@@ -1,0 +1,31 @@
+;
+;MACROS GENERALES y MACROS BÁSICAS
+;
+;==================================================================
+;Macro para la selección de bancos
+;==================================================================
+Banco0	macro
+ 		bcf	STATUS, RP0
+ 		bcf	STATUS, RP1
+ 		endm
+
+Banco1	macro
+ 		bsf	STATUS, RP0
+ 		bcf	STATUS, RP1
+ 		endm
+ 
+Banco2	macro
+ 		bcf	STATUS, RP0
+ 		bsf	STATUS, RP1
+ 		endm
+ 
+Banco3	macro
+ 		bsf	STATUS, RP0
+ 		bsf	STATUS, RP1
+ 		endm
+
+#define	Bank0 Banco0		;Sinónimos de los bancos
+#define	Bank1 Banco1		;Sinónimos de los bancos
+#define	Bank2 Banco2		;Sinónimos de los bancos
+#define	Bank3 Banco3		;Sinónimos de los bancos
+;***********************************************************************

@@ -1,0 +1,8 @@
+;Principales definiciones
+
+#define	version		SFHM
+
+#define verdadero 	1
+#define falso		0
+
+

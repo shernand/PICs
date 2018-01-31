@@ -1,0 +1,539 @@
+From: <Guardado por Microsoft Internet Explorer 5>
+Subject: Macros for useing Motorola ASM code in MPASM
+Date: Mon, 9 May 2005 06:53:43 -0600
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	type="text/html";
+	boundary="----=_NextPart_000_0000_01C55463.D6D42510"
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2900.2180
+
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_0000_01C55463.D6D42510
+Content-Type: text/html;
+	charset="Windows-1252"
+Content-Transfer-Encoding: quoted-printable
+Content-Location: http://www.piclist.com/techref/microchip/mpasmmotmac.htm
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" =
+"http://www.w3c.org/TR/1999/REC-html401-19991224/loose.dtd">
+<HTML><HEAD><TITLE>Macros for useing Motorola ASM code in MPASM</TITLE>
+<META http-equiv=3DContent-Type content=3D"text/html; =
+charset=3Dwindows-1252"><!-- Created with AOLpress/2.0 -->
+<META content=3D"MSHTML 6.00.2900.2627" name=3DGENERATOR></HEAD>
+<BODY onload=3D"javascript:et=3Dnew Date();eol();">
+<SCRIPT type=3Dtext/javascript><!--
+var st=3Dnew Date();				=09
+var et=3Dnew Date();				=09
+var avgBndWdth=3D0;					=09
+function eol() {					=09
+var s=3D4400;				=09
+var i=3Ddocument.images;			=09
+ for (var j=3D0;j<i.length;j++) 	=09
+  { s +=3D parseInt(i[j].fileSize); };=09
+ avgBndWdth =3D s/((et-st)||1);			=09
+ s=3D ' '+parseInt(s/1024)+'KB'; 	=09
+ i=3D' ('+(document.images.length-1)+' imgs) in '+((et-st)||1)/1000+'s =
+is ';=09
+ if (document.getElementById) 	=09
+  =
+{document.getElementById('lt').innerText=3Ds+i+parseInt(avgBndWdth)+'KBps=
+';}
+ else {document.info.lt.value=3Di;}	=09
+ };					=09
+//--></SCRIPT>
+<A onclick=3D"return false;"=20
+href=3D"http://www.piclist.com/techref/indexok.asp?38481.2041203704"><IMG=
+ height=3D1=20
+alt=3D"please dont rip this site" =
+src=3D"http://www.piclist.com/images/null.gif"=20
+width=3D1 align=3Dleft border=3D0></A>=20
+<H1><A =
+href=3D"http://www.piclist.com/techref/microchip/index.htm">Microchip</A>=
+=20
+<A href=3D"http://www.piclist.com/techref/microchip/mpasm.htm">MPASM</A> =
+</H1>
+<H2>Macros for useing <A=20
+href=3D"http://www.piclist.com/techref/6800/index.htm">Motorola</A> ASM =
+code in <A=20
+href=3D"http://www.piclist.com/techref/microchip/mpasm.htm">MPASM</A> =
+(!) </H2>
+<P>Alice Cambell says:=20
+<BLOCKQUOTE>Here are some macros i've been using and fiddling with. They =
+are=20
+  not complete, and a few might not even be right, but it would get you =
+started:=20
+
+  <P>alice <PRE>;motmacro.asm
+        list    p=3D16c84
+        radix   dec
+        #include p16c84.inc
+        __CONFIG _LP_OSC &amp; _WDT_OFF &amp;_PWRTE_ON &amp; _CP_OFF
+;----------------------------------------------------
+;cpu equates (memory map)
+status  equ     0x03
+porta   equ     0x05
+portb   equ     0x06
+trisa   equ     0x85
+trisb   equ     0x86
+;yes i know, but i hate uppercase.
+        cblock  0x10
+        temp
+        tempa
+        wtemp
+        answer
+        endc
+c       =3D       0
+z               =3D       2
+w       =3D     0       ;work reg
+f       =3D     1       ;file reg
+_pd     =3D     3
+_to     =3D     4
+
+;-----------------------------------------------------
+        org     0x00
+        nop                     ;this program is mostly used in =
+simulator.
+        goto    tryout
+;------------------------------------------------------
+;various macros in no particular order
+;macro area
+;compare literal in work
+cmpl    macro   value   ;nondestructive
+        movwf   wtemp
+        sublw   value
+        swapf   wtemp,f
+        swapf   wtemp,w
+        endm
+
+;compare file in work
+cmpf    macro   file
+        movwf   wtemp
+        movfw   file
+        subwf   wtemp,w
+        endm
+
+;branch not equal
+bne     MACRO fr1,fr2,address
+        movf fr2,W
+        subwf fr1,W
+        btfss 3,2
+        goto address
+        ENDM
+
+;branch if equal
+beq     MACRO fr1,fr2,address
+        movf fr2,W
+        subwf fr1,W
+        btfsc 3,2
+        goto address
+        ENDM
+
+;branch if less
+blo     macro   address
+        btfss   status,c
+        goto    address
+        endm
+
+;branch if higher
+bhi     macro   address
+        btfsc   status,c
+        goto    address
+        ENDM
+
+;branch if plus-- test bit 7 set
+bpl     macro   file,address    ;????
+        movfw   file
+        andlw   b'10000000'
+        btfsc   status,z
+        goto    address
+        ENDM
+
+;branch if minus-- test bit 7 set
+bmi     macro   file,address    ;????
+        movfw   file
+        andlw   b'10000000'
+        btfss   status,z
+        goto    address
+        ENDM
+
+;branch less than or same
+bls     MACRO fr1,fr2,address
+        movf fr1,W
+        subwf fr2,W
+        btfsc 3,0
+        goto address
+        ENDM
+
+bhs     MACRO fr1,fr2,address
+        movf fr2,W
+        subwf fr1,W
+        btfsc 3,0
+        goto address
+        ENDM
+
+cmp     macro   file
+        movwf   wtemp
+        movfw   file
+        subwf   wtemp,w
+        endm
+
+txa     MACRO   address
+        movfw   indf
+        ENDM
+
+ldx     MACRO   address
+        movwf   fsr
+        ENDM
+
+atx     MACRO address
+        movfw   indf
+        ENDM
+
+ldaf    MACRO   address
+        movfw   address
+        ENDM
+
+ldal    MACRO   L
+        movlw   L
+        ENDM
+bra     MACRO   address
+        goto    address
+        ENDM
+
+rts     MACRO
+        RETURN
+        ENDM
+
+sta     MACRO   address
+        movwf   address
+        ENDM
+
+
+jsr     MACRO address
+        call  address
+        EMDM
+
+jmp     MACRO address
+        goto    address
+        ENDM
+
+
+sub   MACRO address,fr1         ;CHECK THAT FILE SUBTRACTS FROM
+WORK
+        movfw   fr1
+        subwf address,F
+        ENDM
+
+nega    MACRO
+        MOVWF   wtemp
+        comf    wtemp,w
+        ENDM
+
+stx     MACRO
+        movwf   fsr
+        ENDM
+;sta    movwf   whatever
+
+sbc     MACRO address
+        subwf   address, F
+        ENDM
+
+subw    MACRO   address
+        subwf   address,f
+        ENDM
+;----------------------------------------------------
+tryout
+        movlw   .8
+        movwf   tempa
+        movlw   .8
+        movwf   temp
+        movlw   .5
+        nop
+        cmp     tempa
+        bhi     true
+;       bne temp,tempa,true
+;       movwf   answer
+false
+stopit  goto    stopit
+true
+orbit   goto    orbit
+;----------------------------------------
+        end
+</PRE></BLOCKQUOTE>
+<P>Code:=20
+<UL>
+  <HR>
+
+  <TABLE>
+    <FORM name=3Dinfo action=3D/techref/postsearch.asp method=3Dpost>
+    <TBODY>
+    <TR>
+      <TD><SMALL>file: /techref/microchip/mpasmmotmac.htm, <SPAN id=3Dlt =
+
+        NAME=3D"lt">4KB, <INPUT size=3D30 name=3Dlt></SPAN>, updated: =
+2001/12/14=20
+17:35,
+        <SCRIPT type=3Dtext/javascript><!--
+ eol();
+ for (var j=3D0;j<document.images.length;j++) 	=09
+  { document.images[j].onload =3D new Function('eol();'); };=09
+//-->
+</SCRIPT>
+         </SMALL>
+        <DIV id=3Dupperright=20
+        =
+onmouseover=3D"this.style.backgroundColor=3D'#FFFF00';this.style.borderSt=
+yle=3D'outset';"=20
+        style=3D"BORDER-TOP-WIDTH: 2px; BORDER-LEFT-WIDTH: 2px; RIGHT: =
+0px; FILTER: progid:DXImageTransform.Microsoft.Alpha(opacity=3D75); =
+BORDER-BOTTOM-WIDTH: 2px; COLOR: gray; POSITION: absolute; TOP: 0px; =
+BACKGROUND-COLOR: #ffffff; TEXT-ALIGN: right; BORDER-RIGHT-WIDTH: 2px"=20
+        =
+onmouseout=3D"this.style.backgroundColor=3D'#FFFFFF';this.style.borderSty=
+le=3D'ridge';"=20
+        NAME=3D"upperright"><SMALL><SUP><A title=3D"Go to the top page"=20
+        style=3D"COLOR: #af4040; TEXT-DECORATION: none"=20
+        href=3D"http://www.piclist.com/techref/index.htm">TOP</A> <A=20
+        title=3D"Monthly Change Log for this folder"=20
+        style=3D"COLOR: #af4040; TEXT-DECORATION: none"=20
+        =
+href=3D"http://www.piclist.com/techref/microchip/new200505.txt">NEW</A>
+        <SCRIPT>
+<!--- Hide script from old browsers.
+document.write('<A style=3D"color:#AF4040;text-decoration:none;" =
+TITLE=3D"More pages like this." =
+HREF=3D"/techref/postsearch.asp\077from=3D%2Ftechref%2Fmicrochip%2Fmpasmm=
+otmac%2Ehtm">MORE</A> ')
+// End the hiding here. -->
+</SCRIPT>
+         <A=20
+        title=3D"I'm willing to pay for help, please refer me to a =
+qualified consultant"=20
+        style=3D"COLOR: #af4040; TEXT-DECORATION: none"=20
+        href=3D"mailto:webmaster@piclist.com?subject=3DI need someone to =
+help me with:">HELP</A>=20
+        <A title=3D"Advanced search" style=3D"COLOR: #af4040; =
+TEXT-DECORATION: none"=20
+        =
+href=3D"http://www.piclist.com/techref/postsearch.asp">FIND:</A>&nbsp;<BR=
+><INPUT=20
+        id=3Dsearch title=3D"Free text search"=20
+        style=3D"BORDER-RIGHT: #af0000 1px solid; PADDING-RIGHT: 0px; =
+BORDER-TOP: #af0000 1px solid; PADDING-LEFT: 0px; FONT-SIZE: small; =
+PADDING-BOTTOM: 0px; BORDER-LEFT: #af0000 1px solid; PADDING-TOP: 0px; =
+BORDER-BOTTOM: #af0000 1px solid; BACKGROUND-COLOR: transparent"=20
+        onclick=3D"this.value=3D'';" maxLength=3D100 value=3DSearch =
+name=3DSearchString>=20
+        <INPUT type=3Dhidden value=3DON name=3DFreeText> <INPUT =
+type=3Dhidden=20
+        value=3D/techref/microchip/mpasmmotmac.htm name=3Dfrom> =
+</SUP></SMALL></DIV>
+        <DIV id=3Dupperleft=20
+        =
+onmouseover=3D"this.style.backgroundColor=3D'#FFFF00';this.style.borderSt=
+yle=3D'outset';"=20
+        style=3D"FILTER: =
+progid:DXImageTransform.Microsoft.Alpha(opacity=3D75); LEFT: 0px; COLOR: =
+gray; POSITION: absolute; TOP: 0px"=20
+        =
+onmouseout=3D"this.style.backgroundColor=3D'transparent';this.style.borde=
+rStyle=3D'none';"=20
+        NAME=3D"upperleft"><SMALL><A=20
+        =
+href=3D"http://www.piclist.com/techref/indexok.asp?top"></A><SUP>148.226.=
+18.114:<A=20
+        style=3D"COLOR: #af4040"=20
+        =
+href=3D"http://www.piclist.com/techref/login/default.asp?req=3D403%3Bhttp=
+%3A%2F%2Fwww%2Epiclist%2Ecom%2Ftechref%2Fmicrochip%2Fmpasmmotmac%2Ehtm">L=
+OG=20
+        IN</A></SUP></SMALL></DIV>
+        <DIV style=3D"LEFT: 25%; WIDTH: 25%; POSITION: absolute; TOP: =
+0px"=20
+        align=3Dcenter><SMALL><SUP><FONT color=3D#ff0000><B><A=20
+        title=3D"Why does RIP/GRAB/SPIDERing lead to ads and sponsors? =
+Click here."=20
+        style=3D"COLOR: red"=20
+        href=3D"http://www.piclist.com/dontripthissite.htm">PLEASE DON'T =
+
+        RIP!</A></B></FONT></SUP> </SMALL></DIV>
+        <SCRIPT language=3DJavaScript type=3Dtext/javascript>
+<!--- Hide script from old browsers.
+var old =3D 1;
+var to;
+
+function scrollHold() {
+var pos=3D1;
+	if (to) clearTimeout(to);
+	if (window.innerHeight) {
+		pos =3D window.pageYOffset;
+		}
+	else if (document.documentElement && =
+document.documentElement.scrollTop) {
+		pos =3D document.documentElement.scrollTop;
+		}
+	else if (document.body) {
+		pos =3D document.body.scrollTop;
+		}
+	if (pos < 0) pos =3D 1;
+	else pos +=3D 1;
+	if (pos !=3D old) {
+		upperright.style.top =3D pos;
+		upperleft.style.top =3D pos;
+		}
+	old =3D pos;
+	if (window.onscroll=3D=3Dnull) {to=3DsetInterval('scrollHold()',100);}
+}
+
+window.onscroll =3D scrollHold;
+scrollHold();
+
+// End the hiding here. -->
+</SCRIPT>
+      </TD></TD></FORM></TR></TBODY></TABLE>
+  <HR>
+
+  <DIV>
+  <TABLE width=3D"30%" align=3Dright>
+    <TBODY>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>These pages are served without commercial sponsorship. (No =
+popup=20
+        ads, etc...).Bandwidth abuse increases hosting cost forcing =
+sponsorship=20
+        or shutdown. This server aggressively defends against automated =
+copying=20
+        for any reason including offline viewing, duplication, etc... =
+Please=20
+        respect this requirement and <FONT face=3D"Comic Sans MS" =
+color=3D#ff0000>DO=20
+        NOT RIP THIS SITE</FONT>.<A=20
+        =
+href=3D"http://www.piclist.com/dontripthissite.htm">Questions?</A></TD></=
+TR></TBODY></TABLE>Did=20
+  you find what you needed? From: "<I><A=20
+  =
+href=3D"http://www.piclist.com/techref/microchip/mpasm.htm">/microchip/mp=
+asm.htm</A></I>"=20
+
+  <UL>
+    <SCRIPT>
+<!--- Hide script from old browsers.
+document.write('<LI><I>&quot;Not quite. <A =
+HREF=3D"/techref/postsearch.asp\077from=3D%2Ftechref%2Fmicrochip%2Fmpasmm=
+otmac%2Ehtm"> Look for more pages like this one.&quot;</A></I> ')
+// End the hiding here. -->
+</SCRIPT>
+
+    <LI>
+    <FORM action=3D/techref/postsearch.asp#result method=3Dpost><I>"No. =
+I'm looking=20
+    for: <INPUT maxLength=3D100 size=3D40 name=3DSearchString> <INPUT =
+type=3Dhidden=20
+    value=3Don name=3DFreeText> <INPUT type=3Dhidden=20
+    value=3D/techref/microchip/mpasmmotmac.htm name=3Dfrom> <INPUT =
+type=3Dsubmit value=3DFetch name=3DAction>"</I></FORM>
+    <LI><A =
+href=3D"http://www.piclist.com/techref/postsearch.asp"><I>"No. Take me=20
+    to the search page."</I></A>=20
+    <LI><A href=3D"http://www.piclist.com/techref/index.htm"><I>"No. =
+Take me to=20
+    the top so I can drill down by catagory"</I></A>=20
+    <LI><A=20
+    href=3D"mailto:webmaster@piclist.com?subject=3DI need someone to =
+help me with:"><I>"No.=20
+    I'm willing to pay for help, please refer me to a qualified=20
+    consultant"</I></A>=20
+    <LI>
+    <FORM action=3D/techref/update.asp method=3Dpost><INPUT =
+type=3Dhidden=20
+    value=3DInterested: name=3Daction> <INPUT type=3Dhidden value=3Don =
+name=3Dprivate>=20
+    <INPUT type=3Dhidden value=3D148.226.18.114 name=3Did> <INPUT =
+type=3Dhidden=20
+    value=3D/techref/microchip/mpasmmotmac.htm name=3Durl> <I>"No. But =
+I'm=20
+    interested. <INPUT type=3Dsubmit value=3DEmail> me at <INPUT =
+name=3Demail> when=20
+    this page is expanded."</I></FORM></LI></UL></DIV>
+  <HR>
+  <A name=3Dform></A>
+  <FORM action=3D/techref/update.asp method=3Dpost><INPUT type=3Dhidden =
+value=3Don=20
+  name=3Dprivate> <INPUT type=3Dhidden value=3D148.226.18.114 name=3Did> =
+<INPUT=20
+  type=3Dhidden value=3D/techref/microchip/mpasmmotmac.htm name=3Durl> =
+After you find=20
+  an appropriate page, you are invited to <INPUT type=3Dsubmit =
+value=3DPost> your=20
+  <SELECT size=3D4 name=3Daction> <OPTION value=3DQuestions:=20
+    selected>question</OPTION> <OPTION =
+value=3DComments:>comment</OPTION> <OPTION=20
+    value=3D"See also:">link</OPTION> <OPTION value=3DCode:>program=20
+  listing</OPTION></SELECT> to this <A=20
+  href=3D"http://www.piclist.com/idea/websites.htm"><I>massmind</I></A> =
+site!=20
+  <SMALL>(posts will be reviewed)</SMALL> Just type in the box and press =
+the=20
+  Post button. (<A=20
+  =
+href=3D"http://www.piclist.com/techref/language/html/index.htm">HTML</A> =
+
+  welcomed!): <A=20
+  =
+href=3D"http://www.piclist.com/techref/idea/website/codetutorial.htm">A =
+tutorial=20
+  is available</A> <A=20
+  =
+href=3D"http://www.piclist.com/techref/private.asp?req=3Dmembership">Memb=
+ers</A>=20
+  can <A=20
+  =
+href=3D"http://www.piclist.com/techref/login/default.asp?req=3D403%3Bhttp=
+%3A%2F%2Fwww%2Epiclist%2Ecom%2Ftechref%2Fmicrochip%2Fmpasmmotmac%2Ehtm%23=
+form">login</A>=20
+  to post directly, become page editors, and be credited for their =
+posts. <BR><TEXTAREA name=3Dtext rows=3D4 cols=3D65></TEXTAREA>=20
+  <SMALL><BR>Link?&nbsp;Put&nbsp;it&nbsp;here:&nbsp;<INPUT size=3D60 =
+name=3Dfile>=20
+  <BR>if&nbsp;you&nbsp;want&nbsp;a&nbsp;response,=20
+  please&nbsp;enter&nbsp;your&nbsp;email&nbsp;address:&nbsp;<INPUT =
+size=3D40=20
+  name=3Demail> </SMALL></FORM>
+  <HR>
+
+  <TABLE width=3D"30%" align=3Dleft bgColor=3D#f0f0f0>
+    <TBODY>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>
+        <CENTER><FONT face=3DImpact color=3D#c0c0c0 size=3D+3><A=20
+        href=3D"http://www.piclist.com/techref/piclist/support.htm">HALL =
+OF=20
+        FAME!</A></FONT> <BR><I>Support the PICList by honoring its =
+finest.</I>=20
+        </CENTER></TD></TR></TBODY></TABLE>
+  <TABLE width=3D"30%" align=3Dright bgColor=3D#f0f0f0>
+    <TBODY>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>
+        <CENTER><BIG><B>Internet enable your X-10 controllers!</B></BIG> =
+<BR><A=20
+        href=3D"http://www.sxlist.com/" target=3D_top>SXList.com</A> =
+<B><A=20
+        href=3D"http://www.sxlist.com/techref/ubicom/contests.htm"=20
+        target=3D_top><FONT color=3D#fc0335>Andrew Millers virtual X-10=20
+        controller</FONT></A></B> </CENTER></TD></TR></TBODY></TABLE>
+  <P clear=3Dall></P></UL></BODY></HTML>
+
+------=_NextPart_000_0000_01C55463.D6D42510
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+Content-Location: http://www.piclist.com/images/null.gif
+
+R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==
+
+------=_NextPart_000_0000_01C55463.D6D42510--

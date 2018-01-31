@@ -1,0 +1,47 @@
+;Principales macros bajo prueba
+
+;==================================================================
+;Macro para la escritura hacia localidades EEPROM
+;El argumento es una "Literal"
+;==================================================================
+Lee_EEPROM	macro	Direccion
+		
+		Load	Tempo, Direccion
+		call	RD_EEPROM
+
+		endm
+;==================================================================
+;Macro para la lectura de lo que se encuentra en una localidad de
+; memoria EEPROM.
+;Los argumentos son "Literales"
+;==================================================================
+Escribe_EEPROM	macro	Direccion, Dato
+
+		Load	Tempo1, Direccion
+		Load	Tempo, Dato
+		call	WR_EEPROM
+				
+		endm
+;==================================================================
+;Macro para la escritura hacia localidades EEPROM
+;El argumento es un "Registro"
+;==================================================================
+Lee_EEPROM_R	macro	Direccion
+		
+		Copy	Tempo, Direccion
+		call	RD_EEPROM
+
+		endm
+;==================================================================
+;Macro para la lectura de lo que se encuentra en una localidad de
+; memoria EEPROM.
+;Los argumentos son "Literales"
+;==================================================================
+Escribe_EEPROM_R	macro	Direccion, Dato
+
+			Copy	Tempo1, Direccion
+			Copy	Tempo, Dato
+			call	WR_EEPROM
+				
+		endm
+;------------------------------------------------------------------

@@ -1,0 +1,641 @@
+From: <Guardado por Microsoft Internet Explorer 5>
+Subject: 16F877A/D sample programs
+Date: Mon, 9 May 2005 06:56:35 -0600
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	type="text/html";
+	boundary="----=_NextPart_000_000F_01C55464.3D6C55E0"
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2900.2180
+
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_000F_01C55464.3D6C55E0
+Content-Type: text/html;
+	charset="Windows-1252"
+Content-Transfer-Encoding: quoted-printable
+Content-Location: http://www.sxlist.com/techref/microchip/16f877adsamp.htm
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" =
+"http://www.w3c.org/TR/1999/REC-html401-19991224/loose.dtd">
+<HTML><HEAD><TITLE>16F877A/D sample programs</TITLE>
+<META http-equiv=3DContent-Type content=3D"text/html; =
+charset=3Dwindows-1252"><!-- Created with AOLpress/2.0 -->
+<META content=3D"MSHTML 6.00.2900.2627" name=3DGENERATOR></HEAD>
+<BODY onload=3D"javascript:et=3Dnew Date();eol();">
+<SCRIPT type=3Dtext/javascript><!--
+var st=3Dnew Date();				=09
+var et=3Dnew Date();				=09
+var avgBndWdth=3D0;					=09
+function eol() {					=09
+var s=3D10315;				=09
+var i=3Ddocument.images;			=09
+ for (var j=3D0;j<i.length;j++) 	=09
+  { s +=3D parseInt(i[j].fileSize); };=09
+ avgBndWdth =3D s/((et-st)||1);			=09
+ s=3D ' '+parseInt(s/1024)+'KB'; 	=09
+ i=3D' ('+(document.images.length-1)+' imgs) in '+((et-st)||1)/1000+'s =
+is ';=09
+ if (document.getElementById) 	=09
+  =
+{document.getElementById('lt').innerText=3Ds+i+parseInt(avgBndWdth)+'KBps=
+';}
+ else {document.info.lt.value=3Di;}	=09
+ };					=09
+//--></SCRIPT>
+<A onclick=3D"return false;"=20
+href=3D"http://www.sxlist.com/techref/indexok.asp?38481.2069212963"><IMG =
+height=3D1=20
+alt=3D"please dont rip this site" =
+src=3D"http://www.sxlist.com/images/null.gif"=20
+width=3D1 align=3Dleft border=3D0></A>=20
+<H1>16F877 <A =
+href=3D"http://www.sxlist.com/techref/microchip/a2d.htm">A/D</A> <A=20
+href=3D"http://www.sxlist.com/techref/microchip/ios.htm">IO</A> Sample =
+Programs=20
+</H1>
+<P>...the ground pin next to the port A pins is used internally in a way =
+that is=20
+much closer to the A/D converter, and is thus meant to be the analog =
+ground.=20
+<P>JB says:=20
+<BLOCKQUOTE>After trying unsucessfully to get Microchip's example code =
+(among=20
+  others) to work, I hacked out this modification which seems to do the =
+job, at=20
+  least for me. If anyone else is having as a much difficulty as I did, =
+this may=20
+  help get things going. FWIW, the remaining least-significant bits are =
+in=20
+  ADRESL but this example makes use of the most-significant 8 bits left=20
+  justified into ADRESH. <PRE>;16f877 a/d test routine
+;
+;TEST CIRCUIT:
+;pin 11 &amp; 32 =3D 5VDC
+;pin 12 &amp; 31 =3D 0VDC
+;pin 1 =3D 5VDC
+;pin 2 =3D 0 - 5 VDC analog input (center tap on 20k variable resistor)
+;pin 13 &amp; 14 =3D 4MHz crystal with 18pF capacitors to 0VDC
+;pin 15,16,17,18,23,24,25,26 PORTC outputs each to 330 ohm resistor
+;       in series with LED to 0VDC
+;**********************************************************
+
+        __config _LVP_OFF &amp; _XT_OSC &amp; _WDT_OFF &amp; _PWRTE_ON =
+&amp; _CP_OFF &amp; _BODEN_OFF
+&amp; _DEBUG_OFF
+        list p=3D16f877
+
+        include "p16f877.inc"
+
+        ; Start at the reset vector
+        org     0x000
+        goto    Start
+        org     0x004
+Interrupt
+        retfie
+Start
+        bsf     STATUS,RP0      ;bank 1
+        bcf     STATUS,RP1
+        movlw   H'00'
+        movwf   TRISC           ;portc [7-0] outputs
+        clrf    ADCON1          ;left justified, all inputs a/d
+        bcf     STATUS,RP0      ;bank 0
+        movlw   B'01000001'     ;Fosc/8 [7-6], A/D ch0 [5-3], a/d on [0]
+        movwf   ADCON0
+Main
+        call    ad_portc
+        goto    Main
+
+
+ad_portc
+                                ;wait for acquision time (20uS)
+                                ;(non-critical for this test)
+
+        bsf     ADCON0,GO       ;Start A/D conversion
+Wait
+        btfsc   ADCON0,GO       ;Wait for conversion to complete
+        goto    Wait
+
+        movf    ADRESH,W        ;Write A/D result to PORTC
+        movwf   PORTC           ;LEDs
+        return
+
+        end
+
+</PRE>
+  <P></P></BLOCKQUOTE>
+<P>Mark Willcox modified Tony Nixons program=20
+<BLOCKQUOTE><PRE>;pwm.asm to learn CCP/PWM of 16f873. Last edited =
+5/23/2000
+;Originated by Tony Nixon and modified by Mark Willcox.
+;Grahm
+;   This code will light a LED on portC pin RC2/CCP1 and=20
+;display the 8 bit hex value on portB LEDs or bargraph. The CCP1 LED
+;will glow from bright to dim as the pot varies the pulse width.=20
+;Connect an O-scope to CCP1 and watch the PW vary. This code can be=20
+;used on other PICs but you will have to change the code to fit it's=20
+;instruction set. One wire on pot goes to +Vdd and the other end=20
+;of the pot goes to -Vss/ground. The wiper goes to RA0 input pin.
+;You can use any input signal source as long as you don't exceed the=20
+;chips max specs. For example, a slow sine or ramp wave(1-5Hz) will=20
+;flash the CCP1 LED. Make sure you use a common ground for the=20
+;signal generator and PIC board.
+
+
+        #include &lt;p16F873.inc&gt;
+        LIST p=3D16F873
+	errorlevel 1,-302	;to disable MPLAB bank warnings.
+        __config _XT_OSC &amp; _PWRTE_ON &amp; _WDT_OFF &amp; _LVE_OFF
+		;Some versions of MPLAB use _LVP_OFF
+		;This sets all portB pins to output.
+;/*---------Declare Registers
+STATUS	EQU	03
+ADCON	EQU	08
+PORTB	EQU	06
+F       EQU     1
+W       EQU     0
+;/*---------Set up chip parameters
+	CLRF	CCP1CON	;CCP MODULE IS OFF
+	CLRF	TMR2	;CLEAR TIMER2
+	MOVLW	0X7F	;
+	MOVWF	PR2
+	CALL	A2D
+	CLRF	INTCON		;DISABLE INTRPTS ANDCLEAR T0IF
+	BSF	STATUS,RP0
+	BCF	TRISC,2		;MAKE PIN 2 PWM OUTPUT
+	CLRF	PIE1		;DISABLE PERIPHERAL INTS
+	BCF	STATUS,RP0
+	CLRF	PIR1		;CLR PER INT FLAGS
+	MOVLW	0X2C		;PWM  MODE, 2LSBs OF DUTY CYCLE=3D10
+	MOVWF	CCP1CON
+	BSF	T2CON,TMR2ON	;TIME2 STRTS TO INCREMENT
+	;
+	 ;CCP1 INT IS DISABLED
+	 ;DO POLLING ON THE TMR2 INT FLAG BIT
+	;
+PWM_PERIOD_MATCH
+	BTFSS	PIR1,TMR2IF
+	GOTO	PWM_PERIOD_MATCH
+	;
+	 ;UPDATE THIS PWM PERIOD AND THE FOLLOWING PWM DUTY CYCLE
+	;
+	BCF	PIR1,TMR2IF
+A2D     bsf     STATUS,RP0
+        MOVLW   B'00000001'
+        MOVWF   TRISA           ;All outputs except RA0.
+        CLRF    TRISB		;RA0 is wiper of 50k pot/Vin
+        CLRF    TRISC		;PortB is 8 LED output to show=20
+        MOVLW   B'00001110'     ;Hex value of Vin from pot.
+        MOVWF   ADCON1		;left justified, RA0 =3D input
+;/*-----Set up A2D parameters
+        MOVLW   B'11010111'     ;prescaler 1:256 tmr0, internal clock
+        MOVWF   OPTION_REG
+        BCF     STATUS,RP0
+        MOVLW   B'01000001'     ;a2d =3D on, ch0, fosc/8
+        MOVWF   ADCON0
+;/*-----Delay loop to settle A2D, similar to de-bounce???
+mnloop  btfss   INTCON,T0IF     ;50us loop delay @ 4Mhz
+        goto    mnloop
+;/*-----Stop timer0 interrupt
+        BCF     INTCON,T0IF
+        BSF     ADCON0,GO_DONE  ;start a2d conversion
+WAITA2D NOP                     ;wait 4 finish
+        BTFSC   ADCON0,GO_DONE
+        GOTO    WAITA2D
+;/*-----Put A2D/PWM value in W and send to ports.
+        MOVF    ADRESH,W        ;upper 8 bits-ignor lower 3
+        MOVWF	CCPR1L		;PWM is output on pin 13 of 16F873
+        MOVWF   PORTB		;output Hex value to LEDs
+        RETURN			;DUTY CYCLE IS 25% OF PWM PERIOD
+       =20
+   END     =09
+
+
+</PRE>
+  <P></P></BLOCKQUOTE>
+<P>See:=20
+<UL>
+  <LI><A =
+href=3D"http://www.sxlist.com/techref/microchip/pwm.htm">PWM@</A>=20
+</LI></UL>
+<P>Questions:=20
+<UL>
+  <LI>
+  <LI><A title=3DBS-executivemail-=20
+  =
+href=3D"http://www.sxlist.com/techref/member/BS-executivemail-/index.htm"=
+=20
+  name=3D38405.0280324074>sphiwe Bethuel Makgathole;a</A> asks:=20
+  <BLOCKQUOTE><A name=3DBS-executivemail-></A>I'm looking for a program =
+and=20
+    circuit diagram to build a digital voltmeter(ADC) using pic16f627/8 =
+that can=20
+    measure voltages from from 0 to 30 volts. Voltages measured have to=20
+    displayed on 2 LED's.Any advice on digital voltmeters will be=20
+  appreciated.</BLOCKQUOTE><!-- 38405.0280324074 EOR -->
+  <LI>
+  <LI>
+  <LI>
+  <LI>
+  <LI>
+  <LI>
+  <LI><A title=3D137.94.11.222 href=3D"mailto:s22793@rmc.ca"=20
+  name=3D38063.8651736111>s22793@rmc.ca</A> asks:=20
+  <BLOCKQUOTE><A name=3D137.94.11.222></A>Hello to all, I am presently =
+trying to=20
+    program the PIC 16F876 to read in 3 analogue values on 3 different =
+channels=20
+    and saving these values to different registers, for some reason, I =
+cannot=20
+    seem to get the proper values. I am using the C port to display what =
+is=20
+    being read onto the led's so i can see. I was wondering if you might =
+have=20
+    time and would not mind taking a look at my code because i just =
+can't get=20
+    it. for testing purposes, I only call one of the routines in the =
+main at a=20
+    time because i know that it would execute way to fast for me to see =
+anything=20
+    on the leds.<BR><BR>Thank you for your time and =
+patience<BR><BR>Tania=20
+    =
+Maurice<BR>****************************************************<BR>__conf=
+ig=20
+    _LVP_OFF &amp; _RC_OSC &amp; _WDT_OFF &amp; _PWRTE_ON &amp; _CP_OFF =
+&amp;=20
+    _BODEN_ON &amp; _DEBUG_OFF<BR>LIST p=3D16f876<BR>include=20
+    "p16f876.inc"<BR><BR>org 0x000<BR>goto Start<BR>org 0x004<BR><BR>Est =
+equ=20
+    0x20<BR>Nord equ 0x24<BR>Ouest equ =
+0x26<BR>Interrupt<BR>retfie<BR>;Set up=20
+    for A/D convergion<BR>Start<BR>bsf STATUS,RP0<BR>bcf =
+STATUS,RP1<BR>movlw=20
+    H'00'<BR>movwf TRISC<BR>movlw H'00'<BR>movwf TRISB<BR>clrf =
+ADCON1<BR>bcf=20
+    STATUS,RP0<BR>clrf ADCON0<BR>clrf PORTC<BR>clrf Ouest<BR>clrf =
+Est<BR>clrf=20
+    Nord<BR>clrf PORTB<BR><BR>goto Main<BR><BR>; LIRE A/D CHANNEL 0 ,=20
+    OUEST<BR><BR><BR>ad_portcOuest<BR>; clrf PORTC<BR>; clrf Ouest<BR>; =
+clrf=20
+    Est<BR>; clrf Nord<BR>clrf ADRESH<BR>movlw B'10000001'<BR>movwf=20
+    ADCON0<BR><BR>testingOuest<BR>bsf =
+ADCON0,GO<BR><BR>WaitOuest<BR><BR>btfsc=20
+    ADCON0,GO<BR>goto WaitOuest<BR><BR>movf ADRESH,W<BR>movwf =
+Ouest<BR>clrw=20
+    <BR>movf Ouest,W<BR>movwf PORTC<BR>clrf ADRESH<BR>return<BR>; LIRE =
+A/D=20
+    CHANNEL 1 , Nord<BR>ad_portcNord<BR><BR><BR><BR>; clrf PORTC<BR>; =
+clrf=20
+    Ouest<BR>; clrf Est<BR>; clrf Nord<BR>clrf ADRESH<BR>movlw=20
+    B'10001001'<BR>movwf ADCON0<BR>testingNord<BR>bsf=20
+    ADCON0,GO<BR><BR>WaitNord<BR><BR>btfsc ADCON0,GO<BR>goto=20
+    WaitNord<BR><BR>movf ADRESH,W<BR>movwf Nord<BR>clrw <BR>movf =
+Nord,W<BR>movwf=20
+    PORTC<BR>clrf ADRESH<BR>return<BR>; LIRE A/D CHANNEL 2 ,=20
+    EST<BR>ad_portcEst<BR>clrf PORTC<BR>clrf Est<BR>movlw =
+B'10010001'<BR>movwf=20
+    ADCON0<BR>testingEst<BR>bsf ADCON0,GO<BR><BR>WaitEst<BR><BR>btfsc=20
+    ADCON0,GO<BR>goto WaitEst<BR><BR>movf ADRESH,W<BR>movwf Est<BR>clrw =
+<BR>movf=20
+    Est,W<BR>movwf PORTC<BR>clrf=20
+    ADRESH<BR>return<BR><BR><BR><BR><BR><BR>Main<BR><BR>call=20
+    ad_portcOuest<BR>call ad_portcNord<BR>call ad_portcEst<BR><BR><BR>; =
+goto=20
+    Main<BR><BR><BR><BR><BR><BR>end</BLOCKQUOTE><!-- 38063.8651736111 =
+EOR -->
+  <LI><!-- 37717.8444560185 EOR -->
+  <LI>
+  <LI>
+  <LI><A title=3D203.108.120.98=20
+  href=3D"mailto:drumster71@hotmail.com">drumster71@hotmail.com</A> =
+asks:=20
+  <BLOCKQUOTE><A name=3D203.108.120.98></A>I am looking for a program to =
+convert=20
+    signal from peizo disks to midi drum code for the 16f877.Any other =
+advice on=20
+    the midi subject would be greatly=20
+  appreciated.Thnx</BLOCKQUOTE><!-- REPLY --><A=20
+  =
+href=3D"http://www.sxlist.com/techref/member/JMN-EFP-786/index.htm">James=
+=20
+  Newton</A> replies: <I>See <A=20
+  href=3D"http://www.piclist.com/techref/io/midis.htm">General Midi =
+IO</A></I><!-- 37631.4397106481 EOR -->
+  <P><!-- 37538.8920601852 EOR --></P></LI></UL>
+<P>Interested:=20
+<UL>
+  <P>Comments:=20
+  <UL>
+    <LI><!-- 37998.3814814815 EOR --></LI></UL>
+  <HR>
+
+  <TABLE>
+    <FORM name=3Dinfo action=3D/techref/postsearch.asp method=3Dpost>
+    <TBODY>
+    <TR>
+      <TD><SMALL>file: /techref/microchip/16f877adsamp.htm, <SPAN =
+id=3Dlt=20
+        NAME=3D"lt">10KB, <INPUT size=3D30 name=3Dlt></SPAN>, updated: =
+2005/5/5 21:38,
+        <SCRIPT type=3Dtext/javascript><!--
+ eol();
+ for (var j=3D0;j<document.images.length;j++) 	=09
+  { document.images[j].onload =3D new Function('eol();'); };=09
+//-->
+</SCRIPT>
+         </SMALL>
+        <DIV id=3Dupperright=20
+        =
+onmouseover=3D"this.style.backgroundColor=3D'#FFFF00';this.style.borderSt=
+yle=3D'outset';"=20
+        style=3D"BORDER-TOP-WIDTH: 2px; BORDER-LEFT-WIDTH: 2px; RIGHT: =
+0px; FILTER: progid:DXImageTransform.Microsoft.Alpha(opacity=3D75); =
+BORDER-BOTTOM-WIDTH: 2px; COLOR: gray; POSITION: absolute; TOP: 0px; =
+BACKGROUND-COLOR: #ffffff; TEXT-ALIGN: right; BORDER-RIGHT-WIDTH: 2px"=20
+        =
+onmouseout=3D"this.style.backgroundColor=3D'#FFFFFF';this.style.borderSty=
+le=3D'ridge';"=20
+        NAME=3D"upperright"><SMALL><SUP><A title=3D"Go to the top page"=20
+        style=3D"COLOR: #af4040; TEXT-DECORATION: none"=20
+        href=3D"http://www.sxlist.com/techref/index.htm">TOP</A> <A=20
+        title=3D"Monthly Change Log for this folder"=20
+        style=3D"COLOR: #af4040; TEXT-DECORATION: none"=20
+        =
+href=3D"http://www.sxlist.com/techref/microchip/new200505.txt">NEW</A>
+        <SCRIPT>
+<!--- Hide script from old browsers.
+document.write('<A style=3D"color:#AF4040;text-decoration:none;" =
+TITLE=3D"More pages like this." =
+HREF=3D"/techref/postsearch.asp\077from=3D%2Ftechref%2Fmicrochip%2F16f877=
+adsamp%2Ehtm">MORE</A> ')
+// End the hiding here. -->
+</SCRIPT>
+         <A=20
+        title=3D"I'm willing to pay for help, please refer me to a =
+qualified consultant"=20
+        style=3D"COLOR: #af4040; TEXT-DECORATION: none"=20
+        href=3D"mailto:webmaster@sxlist.com?subject=3DI need someone to =
+help me with:">HELP</A>=20
+        <A title=3D"Advanced search" style=3D"COLOR: #af4040; =
+TEXT-DECORATION: none"=20
+        =
+href=3D"http://www.sxlist.com/techref/postsearch.asp">FIND:</A>&nbsp;<BR>=
+<INPUT=20
+        id=3Dsearch title=3D"Free text search"=20
+        style=3D"BORDER-RIGHT: #af0000 1px solid; PADDING-RIGHT: 0px; =
+BORDER-TOP: #af0000 1px solid; PADDING-LEFT: 0px; FONT-SIZE: small; =
+PADDING-BOTTOM: 0px; BORDER-LEFT: #af0000 1px solid; PADDING-TOP: 0px; =
+BORDER-BOTTOM: #af0000 1px solid; BACKGROUND-COLOR: transparent"=20
+        onclick=3D"this.value=3D'';" maxLength=3D100 value=3DSearch =
+name=3DSearchString>=20
+        <INPUT type=3Dhidden value=3DON name=3DFreeText> <INPUT =
+type=3Dhidden=20
+        value=3D/techref/microchip/16f877adsamp.htm name=3Dfrom>=20
+</SUP></SMALL></DIV>
+        <DIV id=3Dupperleft=20
+        =
+onmouseover=3D"this.style.backgroundColor=3D'#FFFF00';this.style.borderSt=
+yle=3D'outset';"=20
+        style=3D"FILTER: =
+progid:DXImageTransform.Microsoft.Alpha(opacity=3D75); LEFT: 0px; COLOR: =
+gray; POSITION: absolute; TOP: 0px"=20
+        =
+onmouseout=3D"this.style.backgroundColor=3D'transparent';this.style.borde=
+rStyle=3D'none';"=20
+        NAME=3D"upperleft"><SMALL><A=20
+        =
+href=3D"http://www.sxlist.com/techref/indexok.asp?top"></A><SUP>148.226.1=
+8.114:<A=20
+        style=3D"COLOR: #af4040"=20
+        =
+href=3D"http://www.sxlist.com/techref/login/default.asp?req=3D403%3Bhttp%=
+3A%2F%2Fwww%2Esxlist%2Ecom%2Ftechref%2Fmicrochip%2F16f877adsamp%2Ehtm">LO=
+G=20
+        IN</A></SUP></SMALL></DIV>
+        <DIV style=3D"LEFT: 25%; WIDTH: 25%; POSITION: absolute; TOP: =
+0px"=20
+        align=3Dcenter><SMALL><SUP><FONT color=3D#ff0000><B><A=20
+        title=3D"Why does RIP/GRAB/SPIDERing lead to ads and sponsors? =
+Click here."=20
+        style=3D"COLOR: red"=20
+        href=3D"http://www.sxlist.com/dontripthissite.htm">PLEASE DON'T=20
+        RIP!</A></B></FONT></SUP> </SMALL></DIV>
+        <SCRIPT language=3DJavaScript type=3Dtext/javascript>
+<!--- Hide script from old browsers.
+var old =3D 1;
+var to;
+
+function scrollHold() {
+var pos=3D1;
+	if (to) clearTimeout(to);
+	if (window.innerHeight) {
+		pos =3D window.pageYOffset;
+		}
+	else if (document.documentElement && =
+document.documentElement.scrollTop) {
+		pos =3D document.documentElement.scrollTop;
+		}
+	else if (document.body) {
+		pos =3D document.body.scrollTop;
+		}
+	if (pos < 0) pos =3D 1;
+	else pos +=3D 1;
+	if (pos !=3D old) {
+		upperright.style.top =3D pos;
+		upperleft.style.top =3D pos;
+		}
+	old =3D pos;
+	if (window.onscroll=3D=3Dnull) {to=3DsetInterval('scrollHold()',100);}
+}
+
+window.onscroll =3D scrollHold;
+scrollHold();
+
+// End the hiding here. -->
+</SCRIPT>
+      </TD></TD></FORM></TR></TBODY></TABLE>
+  <HR>
+
+  <DIV>
+  <TABLE width=3D"30%" align=3Dright>
+    <TBODY>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>These pages are served without commercial sponsorship. (No =
+popup=20
+        ads, etc...).Bandwidth abuse increases hosting cost forcing =
+sponsorship=20
+        or shutdown. This server aggressively defends against automated =
+copying=20
+        for any reason including offline viewing, duplication, etc... =
+Please=20
+        respect this requirement and <FONT face=3D"Comic Sans MS" =
+color=3D#ff0000>DO=20
+        NOT RIP THIS SITE</FONT>.<A=20
+        =
+href=3D"http://www.sxlist.com/dontripthissite.htm">Questions?</A></TD></T=
+R></TBODY></TABLE>Did=20
+  you find what you needed? From: "<I><A=20
+  =
+href=3D"http://www.sxlist.com/techref/microchip/mpasm.htm">/microchip/mpa=
+sm.htm</A></I>"=20
+
+  <UL>
+    <SCRIPT>
+<!--- Hide script from old browsers.
+document.write('<LI><I>&quot;Not quite. <A =
+HREF=3D"/techref/postsearch.asp\077from=3D%2Ftechref%2Fmicrochip%2F16f877=
+adsamp%2Ehtm"> Look for more pages like this one.&quot;</A></I> ')
+// End the hiding here. -->
+</SCRIPT>
+
+    <LI>
+    <FORM action=3D/techref/postsearch.asp#result method=3Dpost><I>"No. =
+I'm looking=20
+    for: <INPUT maxLength=3D100 size=3D40 name=3DSearchString> <INPUT =
+type=3Dhidden=20
+    value=3Don name=3DFreeText> <INPUT type=3Dhidden=20
+    value=3D/techref/microchip/16f877adsamp.htm name=3Dfrom> <INPUT =
+type=3Dsubmit value=3DFetch name=3DAction>"</I></FORM>
+    <LI><A href=3D"http://www.sxlist.com/techref/postsearch.asp"><I>"No. =
+Take me=20
+    to the search page."</I></A>=20
+    <LI><A href=3D"http://www.sxlist.com/techref/index.htm"><I>"No. Take =
+me to the=20
+    top so I can drill down by catagory"</I></A>=20
+    <LI><A=20
+    href=3D"mailto:webmaster@sxlist.com?subject=3DI need someone to help =
+me with:"><I>"No.=20
+    I'm willing to pay for help, please refer me to a qualified=20
+    consultant"</I></A>=20
+    <LI>
+    <FORM action=3D/techref/update.asp method=3Dpost><INPUT =
+type=3Dhidden=20
+    value=3DInterested: name=3Daction> <INPUT type=3Dhidden value=3Don =
+name=3Dprivate>=20
+    <INPUT type=3Dhidden value=3D148.226.18.114 name=3Did> <INPUT =
+type=3Dhidden=20
+    value=3D/techref/microchip/16f877adsamp.htm name=3Durl> <I>"No. But =
+I'm=20
+    interested. <INPUT type=3Dsubmit value=3DEmail> me at <INPUT =
+name=3Demail> when=20
+    this page is expanded."</I></FORM></LI></UL></DIV>
+  <HR>
+  <A name=3Dform></A>
+  <FORM action=3D/techref/update.asp method=3Dpost><INPUT type=3Dhidden =
+value=3Don=20
+  name=3Dprivate> <INPUT type=3Dhidden value=3D148.226.18.114 name=3Did> =
+<INPUT=20
+  type=3Dhidden value=3D/techref/microchip/16f877adsamp.htm name=3Durl> =
+After you find=20
+  an appropriate page, you are invited to <INPUT type=3Dsubmit =
+value=3DPost> your=20
+  <SELECT size=3D4 name=3Daction> <OPTION value=3DQuestions:=20
+    selected>question</OPTION> <OPTION =
+value=3DComments:>comment</OPTION> <OPTION=20
+    value=3D"See also:">link</OPTION> <OPTION value=3DCode:>program=20
+  listing</OPTION></SELECT> to this <A=20
+  href=3D"http://www.sxlist.com/idea/websites.htm"><I>massmind</I></A> =
+site!=20
+  <SMALL>(posts will be reviewed)</SMALL> Just type in the box and press =
+the=20
+  Post button. (<A=20
+  =
+href=3D"http://www.sxlist.com/techref/language/html/index.htm">HTML</A>=20
+  welcomed!): <A=20
+  href=3D"http://www.sxlist.com/techref/idea/website/codetutorial.htm">A =
+tutorial=20
+  is available</A> <A=20
+  =
+href=3D"http://www.sxlist.com/techref/private.asp?req=3Dmembership">Membe=
+rs</A>=20
+  can <A=20
+  =
+href=3D"http://www.sxlist.com/techref/login/default.asp?req=3D403%3Bhttp%=
+3A%2F%2Fwww%2Esxlist%2Ecom%2Ftechref%2Fmicrochip%2F16f877adsamp%2Ehtm%23f=
+orm">login</A>=20
+  to post directly, become page editors, and be credited for their =
+posts. <BR><TEXTAREA name=3Dtext rows=3D4 cols=3D65></TEXTAREA>=20
+  <SMALL><BR>Link?&nbsp;Put&nbsp;it&nbsp;here:&nbsp;<INPUT size=3D60 =
+name=3Dfile>=20
+  <BR>if&nbsp;you&nbsp;want&nbsp;a&nbsp;response,=20
+  please&nbsp;enter&nbsp;your&nbsp;email&nbsp;address:&nbsp;<INPUT =
+size=3D40=20
+  name=3Demail> </SMALL></FORM>
+  <HR>
+
+  <TABLE width=3D"30%" align=3Dleft bgColor=3D#f0f0f0>
+    <TBODY>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>
+        <CENTER><BIG><B>SX MASTERS:</B> Eric Smith and Richard Ottosen's =
+<B><A=20
+        =
+href=3D"http://www.sxlist.com/techref/ubicom/lib/io/dev/video/servid.htm"=
+=20
+        target=3D_top>SERVID</A></B> is an intellegent RS232 video =
+terminal (4x20=20
+        character display) in one chip.</BIG> See the <A=20
+        =
+href=3D"http://www.sxlist.com/techref/ubicom/lib/io/dev/video/servid.htm"=
+=20
+        target=3D_top>write up.</A> </CENTER>
+        <HR width=3D180>
+
+        <CENTER><B><SMALL>Site supported by <BR><A=20
+        href=3D"http://www.sxlist.com/techref/auction.asp">sales</A>, <A =
+
+        =
+href=3D"mailto:james@sxlist.com&amp;subject=3DSXLIST_ADVERTIZING">adverti=
+zing</A>,=20
+        <BR>&amp; <A=20
+        =
+href=3D"http://www.sxlist.com/techref/scenix/support.htm"><B>kind=20
+        contributors<BR>just like you!</B></A> <BR><I>Please don't =
+rip/copy=20
+        <BR>(<A =
+href=3D"http://www.sxlist.com/dontripthissite.htm">here's=20
+        why</A></I> <BR><A=20
+        href=3D"http://www.sxlist.com/dontripthissite.htm#copies">Copies =
+of the=20
+        site on CD</A> <BR>are available at minimal cost.=20
+      </SMALL></CENTER></B></TD></TR></TBODY></TABLE>
+  <DIV></DIV></TD></TR></TABLE>
+  <TABLE width=3D"30%" align=3Dright bgColor=3D#f0f0f0>
+    <TBODY>
+    <TR>
+      <TD>&nbsp;</TD>
+      <TD>
+        <CENTER>
+        <H3><A href=3D"http://www.sxlist.com/techref/robotics.htm"=20
+        target=3D_top>Robotics nuts!</A></H3>Check out <A=20
+        href=3D"http://www.verinet.com/~dlc/"=20
+        target=3D_top>http://www.verinet.com/~dlc/</A> email: <A=20
+        href=3D"mailto:dlc@verinet.com">dlc@verinet.com</A>... This guy =
+ROCKS! He=20
+        has made (and sells but also <I>releases code, docs, etc...</I>) =
+for a=20
+        number of cool little robotic modules including whiskers, IR =
+proximity=20
+        detect and remote control, Sonar proximity detect, PWM, Servo, =
+compass.=20
+        Most of these use the little <A=20
+        =
+href=3D"http://www.sxlist.com/techref/microchip/index.htm">PIC</A> =
+12C508=20
+        controller which costs basically nothing and is <I>soooo</I>=20
+        tiny.<BR>The 4 servos, 2400 baud serial servo controller is a =
+<I>wonder=20
+        of magic</I> and he sells the programmed chip for <FONT=20
+        size=3D+2>$8</FONT>. Wow! </CENTER></TD></TR></TBODY></TABLE>
+  <P clear=3Dall></P></UL></BODY></HTML>
+
+------=_NextPart_000_000F_01C55464.3D6C55E0
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+Content-Location: http://www.sxlist.com/images/null.gif
+
+R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==
+
+------=_NextPart_000_000F_01C55464.3D6C55E0--

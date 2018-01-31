@@ -1,0 +1,2100 @@
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001 ;------------------------------------------------------------------------------
+                      00002 ;         Ejemplos de Evaluación de Condiciones
+                      00003 ; Esta parte es relevante para compender el diseño de las estructuras que 
+                      00004 ; modifican el flujo de control de ejecución de una aplicación.
+                      00005 ; 
+                      00006 ; Las principales estructuras son: 
+                      00007 ; "If - Then - Else"
+                      00008 ; "Do - While"
+                      00009 ; "Do - Until"
+                      00010 ; "For - Índice, Hasta, Actualización"
+                      00011 ; "Switch - Case - Else case" (ó "Select - Case - Else Case")
+                      00012 ; En esta práctica se presentan varias alternativas para resolver lo anterior.
+                      00013 ; STATUS = IRP - RP1 - RP0 - T0  - PD  - Z  - DC  - C
+                      00014 ;==============================================================================
+                      00015 ;-----[ AJUSTES ]-----
+                      00016   LIST  P = PIC16F877                   ; Identificación del uC en donde se ensamblará.
+                      00017   #INCLUDE      P16F877.INC             ; Se usarán las variables de Microchip
+                      00001         LIST
+                      00002 
+                      00003 ;==========================================================================
+                      00004 ;  MPASM PIC16F877 processor include
+                      00005 ; 
+                      00006 ;  (c) Copyright 1999-2013 Microchip Technology, All rights reserved
+                      00007 ;==========================================================================
+                      00008 
+                      00540         LIST
+                      00018   RADIX                 HEX                                             ; La base numérica es Hexadecima
+                            l por omisión
+                      00019 ;==============================================================================
+                      00020 ;-----[ MACROS que se van a ensayar y Ya Están Construidos ]-----
+                      00021         #INCLUDE "sfhm1.mac"    ; Aquí estarán los MACROS a ensayarse.
+                      00001 ;==============================================================================
+                      00002 ;  Librería de Macros para microcontroladores PIC
+                      00003 ;
+                      00004 ;Autores:               Varios
+                      00005 ;Adaptación:    Sergio Fco. Hernández Machuca
+                      00006 ;Fecha:                 Junio del 2002
+                      00007 ;Lugar:                 Xalapa - Veracruz - Mexico
+                      00008 ;version:               1.1
+                      00009 ;
+                      00010 ;-----[ Revisiones  ]-----
+                      00011 ;
+                      00012 ; - Agosto 2017: Se revisa información en general y la de algunos macros.
+                      00013 ; Se ajusta a documentación estándar.
+                      00014 ; - Octubre 2002: Se quitan macros que son sustituidas por instrucciones que 
+                      00015 ; ahora soporta el ensamblador MPASM.
+                      00016 ;               BZ
+                      00017 ;               BNZ
+                      00018 ;  
+                      00019 ;==============================================================================
+Message[301]: MESSAGE: (Versión 1.1 de Librerías de Macros [sfhm_clases@hotmail.com])
+                      00020         MESSG           "Versión 1.1 de Librerías de Macros [sfhm_clases@hotmail.com]"
+                      00021 ;==============================================================================
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00022 ;       Esta librería incluye los macros esenciales para implementar funciones 
+                      00023 ; básicas de control e intepretación en lenguajes de alto nivel.
+                      00024 ;
+                      00025 ;       Para incorporar esta librería a sus propios programas, se debe agregar el 
+                      00026 ; estatuto #INCLUDE inmediatamente después de las directivas que definen el 
+                      00027 ; tipo de uC a emplear y el archivo que contiene las definiciones oficiales 
+                      00028 ; del dispositivo empleado, por ejemplo:
+                      00029 ;
+                      00030 ;-----[ AJUSTES ]-----
+                      00031 ; LIST  P = PIC16F877   ; Identificación del uC en donde se ensamblará.
+                      00032 ; #INCLUDE      P16f877.INC     ; Se usarán las variables de Microchip
+                      00033 ; RADIX Hex                             ; La base numérica es Hexadecimal por omisión
+                      00034 ;
+                      00035 ; #INCLUDE "sfhm1.mac" ; Este archivo se encuentra en la misma carpeta 
+                      00036 ; que el proyecto.
+                      00037 ;
+                      00038 ; Alternativamente se puede emplear la siguiente línea:
+                      00039 ; #INCLUDE "..\sfhm1.mac" ; Este archivo se encuentra en una carpeta en el
+                      00040 ; directorio previo a donde está el proyecto.
+                      00041 ;
+                      00042 ;==============================================================================
+                      00043 ;-----[ Variables Genéricas ]-----
+                      00044 ;
+                      00045 ;       Declaración de variables que se emplean como referencia en la creación de 
+                      00046 ; diversas instancias de los macros. La mayoría se emplea para la generación de
+                      00047 ; las etiquetas que se requieren.
+                      00048 
+  0000                00049         variable        _forknt=0
+  0000                00050         variable        _nxtknt=0
+  0000                00051         variable        _rptknt=0
+  0000                00052         variable        _alwknt=0
+  0000                00053         variable        _untknt=0
+  0000                00054         variable        _seltot=0
+  0000                00055         variable        _selknt=0
+  0000                00056         variable        _castot=0
+  0000                00057         variable        _casknt=0
+  0000                00058         variable        _waitk=0
+  0000                00059         variable        _pollk=0
+  0000                00060         variable        _pollt=0
+                      00061 
+                      00062 ;==============================================================================
+                      00063 ;
+                      00064 ;-----[ Macro FOR, Inicio de la estructura FOR - NEXT ]-----
+                      00065 ;
+                      00066 ;
+                      00067 ;Sintaxis:      For     Variable, Inicio, Fin
+                      00068 ;
+                      00069 ;Operación:     Inicia la estructura FOR - NEXT, los argumentos son: 
+                      00070 ;   "Variable", la cual es una variable en RAM usada como índice para el lazo; 
+                      00071 ;   "Inicio", que es una literal empleada como el valor inicial del índice; 
+                      00072 ;   "Fin", que es una literal usada como el valor final del índice.
+                      00073 ;               
+                      00074 ;       La ejecución de código se realizará en el lazo comprendido entre el
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00075 ;       estatuto FOR y el estatuto NEXT, hasta que el valor de "Variable" sea
+                      00076 ;       igual al valor de la literal "Fin", este valor es calculado en la parte
+                      00077 ;       inicial del lazo. En caso de darse una comparación exitosa, el control
+                      00078 ;       se transfiere al punto en donde se encuentra la macro NEXT.
+                      00079 ;
+                      00080 ;       Se puede concluir el estatuto FOR con los macros NEXT, NEXTL, NEXTF.    
+                      00081 ;
+                      00082 ;Altera:        Registro W
+                      00083 ;
+                      00084 
+                      00085 For     macro   Variable, Inicio, Fin
+                      00086         movlw   Inicio                  ;Inicia el valor del índice
+                      00087         movwf   Variable
+                      00088 
+                      00089 _for#v(_forknt)                         ;Etiqueta de retorno para el NEXT
+                      00090 
+                      00091         movlw   Fin                         ;Prueba si Variable (índice) = FIN
+                      00092         subwf   Variable,w
+                      00093         bz      _next#v(_forknt)        ;Si lo fuera, salta al macro NEXT
+                      00094 
+                      00095 _forknt set     _forknt+1               ;Ajusta para las siguientes
+                      00096 _nxtknt set     _forknt                 ;invocaciones
+                      00097 
+                      00098         endm
+                      00099 ;==========================================================================
+                      00100 ;
+                      00101 ;-----[ Macro FORF Inicio de la estructura FORF - NEXT ]-----
+                      00102 ;
+                      00103 ;
+                      00104 ;Sintaxis:      Forf    Variable, Inicio, Fin
+                      00105 ;
+                      00106 ;Operación:     Inicia la estructura FORF - NEXT, los argumentos son:
+                      00107 ;   "Variable", la cual es una variable en RAM usada como índice para el lazo;
+                      00108 ;   "Inicio", que es una literal empleada como el valor inicial del índice; 
+                      00109 ;   "Fin", que es una variable RAM usada como el valor límite de índice.
+                      00110 ;               
+                      00111 ;       La ejecución de código se realizará en el lazo comprendido entre el
+                      00112 ;       estatuto FORF y el estatuto NEXT, hasta que el valor de "Variable" sea
+                      00113 ;       igual al valor de la variable "Fin", este valor es calculado en la parte
+                      00114 ;       inicial del lazo. En caso de darse una comparación exitosa, el control
+                      00115 ;       se transfiere al punto en donde se encuentra la macro NEXT.
+                      00116 ;
+                      00117 ;       Se puede concluir el estatuto FOR con los macros NEXT, NEXTL, NEXTF.    
+                      00118 ;
+                      00119 ;Altera:        Registro W
+                      00120 ;
+                      00121 
+                      00122 Forf    macro   Variable, Inicio, Fin
+                      00123         movlw   Inicio
+                      00124         movwf   Variable
+                      00125 
+                      00126 _for#v(_forknt)
+                      00127 
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00128         movf    Variable,w
+                      00129         subwf   Fin,w
+                      00130         bz      _next#v(_forknt)
+                      00131 
+                      00132 _forknt set     _forknt+1
+                      00133 _nxtknt set     _forknt
+                      00134 
+                      00135         endm
+                      00136 ;==========================================================================
+                      00137 ;
+                      00138 ;-----[ Macro Next, final de la estructura FOR - NEXT) ]-----
+                      00139 ;
+                      00140 ;
+                      00141 ;Sintaxis:      Next    Variable
+                      00142 ;
+                      00143 ;Operación:     Concluye la estructura FOR - NEXT, el argumento es: "Variable",
+                      00144 ;       la cual es una variable RAM empleada como índice del lazo FOR-NEXT.
+                      00145 ;
+                      00146 ;       La ejecución del macro FOR incrementará el valor de "Variable" y regresará
+                      00147 ;       al inicio del lazo FOR-NEXT para probar si llegó al final. Debe ponerse
+                      00148 ;       mucha atención en que la Variable del macro NEXT sea idéntica a la variable
+                      00149 ;       del macro FOR correspondiente. Estos macros no hacen ningún tipo de revisión
+                      00150 ;       específica al respecto.         
+                      00151 ;
+                      00152 ;       Se puede concluir el estatuto FOR con los macros NEXT, NEXTL, NEXTF.    
+                      00153 ;
+                      00154 ;Altera:        Registro W, contenido de "Variable"
+                      00155 ;
+                      00156 
+                      00157 Next    macro   Variable
+                      00158 
+                      00159 _nxtknt set     _nxtknt-1               ;Ajuste del índice de FOR´s procesados
+                      00160 
+                      00161         incf    Variable,f              ;Incrementa el índice
+                      00162         goto    _for#v(_nxtknt)         ;Regresa al inicio del lazo
+                      00163 
+                      00164 _next#v(_nxtknt)                        ;Punto de salida del NEXT
+                      00165 
+                      00166         endm
+                      00167 ;==========================================================================
+                      00168 ;
+                      00169 ;-----[ Macro Nextl, final de la estructura FOR - NEXTL ]-----
+                      00170 ;
+                      00171 ;
+                      00172 ;Sintaxis:      Nextl   Variable, Incremento
+                      00173 ;
+                      00174 ;Operación:     Concluye la estructura FOR - NEXT, los argumentos son: "Variable",
+                      00175 ;       la cual es una variable RAM empleada como índice del lazo FOR-NEXT, 
+                      00176 ;       "Incremento" es una literal usada para modificar el índice.
+                      00177 ;
+                      00178 ;       La ejecución del macro FOR agregará el valor de la literal "Incremento"
+                      00179 ;       al valor de "Variable" y regresará al inicio del lazo FOR-NEXTL para probar
+                      00180 ;       si llegó al final. Debe ponerse mucha atención en que la Variable del macro 
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00181 ;       NEXT sea idéntica a la variable del macro FOR correspondiente. Estos macros
+                      00182 ;       no hacen ningún tipo de revisión específica al respecto.                
+                      00183 ;
+                      00184 ;       Se puede usar NEXTL para concluir los macros FOR-NEXTL, FORF-NEXTL o FORL-NEXTL
+                      00185 ;
+                      00186 ;Altera:        Registro W, contenido de "Variable"
+                      00187 ;
+                      00188 
+                      00189 Nextl   macro   Variable, Incremento
+                      00190 
+                      00191 _nxtknt set     _nxtknt-1
+                      00192 
+                      00193         movf    Variable,w
+                      00194         addlw   Incremento
+                      00195         movwf   Variable
+                      00196         goto    _for#v(_nxtknt)
+                      00197 
+                      00198 _next#v(_nxtknt)
+                      00199 
+                      00200         endm
+                      00201 ;==========================================================================
+                      00202 ;
+                      00203 ;-----[ Macro Nextf, final de la estructura FOR - NEXTF ]-----
+                      00204 ;
+                      00205 ;
+                      00206 ;Sintaxis:      Nextf   Variable, Incremento
+                      00207 ;
+                      00208 ;Operación:     Concluye la estructura FOR - NEXT, los argumentos son: "Variable",
+                      00209 ;       la cual es una variable RAM empleada como índice del lazo FOR-NEXT, 
+                      00210 ;       "Incremento" es un registro RAM cuyo contenido es usado para modificar el índice.
+                      00211 ;
+                      00212 ;       La ejecución del macro FOR agregará el valor del registro "Incremento"
+                      00213 ;       al valor de "Variable" y regresará al inicio del lazo FOR-NEXTL para probar
+                      00214 ;       si llegó al final. Debe ponerse mucha atención en que la Variable del macro 
+                      00215 ;       NEXT sea idéntica a la variable del macro FOR correspondiente. Este macro
+                      00216 ;       no hacen ningún tipo de revisión específica al respecto.                
+                      00217 ;
+                      00218 ;       Se puede usar NEXTF para concluir los macros FOR-NEXTF, FORF-NEXTF o FORL-NEXTF
+                      00219 ;
+                      00220 ;Altera:        Registro W, contenido de "Variable"
+                      00221 ;
+                      00222 
+                      00223 Nextf   macro   Variable, Incremento
+                      00224 
+                      00225 _nxtknt set     _nxtknt-1
+                      00226 
+                      00227         movf    Incremento,w
+                      00228         addwf   Variable,f
+                      00229         goto    _for#v(_nxtknt)
+                      00230 
+                      00231 _next#v(_nxtknt)
+                      00232 
+                      00233         endm
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00234 ;==========================================================================
+                      00235 ;
+                      00236 ;-----[ Macro Repeat, inicia la estructura REPEAT - ALWAYS o REPEAT - UNTIL ]-----
+                      00237 ;
+                      00238 ;
+                      00239 ;Sintaxis:      Repeat
+                      00240 ;
+                      00241 ;Operación:     Marca el inicio de un lazo REPEAT - ALWAYS o un lazo REPEAT - UNTIL.
+                      00242 ;       Siempre se retornará el control al inicio del lazo REPEAT si esta estructura 
+                      00243 ;       concluye con el macro ALWAYS. El control regresará condicionalmente al incio
+                      00244 ;       de la estructura REPEAT si el lazo es terminado con la macro UNTILEQ o la
+                      00245 ;       macro UNTILNE y se cumple la condición propuesta.
+                      00246 ;
+                      00247 ;Altera:        Nada
+                      00248 ;
+                      00249 
+                      00250 Repeat  macro
+                      00251 
+                      00252 _rpt#v(_rptknt)                         ;Etiqueta para regresar el control de flujo
+                      00253 
+                      00254 _rptknt set     _rptknt+1               ;Contador de macros "Repeat"
+                      00255 _alwknt set     _rptknt                 ;Ajuste del contador de macros "Always"
+                      00256 _untknt set     _rptknt                 ;Ajuste del contador de macros "Until"
+                      00257 
+                      00258         endm
+                      00259 ;==========================================================================
+                      00260 ;
+                      00261 ;-----[ Macro Always, retorna al macro REPEAT correspondiente ]-----
+                      00262 ;
+                      00263 ;
+                      00264 ;Sintaxis:      Always
+                      00265 ;
+                      00266 ;Operación:     Marca el final de un lazo REPEAT - ALWYAS, el control es
+                      00267 ;       pasado automáticamente al macro REPEAT correspondiente.
+                      00268 ;
+                      00269 ;Altera:        Nada.
+                      00270 ;
+                      00271 
+                      00272 Always  macro
+                      00273 
+                      00274 _alwknt set     _alwknt-1               ;Ajusta el contador de macros "Always"
+                      00275 
+                      00276         goto    _rpt#v(_alwknt)         ;Retorna el control al inicio del lazo
+                      00277 
+                      00278         endm
+                      00279 ;==========================================================================
+                      00280 ;
+                      00281 ;-----[ Macro Untileq, retorna (condicionalmente) al macro REPEAT correspondiente ]-----
+                      00282 ;
+                      00283 ;
+                      00284 ;Sintaxis:      Untileq
+                      00285 ;
+                      00286 ;Operación:     Marca el final de un lazo REPEAT - ALWYAS, el control es
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00287 ;       pasado  al macro REPEAT correspondiente si la bandera "Z" está en
+                      00288 ;       cero (limpiada) en el momento en que se procesa este macro.
+                      00289 ;
+                      00290 ;Altera:        Nada.
+                      00291 ;
+                      00292 
+                      00293 UntilEq macro
+                      00294 
+                      00295 _untknt set     _untknt-1               ;Ajusta el contador de macros "UntilEq"
+                      00296 
+                      00297         bnz     _rpt#v(_untknt)         ;Prueba si la bandera de zero está en "0", es decir,
+                      00298                                         ;si el resultado previo es distinto a "0"
+                      00299         endm
+                      00300 ;==========================================================================
+                      00301 ;
+                      00302 ;-----[ Macro Untilne, retorna (condicionalmente) al macro REPEAT correspondiente ]-----
+                      00303 ;
+                      00304 ;
+                      00305 ;Sintaxis:      Untilne
+                      00306 ;
+                      00307 ;Operación:     Marca el final de un lazo REPEAT - ALWYAS, el control es
+                      00308 ;       pasado  al macro REPEAT correspondiente si la bandera "Z" está en
+                      00309 ;       uno (puesta) en el momento en que se procesa este macro.
+                      00310 ;
+                      00311 ;Altera:        Nada.
+                      00312 ;
+                      00313 
+                      00314 UntilNe macro
+                      00315 
+                      00316 _untknt set     _untknt-1               ;Ajusta el contador de macros "UntilEq"
+                      00317 
+                      00318         bz      _rpt#v(_untknt)         ;Prueba si la bandera de zero está en "0", es decir,
+                      00319                                         ;si el resultado previo es distinto a "0"
+                      00320         endm
+                      00321 ;==========================================================================
+                      00322 ;
+                      00323 ;-----[ Macro Select, declara el inicio de una estructura SELECT - EndSELECT  ]-----
+                      00324 ;
+                      00325 ;
+                      00326 ;Sintaxis:      Select
+                      00327 ;
+                      00328 ;Operación:     Marca el inicio de una estructura SELECT - EndSELECT, la cual
+                      00329 ;       típicamente se puede ver como:
+                      00330 ;
+                      00331 ;       SELECT                  ;Inicio del bloque SELECT
+                      00332 ;         CASE  5               ; Si w = 5 (a la literal 5)
+                      00333 ;           ...                 ;Se realizan algunas instrucciones ...
+                      00334 ;           ...                 ;
+                      00335 ;         ENDCASE               ;Fin de la claúsula para cuando w = 5
+                      00336 ;         CASEF Otra            ;Si w = Otra (en este caso una variable)
+                      00337 ;           ...                 ;
+                      00338 ;           ...                 ;Se realizan otras instrucciones
+                      00339 ;         ENDCASE               ;Fin de sección para cuando w = al valor de "Otra"
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE  8
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00340 ;           ...                 ;Sección que se ejecuta por omisión
+                      00341 ;           ...                 ;Si todos los casos anteriores fallan.
+                      00342 ;       ENDSELECT               ;Fin del bloque SELECT  
+                      00343 ;
+                      00344 ;Altera:        Nada.
+                      00345 ;
+                      00346 
+                      00347 Select  macro
+                      00348 
+                      00349 _seltot set     _seltot+1       ;Ajuste del número de "Selects"
+                      00350 _selknt set     _seltot         ;Ajuste del contador de macros "Selects"
+                      00351 
+                      00352         endm
+                      00353 ;==========================================================================
+                      00354 ;
+                      00355 ;-----[ Macro EndSelect, declara el fin de una estructura SELECT - EndSELECT  ]-----
+                      00356 ;
+                      00357 ;
+                      00358 ;Sintaxis:      EndSelect
+                      00359 ;
+                      00360 ;       Se debe concluir cada macro SELECT con un macro EndSELECT correspondiente,
+                      00361 ;       en caso contrario se reportarán errores por parte del programa ensamblador.
+                      00362 ;
+                      00363 ;Altera:        Nada.
+                      00364 ;
+                      00365 
+                      00366 EndSelect       macro
+                      00367 
+                      00368 sel#v(_selknt)                          ;Etiqueta que concluye una sección "Select"
+                      00369 
+                      00370 _selknt set     _selknt-1               ;Contador de macros "Select#, ajuste
+                      00371 
+                      00372         endm
+                      00373 ;==========================================================================
+                      00374 ;
+                      00375 ;-----[ Macro Case, declara el inicio de una estructura CASE - ENDCASE ]-----
+                      00376 ;
+                      00377 ;
+                      00378 ;Sintaxis:      Case    Literal
+                      00379 ;
+                      00380 ;Operación:     Cuando se ejecuta el macro CASE, el valor de "w" es comparado
+                      00381 ;       con el valor de la literal propuesta en el argumento, si los valores 
+                      00382 ;       son iguales, el código que sigue a continuación del macro CASE 
+                      00383 ;       es ejecutado. Si los valores de la literal y "w" son distintos, 
+                      00384 ;       el control pasa al código que está a continuación de macro ENDCASE 
+                      00385 ;       correspondiente.
+                      00386 ;
+                      00387 ;Altera:        Nada.
+                      00388 ;
+                      00389 
+                      00390 Case    macro   Literal
+                      00391 
+                      00392 _castot set     _castot+1               ;Ajuste
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE  9
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00393 _casknt set     _castot                 ;Ajuste
+                      00394 
+                      00395         xorlw   Literal                 ;Comparación de "w" con la literal argumento
+                      00396         bz      cas#v(_casknt)          ;Si son iguales, ejecuta la sección que continua
+                      00397         xorlw   Literal                 ;Si no, restaura el valor de "w"
+                      00398         goto    ecas#v(_casknt)         ;Salta al final ("EndCase")
+                      00399 
+                      00400 cas#v(_casknt)                          
+                      00401 
+                      00402         xorlw   Literal                 ;Restaura el valor de "w" y continúa ...
+                      00403 
+                      00404         endm
+                      00405 ;==========================================================================
+                      00406 ;
+                      00407 ;-----[ Macro Casef, declara el inicio de una estructura CASEF - ENDCASE ]-----
+                      00408 ;
+                      00409 ;
+                      00410 ;Sintaxis:      Casef   Variable
+                      00411 ;               
+                      00412 ;               En este caso, es usada una "Variable" como selector del CASEF.
+                      00413 ;
+                      00414 ;Operación:     Cuando se ejecuta el macro CASE, el valor de w es comparado
+                      00415 ;       con el valor de la variable del argumento, si son iguales, el código que
+                      00416 ;       sigue a continuación del macro CASE es ejecutado. Si los valores de
+                      00417 ;       la variable y "w" son distintos, el control pasa al código que está
+                      00418 ;       a continuación de macro ENDCASE correspondiente.
+                      00419 ;
+                      00420 ;Altera:        Nada.
+                      00421 ;
+                      00422 
+                      00423 CaseF   macro   Variable
+                      00424 
+                      00425 _castot set     _castot+1               ;Ajuste
+                      00426 _casknt set     _castot                 ;Ajuste
+                      00427 
+                      00428         xorwf   Variable,w              ;Comparación de "w" con la variable argumento
+                      00429         bz      cas#v(_casknt)          ;Si son iguales, ejecuta la sección que continua
+                      00430         xorwf   Variable,w              ;Si no, restaura el valor de "w"
+                      00431         goto    ecas#v(_casknt)         ;Salta al final ("EndCase")
+                      00432 
+                      00433 cas#v(_casknt)
+                      00434 
+                      00435         xorwf   Variable,w              ;Restaura el valor de "w" y continúa ...
+                      00436 
+                      00437         endm
+                      00438 ;==========================================================================
+                      00439 ;
+                      00440 ;-----[ Macro EndCase, declara el final de una estructura CASE-ENDCASE o CASEF - ENDCASE ]-----
+                      00441 ;
+                      00442 ;
+                      00443 ;Sintaxis:      EndCase
+                      00444 ;
+                      00445 ;
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 10
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00446 ;Operación:     El macro ENDCASE marca el final de una estructura CASE-ENDCASE o de una
+                      00447 ;       estructura CASEF-ENDCASE. Esta macro sirve como un marcador para realizar un
+                      00448 ;       salto para la correspondiente macro CASE o CASEF.
+                      00449 ;
+                      00450 ;       Se debe incluir una macro ENDCASE para cada macro CASE o macro CASEF, en caso de
+                      00451 ;       no hacer ésto, el programa ensamblador reportará errores en su ejecución.
+                      00452 ;
+                      00453 ;Altera:        Nada.
+                      00454 ;
+                      00455 
+                      00456 EndCase macro
+                      00457 
+                      00458         goto    sel#v(_selknt)          ;Salta a la siguiente sección.
+                      00459 
+                      00460 ecas#v(_casknt)                         ;Etiqueta de "EndCase"
+                      00461 
+                      00462 _casknt set     _casknt-1               ;Ajuste
+                      00463 
+                      00464         endm
+                      00465 ;==============================================================================
+                      00466 ;
+                      00467 ;-----[ Macro WaitWhile, declara un lazo WAIT-WHILE que se ejecuta rápidamente ]-----
+                      00468 ;
+                      00469 ;
+                      00470 ;Sintaxis:      WaitWhile       Variable, AndL, XorL
+                      00471 ;
+                      00472 ;
+                      00473 ;Operación:     Esta macro crea un lazo que se ejecuta de manera eficiente (a una alta
+                      00474 ;       velocidad) a partir de leer un byte localizado en la "Variable" del argumento.
+                      00475 ;       El valor leído en la localidad indicada es puesto en AND con el valor de la literal 
+                      00476 ;       "AndL" para posteriormente poner este resultado parcial en OR exclusivo con la literal "XorL".
+                      00477 ;       Si el valor previamente calculado es "verdadero", es decir, si es distinto a cero, 
+                      00478 ;       el lazo se repite. Si el resultado es "falso", esta macro concluye su ejecución.
+                      00479 ;
+                      00480 ;
+                      00481 ;Altera:        Registro W. No modifica a "Variable"
+                      00482 
+                      00483 WaitWhile       macro   Variable,AndL,XorL
+                      00484 
+                      00485 waitw#v(_waitk)                         ;Etiqueta para el retorno
+                      00486 
+                      00487         movf    Variable,w              ;Toma el valor de la variable
+                      00488         andlw   AndL                    ;Realiza el AND con la literal AndL
+                      00489 
+                      00490         if      XorL != 0               ;Si el valor de XorL es distinto a cero
+                      00491         xorlw   XorL                    ;Calcula el OR con ese dato
+                      00492         endif
+                      00493 
+                      00494         bnz     waitw#v(_waitk)         ;Prueba para verificar si se concluyó
+                      00495 
+                      00496 _waitk  set     _waitk+1                ;Ajuste
+                      00497 
+                      00498         endm
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 11
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00499 ;==========================================================================
+                      00500 ;
+                      00501 ;-----[ Macro WaitUntil, declara un lazo WAIT-UNTIL que se ejecuta rápidamente ]-----
+                      00502 ;
+                      00503 ;
+                      00504 ;Sintaxis:      WaitUntil       Variable, AndL, XorL
+                      00505 ;
+                      00506 ;
+                      00507 ;Operación:     Esta macro crea un lazo que se ejecuta de manera eficiente (a una alta
+                      00508 ;       velocidad) a partir de leer un byte localizado en la "Variable" del argumento.
+                      00509 ;       El valor leído en la localidad indicada es puesto en AND con el valor de la literal 
+                      00510 ;       "AndL" para posteriormente poner este resultado parcial en OR Exclusivo con la literal "XorL".
+                      00511 ;       Si el valor previamente calculado es "falso", es decir, si es distinto a cero, 
+                      00512 ;       el lazo se repite. Si el resultado es "verdadero", esta macro concluye su ejecución.
+                      00513 ;
+                      00514 ;
+                      00515 ;Altera:        Registro w. No altera a "Variable"
+                      00516 
+                      00517 WaitUntil       macro   Variable,AndL,XorL
+                      00518 
+                      00519 waitw#v(_waitk)                         ;Etiqueta de retorno
+                      00520 
+                      00521         movf    Variable,w                      ;Toma el valor de la "Variable"
+                      00522         andlw   AndL                    ;Realiza el AND con la literal
+                      00523 
+                      00524         if      XorL != 0               ;Si el dato es adecuado, calcula el OR
+                      00525           xorlw XorL                    ;
+                      00526         endif
+                      00527 
+                      00528         bz      waitw#v(_waitk)         ;Prueba para verificar si concluyó
+                      00529 
+                      00530 _waitk  set     _waitk+1                ;Ajuste
+                      00531 
+                      00532         endm
+                      00533 ;==========================================================================
+                      00534 ;
+                      00535 ;-----[ Macro Poll, inicia una estructura POLL-ENDPOLL ]-----
+                      00536 ;
+                      00537 ;
+                      00538 ;Sintaxis:      Poll    Variable, AndL, XorL
+                      00539 ;
+                      00540 ; 
+                      00541 ;Operación:     Esta macro lee el valor del byte localizado en "Variable", calcula la
+                      00542 ;       operación AND de esta cantidad con la literal "XandL" para posteriormente poner 
+                      00543 ;       en OR Exclusiva con la variable "XorL". Si el resultado es "verdadero" (distinto a
+                      00544 ;       cero), se pasa el control al código que está a continuación. Si el resultado es
+                      00545 ;       "falso" (resultado igual a cero), se salta a la macro ENDPOLL correspondiente.
+                      00546 ;
+                      00547 ;               Por ejemplo, el siguiente comando POLL probará para ver si el bit 3 de la
+                      00548 ;       variable DATO está en un estado de "1":
+                      00549 ;
+                      00550 ;       Poll    DATO,8,0                ;Prueba el bit 3 (¿Está en "1"?) (00001000 , 00000000)
+                      00551 ;       ...                             ;Realiza lo que está en estas líneas
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 12
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00552 ;       ...                             ;  si el resultado 
+                      00553 ;       ...                             ;  fuera "verdadero" ...
+                      00554 ;       ...                             ;
+                      00555 ;       EndPoll                         ;Salta aquí si el resultado fuera "falso"
+                      00556 ;
+                      00557 ;               El siguiente comando POLL ejecutará un segmento de código específico si
+                      00558 ;       se da el caso de que para lo que se encuentra en la localidad DATO, el bit 3 está
+                      00559 ;       en "1", mientras alguno de los bits 1 o 2 están en "0".
+                      00560 ;
+                      00561 ;       Poll    DATO,0x0e,0x06          ;Prueba los bits del 1 al 3: 0x0e=00001110, 0x06=0000110
+                      00562 ;       ...                             ;Realiza esto ...
+                      00563 ;       ...                             ;   si el bit 3 es "1" ...
+                      00564 ;       ...                             ;   y si el bit 1 o el bit 2 son "0"
+                      00565 ;       EndPoll                         ;
+                      00566 ;
+                      00567 ;Altera:        Registro w. No modifica el valor de "variable"
+                      00568 ;
+                      00569 
+                      00570 Poll    macro   Variable, AndL, XorL
+                      00571 
+                      00572 _pollt  set     _pollt+1                ;Ajuste de variables
+                      00573 _pollk  set     _pollt
+                      00574 
+                      00575         movf    Variable,w              ;Toma el dato a probar
+                      00576         andlw   AndL                    ;Calcula la parte AND
+                      00577         xorlw   XorL                    ;  y la de la XOR
+                      00578 
+                      00579         bz      poll#v(_pollk)          ;Si el resultado es falso, sal de la estructura
+                      00580         
+                      00581         endm
+                      00582 ;==========================================================================
+                      00583 ;
+                      00584 ;-----[ Macro EndPoll, concluye una estructura POLL-ENDPOLL ]-----
+                      00585 ;
+                      00586 ;
+                      00587 ;Sintaxis:      EndPoll
+                      00588 ;
+                      00589 ;
+                      00590 ;Operación:     Esta macro termina una estructura POLL-ENDPOLL. Se llega a este punto
+                      00591 ;       si la macro POLL asociada falla.
+                      00592 ;
+                      00593 ;Altera:        Nada.
+                      00594 ;
+                      00595 
+                      00596 EndPoll macro
+                      00597 
+                      00598 poll#v(_pollk)                          ;Asigna una etiqueta
+                      00599 
+                      00600 _pollk  set     _pollk-1                ;Ajusta
+                      00601 
+                      00602         endm
+                      00603 
+                      00604 ;==============================================================================
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 13
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00605 ;==============================================================================
+                      00606 ;-----[ MACROS genéricos IF ]-----
+                      00607 ;
+                      00608 ;         Los macros que se describen a continuación implementan estatutos IF 
+                      00609 ; semejantes a los del lenguaje FORTRAN. Se pueden crear alias para adaptarse
+                      00610 ; al lenguaje de programación que le sea más comun al ususraio.
+                      00611 ;               
+                      00612 ;   El formato genérico de estos macros es:
+                      00613 ;
+                      00614 ;               IFcondicionF    Variable, destino    ó alternativamente
+                      00615 ;
+                      00616 ;               IFcondicionL    Constante, destino
+                      00617 ;
+                      00618 ;       En donde "condición" podrá ser alguna de las siguientes:
+                      00619 ;       
+                      00620 ;       GT = Más grande que         GE = Más grande o igual a   EQ = Igual a    
+                      00621 ;       LE = Menor o igual a    LT = Menor a                            NE = Distinto a 
+                      00622 ;       
+                      00623 ;       El mecanismo de funcionamiento de cada macro es básicamente como lo 
+                      00624 ; describen los siguientes ejemplos:
+                      00625 ;
+                      00626 ;               IFWEQL 2, Aqui
+                      00627 ;
+                      00628 ;   Probará el valor del registro "W" contra la constante (literal) "2",
+                      00629 ; si W es igual a 2 se transferirá el control hacia la etiqueta "Aqui",
+                      00630 ; en caso contrario se continúa con la ejecución de la siguiente instrucción.
+                      00631 ;
+                      00632 ;       El macro:
+                      00633 ;       
+                      00634 ;               IFWGEF Resultado, Proceso
+                      00635 ;
+                      00636 ;   Trasladará el control a donde se encuentra la etiqueta "Proceso" si el
+                      00637 ; valor actual del registro "W" es Mayor o Igual al contenido actual de la 
+                      00638 ; variable (registro) "Resultado".
+                      00639 ;
+                      00640 ;       NOTA 1: Debe cuidarse que la dirección de destino del salto se encuentre
+                      00641 ; en la misma página en la que se encuentran el macro empleado.
+                      00642 ;
+                      00643 ;       NOTA 2: Se requiere una variable global para preservar el valor del
+                      00644 ; registro w. Se sugiere emplear alguna de las localidades en la zona común
+                      00645 ; ("zona de espejo") entre bancos (0x70 - 0x7F).
+                      00646 ;
+                      00647 ;Alteran:       La bandera de "carry" (posiblemente).
+                      00648 ;         Preservan el valor del registro w
+                      00649 ;
+                      00650 ;==============================================================================
+                      00651 ;       A continuación se definen variables que son comunes a TODOS los bancos
+                      00652 ;
+                      00653 ; La definición que a continuación se establece será válida para todos los
+                      00654 ; programas.
+                      00655 ;
+                      00656 ; ==  ¿AHORA ESTÁN DEFINIDAS EN EL PROGRAMA PRINCIPAL? ==
+                      00657 
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 14
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00658   CBLOCK  0X70  ; Variables Temperolaes Generales
+  00000070            00659     Tempw   ; Variable para preservar temporalmente el valor del registro "W"
+                      00660     
+  00000071            00661     Temp1   ; Variables Temporales
+  00000072            00662     Temp2   ;...
+  00000073            00663     Temp3   ;...
+                      00664     
+  00000074            00665     Stack   ; Apuntador para una zona particular LIFO
+  00000075            00666     Flags   ; Banderas que indican el estado de la aplicación.
+  00000076            00667     Pass0   ; Indica si se pasó por esta zona de ejecución.
+  00000077            00668     Pass1   ;
+                      00669   
+                      00670   ENDC
+                      00671 
+                      00672 ;TempW          equ             H'070'          ;Variable en donde se aloja temporalmente el registro "w
+                            "
+                      00673 
+                      00674 ;Temp1          equ     H'071'          ;Variables temporales
+                      00675 ;Temp2          equ     H'072'          ;
+                      00676 ;Temp3          equ     H'073'          ;
+                      00677 
+                      00678 ;Stack          equ     H'074'          ;Apuntador del "stack" en RAM
+                      00679 
+                      00680 ;Flags          equ     H'075'          ;Registro de banderas internas
+                      00681 
+                      00682 ;Pass0          equ     H'076'          ;
+                      00683 ;Pass1          equ     H'077'          ;
+                      00684 
+                      00685 ;------------------------------------------------------------------------------
+                      00686 IfWGTF  MACRO   Variable, Destino
+                      00687 ;------------------------------------------------------------------------------
+                      00688  
+                      00689   LOCAL   If10                    ;Esta etiqueta es LOCAL a este macro
+                      00690  
+                      00691   movwf   TempW                   ;Guarda temporalmente el valor de "w"
+                      00692 
+                      00693   subwf   Variable,W    ;Calcula: W - (Variable)
+                      00694   bc   If10                           ;Instrucción "macro" (Branch if Carry Set)
+                      00695 
+                      00696   movfw   TempW                   ;Restaura el valor de "w"
+                      00697   goto   Destino                        ;Salta a la etiqueta indicada...
+                      00698 
+                      00699 If10:                 ; Saltará hacia acá si la prueba fue fallida.
+                      00700   movfw   TempW                   ;Restaura el valor de "w"
+                      00701   ENDM
+                      00702 ;------------------------------------------------------------------------------
+                      00703  
+                      00704 IfWGTL   MACRO   Constante, Destino
+                      00705  
+                      00706 ;------------------------------------------------------------------------------
+                      00707  
+                      00708    LOCAL   If15
+                      00709  
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 15
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00710    movwf   TempW
+                      00711 
+                      00712    sublw   Constante
+                      00713    bc   If15
+                      00714 
+                      00715    movfw   TempW
+                      00716    goto   Destino
+                      00717 
+                      00718 If15
+                      00719 
+                      00720    movfw   TempW
+                      00721  
+                      00722    ENDM
+                      00723 ;------------------------------------------------------------------------------
+                      00724  
+                      00725 IfWGEF MACRO Variable, Destino
+                      00726  
+                      00727 ;------------------------------------------------------------------------------
+                      00728  
+                      00729    LOCAL   If20,If21
+                      00730  
+                      00731    movwf   TempW
+                      00732 
+                      00733    subwf   Variable,W
+                      00734    bnc   If20
+                      00735    bnz   If21
+                      00736 
+                      00737 If20
+                      00738 
+                      00739    movfw   TempW
+                      00740    goto   Destino
+                      00741 
+                      00742 If21
+                      00743 
+                      00744    movfw   TempW
+                      00745  
+                      00746    ENDM
+                      00747  
+                      00748 ;------------------------------------------------------------------------------
+                      00749  
+                      00750 IfWGEL   MACRO   Constante, Destino
+                      00751  
+                      00752 ;------------------------------------------------------------------------------
+                      00753  
+                      00754    LOCAL   If25,If26
+                      00755  
+                      00756    movwf   TempW
+                      00757 
+                      00758    sublw   Constante
+                      00759    bnc   If25
+                      00760    bnz   If26
+                      00761 
+                      00762 If25
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 16
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00763 
+                      00764    movfw   TempW
+                      00765    goto   Destino
+                      00766 
+                      00767 If26
+                      00768 
+                      00769    movfw   TempW
+                      00770  
+                      00771    ENDM
+                      00772 ;------------------------------------------------------------------------------
+                      00773  
+                      00774 IfWEQF   MACRO   Variable, Destino
+                      00775  
+                      00776 ;------------------------------------------------------------------------------
+                      00777  
+                      00778    LOCAL   If30
+                      00779  
+                      00780   movwf  TempW
+                      00781 
+                      00782   subwf  Variable,W
+                      00783   bnz  If30
+                      00784 
+                      00785   movfw  TempW
+                      00786   goto  Destino
+                      00787 
+                      00788 If30
+                      00789 
+                      00790   movfw  TempW
+                      00791  
+                      00792   ENDM
+                      00793 ;------------------------------------------------------------------------------
+                      00794  
+                      00795 IfWEQL  MACRO  Constante, Destino
+                      00796  
+                      00797 ;------------------------------------------------------------------------------
+                      00798  
+                      00799   LOCAL  If35
+                      00800 
+                      00801   movwf  TempW
+                      00802 
+                      00803   sublw  Constante
+                      00804   bnz  If35
+                      00805 
+                      00806   movfw  TempW
+                      00807   goto  Destino
+                      00808 
+                      00809 If35
+                      00810 
+                      00811   movfw  TempW
+                      00812  
+                      00813   ENDM
+                      00814 ;------------------------------------------------------------------------------
+                      00815  
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 17
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00816 IfWNEF  MACRO  Variable, Destino
+                      00817  
+                      00818 ;------------------------------------------------------------------------------
+                      00819  
+                      00820   LOCAL  If40
+                      00821  
+                      00822   movwf  TempW
+                      00823 
+                      00824   subwf  Variable,W
+                      00825   bz  If40
+                      00826 
+                      00827   movfw  TempW
+                      00828   goto  Destino
+                      00829 
+                      00830 If40
+                      00831 
+                      00832   movfw  TempW
+                      00833  
+                      00834   ENDM
+                      00835 ;------------------------------------------------------------------------------
+                      00836  
+                      00837 IfWNEL  MACRO  Constante, Destino
+                      00838  
+                      00839 ;------------------------------------------------------------------------------
+                      00840  
+                      00841   LOCAL  If45
+                      00842  
+                      00843   movwf  TempW
+                      00844 
+                      00845   sublw  Constante
+                      00846   bz  If45
+                      00847 
+                      00848   movfw  TempW
+                      00849   goto  Destino
+                      00850 
+                      00851 If45
+                      00852 
+                      00853   movfw  TempW
+                      00854  
+                      00855   ENDM
+                      00856 ;------------------------------------------------------------------------------
+                      00857  
+                      00858 IfWLEF  MACRO  Variable, Destino
+                      00859  
+                      00860 ;------------------------------------------------------------------------------
+                      00861  
+                      00862   LOCAL  If50
+                      00863  
+                      00864   movwf  TempW
+                      00865 
+                      00866   subwf  Variable,W
+                      00867   bnc  If50
+                      00868 
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 18
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00869   movfw  TempW
+                      00870   goto  Destino
+                      00871 
+                      00872 If50
+                      00873 
+                      00874   movfw  TempW
+                      00875  
+                      00876   ENDM
+                      00877 ;------------------------------------------------------------------------------
+                      00878  
+                      00879 IfWLEL  MACRO  Constante, Destino
+                      00880  
+                      00881 ;------------------------------------------------------------------------------
+                      00882  
+                      00883   LOCAL  If55
+                      00884  
+                      00885   movwf  TempW
+                      00886 
+                      00887   sublw  Constante
+                      00888   bnc  If55
+                      00889 
+                      00890   movfw  TempW
+                      00891   goto  Destino
+                      00892 
+                      00893 If55
+                      00894 
+                      00895   movfw  TempW
+                      00896  
+                      00897   ENDM
+                      00898 ;------------------------------------------------------------------------------
+                      00899  
+                      00900 IfWLTF  MACRO  Variable, Destino
+                      00901  
+                      00902 ;------------------------------------------------------------------------------
+                      00903  
+                      00904   LOCAL  If60
+                      00905  
+                      00906   movwf  TempW
+                      00907   subwf  Variable,W
+                      00908   bnc  If60
+                      00909   bz  If60
+                      00910   movfw  TempW
+                      00911   goto  Destino
+                      00912 If60
+                      00913   movfw  TempW
+                      00914  
+                      00915   ENDM
+                      00916  
+                      00917 ;------------------------------------------------------------------------------
+                      00918  
+                      00919 IfWLTL  MACRO  Constante, Destino
+                      00920  
+                      00921 ;------------------------------------------------------------------------------
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 19
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00922  
+                      00923   LOCAL  If65
+                      00924  
+                      00925   movwf  TempW
+                      00926 
+                      00927   sublw  Constante
+                      00928   bnc  If65
+                      00929   bz  If65
+                      00930 
+                      00931   movfw  TempW
+                      00932   goto  Destino
+                      00933 
+                      00934 If65
+                      00935 
+                      00936   movfw  TempW
+                      00937  
+                      00938   ENDM
+                      00939 
+                      00940 ;==========================================================================
+                      00941 ;
+                      00942 ;-----[ Macros genéricos para el manejo de Puertos de I/O ]-----
+                      00943 ;
+                      00944 ;==========================================================================
+                      00945 ;
+                      00946 ;       Se requiere la implementación de los macros:
+                      00947 ;
+                      00948 ;       BANK0, BANK1, BANK2, BANK3
+                      00949 ;
+                      00950 ;==========================================================================
+                      00951 ;
+                      00952 ;-----[ Macro DirIn, ajusta como entrada al pin definido para el puerto dado ]-----
+                      00953 ;
+                      00954 ;
+                      00955 ;Sintaxis:      DirIn   Número_Puerto, Número_Pin
+                      00956 ;
+                      00957 ;Operación:     Ajusta como "entrada" al bit propuesto.
+                      00958 ;
+                      00959 ;Altera:        Registro w
+                      00960 ;
+                      00961 
+                      00962 DirIn   macro   PortNum,PinNum
+                      00963  
+                      00964                 Bank1                           ;Asegura estar en el banco 1 ("tris")
+                      00965                 bsf     PortNum,PinNum          ;Ajusta a "uno"
+                      00966                 Bank0                           ;Regresa al banco 0 (se supone que de aquí parte)
+                      00967  
+                      00968                 endm
+                      00969 ;==========================================================================
+                      00970 ;
+                      00971 ;-----[ Macro DirOut, ajusta como salida al pin definido para el puerto dado ]-----
+                      00972 ;
+                      00973 ;
+                      00974 ;Sintaxis:      DirOut  Número_Puerto, Número_Pin
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 20
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00975 ;
+                      00976 ;Operación:     Ajusta como "salida" al bit propuesto.
+                      00977 ;
+                      00978 ;Altera:        Registro w
+                      00979 ;
+                      00980  
+                      00981 DirOut  macro   PortNum,PinNum
+                      00982  
+                      00983                 Bank1
+                      00984                 bcf     PortNum,PinNum
+                      00985                 Bank0
+                      00986  
+                      00987                 endm
+                      00988 ;==========================================================================
+                      00989 ;
+                      00990 ;-----[ Macro ClrPin, ajusta a "0" el pin definido para el puerto dado ]-----
+                      00991 ;
+                      00992 ;
+                      00993 ;Sintaxis:      ClrPin  Número_Puerto, Número_Pin
+                      00994 ;
+                      00995 ;Operación:     Ajusta a "cero" al bit propuesto.
+                      00996 ;
+                      00997 ;       NOTA: Se deben dejar libres a las localidades de RAM reservadas para que
+                      00998 ;       sirvan como localidades "espejo" para los puertos
+                      00999 ;
+                      01000 ;       Las localidades espejo se localizan a 27 (0x1B) bytes de las respectivas
+                      01001 ;       localidades de los puertos.
+                      01002 ;
+                      01003 ;       PORTA (0x05) + (0x1b) = 0x20 (localidad de RAM)
+                      01004 ;       PORTB (0x06) + (0x1b) = 0x21 (localidad de RAM)
+                      01005 ;       PORTC (0x07) + (0x1b) = 0x22 (localidad de RAM)
+                      01006 ;       PORTD (0x08) + (0x1b) = 0x23 (localidad de RAM)
+                      01007 ;       PORTE (0x09) + (0x1b) = 0x24 (localidad de RAM)
+                      01008 ;
+                      01009 ;Altera:        Registro w
+                      01010 ;
+                      01011  
+                      01012 ClrPin          macro   PortNum,PinNum
+                      01013  
+                      01014                         bcf             PortNum+D'27',PinNum    ;Ajusta a "cero" los bits del "espejo"
+                      01015 
+                      01016                         movfw   PortNum+D'27'                   ;Copia a "w"
+                      01017 
+                      01018                         movwf   PortNum                                 ;Traslada al puerto correspondie
+                            nte
+                      01019  
+                      01020                         endm
+                      01021 ;==========================================================================
+                      01022 ;
+                      01023 ;-----[ Macro SetPin, ajusta a "1" al pin definido para el puerto dado ]-----
+                      01024 ;
+                      01025 ;
+                      01026 ;Sintaxis:      SetPin  Número_Puerto, Número_Pin
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 21
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      01027 ;
+                      01028 ;Operación:     Ajusta a "uno" al bit propuesto.
+                      01029 ;
+                      01030 ;       NOTA: Se deben dejar libres a las localidades de RAM reservadas para que
+                      01031 ;       sirvan como localidades "espejo" para los puertos
+                      01032 ;
+                      01033 ;       Las localidades espejo se localizan a 27 (0x1B) bytes de las respectivas
+                      01034 ;       localidades de los puertos.
+                      01035 ;
+                      01036 ;       PORTA (0x05) + (0x1b) = 0x20 (localidad de RAM)
+                      01037 ;       PORTB (0x06) + (0x1b) = 0x21 (localidad de RAM)
+                      01038 ;       PORTC (0x07) + (0x1b) = 0x22 (localidad de RAM)
+                      01039 ;       PORTD (0x08) + (0x1b) = 0x23 (localidad de RAM)
+                      01040 ;       PORTE (0x09) + (0x1b) = 0x24 (localidad de RAM)
+                      01041 ;
+                      01042 ;Altera:        Registro w
+                      01043 ;
+                      01044  
+                      01045 SetPin          macro   PortNum,PinNum
+                      01046  
+                      01047                         bsf     PortNum+D'27',PinNum    ;Ajusta a "uno" los bits del "espejo"
+                      01048 
+                      01049                         movfw   PortNum+D'27'           ;Copia a "w"
+                      01050 
+                      01051                         movwf   PortNum                 ;Traslada al puerto correspondiente
+                      01052  
+                      01053                         endm
+                      01054 ;==============================================================================================
+                      01055 ;
+                      01056 ;-----[ Macro GoTab, realiza la búsqueda en una tabla que está en cualquier lugar de memoria ]-----
+                      01057 ;
+                      01058 ;
+                      01059 ;Sintaxis:      GoTab   Tabla
+                      01060 ;
+                      01061 ;Operación:     Salta a una tabla localizada en cualquier localidad de memoria.
+                      01062 ;
+                      01063 ;       La tabla debe empezar con la línea:
+                      01064 ;
+                      01065 ;               ADDWF   PCL, F
+                      01066 ;
+                      01067 ;       La tabla no debe tener más de 256 elementos, tampoco debe cruzar límites de páginas     
+                      01068 ;
+                      01069 ;Altera:        Nada
+                      01070 ;
+                      01071  
+                      01072 GoTab           macro   Tabla
+                      01073 
+                      01074                         ERRORLEVEL -306                 ;Deshabilita la muestra de errores de este nivel
+                      01075  
+                      01076                         movwf   TempW                   ;Guarda el valor de "w"
+                      01077 
+                      01078                         movlw   LOW Tabla               ;Toma la parte baja de la dirección de "Tabla"
+                      01079                         addwf   TempW,W                 ;Agrégale el valor del parámetro (Índice de Búsq
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 22
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                            ueda)
+                      01080                                                                         ;  (índice para acceder a la tab
+                            la)
+                      01081                         movlw   HIGH Tabla              ;Toma la parte alta de la dirección de "Tabla" 
+                      01082 
+                      01083                         skpnc                                   ;Salta si no se generó un bit de acarreo
+                      01084                         addlw   D'1'                    ; (en caso contrario, súmale "1", del Carry gene
+                            rado)
+                      01085 
+                      01086                         movwf   PCLATH                  ;Toma la parte alta de "Tabla" ya calculada
+                      01087 
+                      01088                         movfw   TempW                   ;Restaura el valor de "w"
+                      01089   
+                      01090                         call    Tabla                   ;Salta a la "Tabla"
+                      01091  
+                      01092                         movwf   TempW                   ;Guarda el valor de "w" regresado
+                      01093 
+                      01094                         movlw   HIGH $                  ;Toma la parte alta de la dirección actual
+                      01095                         movwf   PCLATH                  ; restáurala.
+                      01096 
+                      01097                         movfw   TempW                   ;Restaura el valor de "w" (resultado de la tabla
+                            )
+                      01098   
+                      01099                         endm
+                      01100  
+                      01101                         ERRORLEVEL +306                 ;Habilita la muestra de errores de este nivel
+                      01102 ;==============================================================================================
+                      01103 ;
+                      01104 ;-----[ Macro GoSub, realiza una llamada a Subrutina, a cualquier lugar de memoria ]-----
+                      01105 ;
+                      01106 ;
+                      01107 ;Sintaxis:      GoSub   Subrutina
+                      01108 ;
+                      01109 ;Operación:     Salta a ejecutar una Subrutina, pudiendo ésta estar en cualquier lugar.
+                      01110 ;
+                      01111 ;Se usa la variable TempW
+                      01112 ;
+                      01113 ;Altera:        Lo que altere la Subrutina llamada (si altera algo).
+                      01114 ;
+                      01115 
+                      01116 GoSub           macro   Subrutina
+                      01117 
+                      01118                         ERRORLEVEL      -306            ;Deshabilitar cierto rango de errores.
+                      01119                         
+                      01120                         movwf   TempW                   ;Resguarda el valor de "W"
+                      01121                         
+                      01122                         movlw   HIGH Subrutina  ;Toma la parte alta de la dirección a la que se salta
+                      01123                         movwf   PCLATH                  ;Ajusta al PC de acuerdo a lo anterior
+                      01124                         
+                      01125                         movfw   TempW                   ;Restaura el valor de "W" (que podría se Parámet
+                            ro)
+                      01126                         
+                      01127                         call    Subrutina               ;Llama a la subrutina en cuestión
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 23
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      01128                         
+                      01129                         movwf   TempW                   ;Resguarda "W"
+                      01130 
+                      01131                         movlw   HIGH $                  ;Ahora ajusta el PC para donde se encuentra la m
+                            acro
+                      01132                         movwf   PCLATH
+                      01133 
+                      01134                         movfw   TempW                   ;Restaura el valor de "W"
+                      01135                         
+                      01136                         endm                                    ;Terminó
+                      01137                         
+                      01138                         ERRORLEVEL      +306
+                      01139 ;==========================================================================
+                      01140 ;
+                      01141 ;
+                      01142 ;-----[ Macros para el manejo de una Pila ("Stack") ]-----
+                      01143 ;
+                      01144 ;
+                      01145 ;========================================================================== 
+                      01146 ;
+                      01147 ;       Con las siguientes macros se define y mantiene un "stack" de propósito general.
+                      01148 ;
+                      01149 ;       Lo contenido en el registro "FSR" apunta a la siguiente localidad (libre) de "stack"
+                      01150 ;       disponible.
+                      01151 ; 
+                      01152 ;   El registro "W" es preservado en la variable TempW.
+                      01153 ;
+                      01154 ;   No se utiliza un mecanismo para determinar desbordamiento en el Stack.
+                      01155 ; 
+                      01156 ;       La posición actual del apuntador es preservada en el Stack SOLAMENTE
+                      01157 ;   cuando el macro SavStack es empleado, en cualquier otro caso, Stack es
+                      01158 ;   ajustado a un valor de cero.
+                      01159 ;
+                      01160  
+                      01161 Push1           macro
+                      01162  
+                      01163                         movfw   Temp1                   ;Guarda Temp1 en "W"
+                      01164                         
+                      01165                         movwf   INDF                    ;Deposita el dato
+                      01166                         incf    FSR,F                   ;Incrementa el apuntador del SP
+                      01167                         movfw   TempW                   ;Guarda el valor a depositar
+                      01168   
+                      01169                         endm
+                      01170  
+                      01171 ;------------------------------------------------------------------------------
+                      01172   
+                      01173 Push2  MACRO
+                      01174  
+                      01175 ;------------------------------------------------------------------------------
+                      01176  
+                      01177   movfw  Temp1
+                      01178   movwf  INDF
+                      01179   incf  FSR,F  
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 24
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      01180   movfw  Temp2
+                      01181   movwf  INDF
+                      01182   incf  FSR,F  
+                      01183   movfw  TempW
+                      01184   ENDM
+                      01185  
+                      01186 ;------------------------------------------------------------------------------
+                      01187   
+                      01188 Push3  MACRO
+                      01189  
+                      01190 ;------------------------------------------------------------------------------
+                      01191  
+                      01192   movfw  Temp1
+                      01193   movwf  INDF
+                      01194   incf  FSR,F  
+                      01195   movfw  Temp2
+                      01196   movwf  INDF
+                      01197   incf  FSR,F  
+                      01198   movfw  Temp3
+                      01199   movwf  INDF
+                      01200   incf  FSR,F  
+                      01201   movfw  TempW
+                      01202   ENDM
+                      01203  
+                      01204 ;------------------------------------------------------------------------------
+                      01205   
+                      01206 Pull1  MACRO
+                      01207  
+                      01208 ;------------------------------------------------------------------------------
+                      01209  
+                      01210   movwf  TempW
+                      01211   decf  FSR,F
+                      01212   movfw  INDF
+                      01213   movwf  Temp1
+                      01214   movfw  TempW
+                      01215   ENDM
+                      01216  
+                      01217 ;------------------------------------------------------------------------------
+                      01218   
+                      01219 Pull2  MACRO
+                      01220  
+                      01221 ;------------------------------------------------------------------------------
+                      01222  
+                      01223   movwf  TempW
+                      01224   decf  FSR,F
+                      01225   movfw  INDF
+                      01226   movwf  Temp2
+                      01227   decf  FSR,F
+                      01228   movfw  INDF
+                      01229   movwf  Temp1
+                      01230   movfw  TempW
+                      01231   ENDM
+                      01232  
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 25
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      01233 ;------------------------------------------------------------------------------
+                      01234   
+                      01235 Pull3  MACRO
+                      01236  
+                      01237 ;------------------------------------------------------------------------------
+                      01238  
+                      01239   movwf  TempW
+                      01240   decf  FSR,F
+                      01241   movfw  INDF
+                      01242   movwf  Temp3
+                      01243   decf  FSR,F
+                      01244   movfw  INDF
+                      01245   movwf  Temp2
+                      01246   decf  FSR,F
+                      01247   movfw  INDF
+                      01248   movwf  Temp1
+                      01249   movfw  TempW
+                      01250   ENDM
+                      01251  
+                      01252 ;------------------------------------------------------------------------------
+                      01253  
+                      01254 SavStak  MACRO
+                      01255  
+                      01256 ;Temporarily save the System Stack Pointer if it is not already saved.
+                      01257 ;NOTE: This routine guards against a "false pointer" being saved.
+                      01258 ;CAUTION!: W is not preserved.
+                      01259 ;Stack now holds the current stack pointer.
+                      01260  
+                      01261 ;------------------------------------------------------------------------------
+                      01262  
+                      01263   LOCAL  SS0
+                      01264  
+                      01265   tstf  Stack
+                      01266   bnz  SS0
+                      01267   movfw  FSR
+                      01268   movwf  Stack
+                      01269 SS0
+                      01270   ENDM
+                      01271  
+                      01272 ;------------------------------------------------------------------------------
+                      01273  
+                      01274 GetStak  MACRO
+                      01275  
+                      01276 ;Restore the System Stack Vector (IRP and FSR).
+                      01277 ;CAUTION!: W is not preserved! 
+                      01278 ;Stack no longer holds the current stack pointer.
+                      01279  
+                      01280 ;------------------------------------------------------------------------------
+                      01281  
+                      01282   movfw  Stack
+                      01283   movwf  FSR
+                      01284   clrf  Stack
+                      01285  
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 26
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      01286   ENDM
+                      00022 ;==============================================================================
+                      00023 ;-----[ MACROS que se van a Construir y para Experimentar ]-----
+                      00024 ;-----[ Macro "SaltaSiIgual" ]-----
+                      00025 ; Compara el valor de un "Registro" (localidad de una FSR) con una "Constante". 
+                      00026 ;       Si: "Registro" = Constante  -> Saltará a la dirección indicada por "Salto",
+                      00027 ;                                                                                                       
+                                     La Bandera "Z" se habrá puesto a "1"
+                      00028 ;   Si  "Registro" =! Constante -> No salta, continúa la ejecución con la 
+                      00029 ;                                                                                                       
+                                                             siguiente instrucción.
+                      00030 ;                                                                                                       
+                                                             La Bandera "Z" se habrá puesto a "0"
+                      00031 ;-----------------------------------------------------------------------------
+                      00032 SaltaSiIgual    MACRO   Registro, Constante, Salto
+                      00033         movlw   Constante               ; Se emplea la resta para la comparación.
+                      00034         subwf   Registro,W      ; (W)=(Registro) - Constante
+                      00035         btfsc   STATUS,Z                ; ¿Z=0?, ¿(W) distinto  a 0?, ¿(Registro) != Constante?
+                      00036         goto    Salto                           ; Ha resultado que (Registro)=Constante ("Z" = 1)
+                      00037         ENDM
+                      00038 ;-----
+                      00039         ; Alias para el MACRO anterior:
+                      00040         #DEFINE JumpIfEqual SaltaSiIgual
+                      00041         #DEFINE JpEq SaltaSiIgual
+                      00042 ;-----------------------------------------------------------------------------
+                      00043 ;-----[ Macro Load ]-----
+                      00044 ; Carga un valor en una variables
+                      00045 Load    MACRO   Var,Valor
+                      00046         movlw   Valor   ; Toma el valor de la literal
+                      00047         movwf   Var     ; Trasládalo a la FSR, puede ser un Puerto, Variable, Etc.
+                      00048         ENDM
+                      00049         ; Alias para el MACRO anterior:
+                      00050         #DEFINE Carga Load
+                      00051 ;-----------------------------------------------------------------------------
+                      00052 ;-----[ Variables, Apuntadores, Contadores y Otras Cosas ]-----
+                      00053 ;
+                      00054 ; La zona de memoria disponible para el usuario es de 0x20 - 0x7F 
+                      00055 ; en el BANCO "0". Recuerde que de la localida 0x70 a la 0x7F se crea un
+                      00056 ; "espejo" en relación al BANCO "1", BANCO "2" y BANCO "3".
+                      00057 ;-->
+                      00058 ; ¿Cuáles son las localidades absolutas de las "localidades espejo" en los
+                      00059 ; Bancos 1, 2, y 3?
+                      00060 ;<--
+                      00061 
+                      00062         CBLOCK  0x20  ; Zona principal de Variables. Banco "0"
+  00000020            00063                 Reg1                            ; Registro No. 1
+  00000021            00064                 Reg2                            ; Registro No. 2
+  00000022            00065                 Reg3                            ; Registro No. 3
+                      00066                 
+  00000023            00067                 VarX
+  00000024            00068                 VarY
+  00000025            00069                 VarZ
+                      00070                 
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 27
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+  00000026            00071                 Estado      ; Identifica el estado en que se encuentra la Aplicación.
+  00000027            00072                 Concluye                ; ¿Se Terminó la Aplicación?
+  00000028            00073                 Otra
+                      00074         ENDC
+                      00075 ;==============================================================================
+                      00076         
+0000                  00077         ORG     0x00
+                      00078 
+  00000000            00079 OK                              EQU             0x00    ; Todo Bien
+  00000033            00080 Inicio          EQU             0x33    ; Se INICIÓ la aplicación.      
+  00000000            00081 PasoThen        EQU             0x00    ; Valor para cuando pasa por la opción THEN.
+  000000FF            00082 PasoElse        EQU   0xFF  ; Valor para cuando pasa por la opción ELSE.
+  000000AA            00083 LlegoFin        EQU   0xAA  ; Se terminó el CICLO.
+  00000055            00084 Proceso         EQU   0x55  ; Está en etapa de PROCESAMIENTO.
+                      00085 
+  00000000            00086 K0              EQU   .0                ; Valores para pruebas
+  0000000A            00087 K10             EQU   .10
+  00000014            00088 K20             EQU   .20
+  00000032            00089 K50                             EQU             .50
+                      00090 
+0000   2801           00091         goto            Evaluar
+                      00092         
+0001                  00093 Evaluar:
+                      00094 
+                      00095 ;--------------------------
+                      00096 ; Prueba para Reg1 == Reg2
+                      00097 ;--------------------------
+                      00098         Load    Estado, Inicio          ; ESTADO =  0x33
+0001   3033               M         movlw   Inicio  ; Toma el valor de la literal
+0002   00A6               M         movwf   Estado  ; Trasládalo a la FSR, puede ser un Puerto, Variable, Etc.
+                      00099         Load    Concluye, Inicio        ; CONCLUYE = 0x33
+0003   3033               M         movlw   Inicio  ; Toma el valor de la literal
+0004   00A7               M         movwf   Concluye ; Trasládalo a la FSR, puede ser un Puerto, Variable, Etc.
+                      00100         
+                      00101         Load  Reg1, 0x00                        ; Valores inciales para una prueba
+0005   3000               M         movlw   0x00    ; Toma el valor de la literal
+0006   00A0               M         movwf   Reg1    ; Trasládalo a la FSR, puede ser un Puerto, Variable, Etc.
+                      00102         Load    Reg2, 0x03                      ;
+0007   3003               M         movlw   0x03    ; Toma el valor de la literal
+0008   00A1               M         movwf   Reg2    ; Trasládalo a la FSR, puede ser un Puerto, Variable, Etc.
+                      00103         
+                      00104 ;-----[ ENSAYO Reg1 == Reg2 ]-----      
+0009   0820           00105         movf    Reg1, W
+Message[305]: Using default destination of 1 (file).
+000A   02A1           00106         subwf   Reg2
+000B   1903           00107         btfsc   STATUS, Z
+000C   2810           00108         goto    ZonaThen
+000D                  00109 ZonaElse:
+                      00110         Load    Estado, PasoElse
+000D   30FF               M         movlw   PasoElse ; Toma el valor de la literal
+000E   00A6               M         movwf   Estado  ; Trasládalo a la FSR, puede ser un Puerto, Variable, Etc.
+000F   2812           00111         goto    FinAeqB
+                      00112 
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 28
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0010                  00113 ZonaThen:
+                      00114         Load    Estado, PasoThen        
+0010   3000               M         movlw   PasoThen ; Toma el valor de la literal
+0011   00A6               M         movwf   Estado  ; Trasládalo a la FSR, puede ser un Puerto, Variable, Etc.
+                      00115 
+0012                  00116 FinAeqB:
+                      00117         Load    Concluye, OK
+0012   3000               M         movlw   OK      ; Toma el valor de la literal
+0013   00A7               M         movwf   Concluye ; Trasládalo a la FSR, puede ser un Puerto, Variable, Etc.
+                      00118         
+                      00119 ;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= 
+0014   0063           00120         sleep
+                      00121 ;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+                      00122         END
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 29
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ACKDT                             00000005
+ACKEN                             00000004
+ACKSTAT                           00000006
+ADCON0                            0000001F
+ADCON1                            0000009F
+ADCS0                             00000006
+ADCS1                             00000007
+ADDEN                             00000003
+ADFM                              00000007
+ADIE                              00000006
+ADIF                              00000006
+ADON                              00000000
+ADRESH                            0000001E
+ADRESL                            0000009E
+Always                            
+BCLIE                             00000003
+BCLIF                             00000003
+BF                                00000000
+BRGH                              00000002
+C                                 00000000
+CCP1CON                           00000017
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCP1X                             00000005
+CCP1Y                             00000004
+CCP2CON                           0000001D
+CCP2IE                            00000000
+CCP2IF                            00000000
+CCP2M0                            00000000
+CCP2M1                            00000001
+CCP2M2                            00000002
+CCP2M3                            00000003
+CCP2X                             00000005
+CCP2Y                             00000004
+CCPR1                             00000015
+CCPR1H                            00000016
+CCPR1L                            00000015
+CCPR2                             0000001B
+CCPR2H                            0000001C
+CCPR2L                            0000001B
+CHS0                              00000003
+CHS1                              00000004
+CHS2                              00000005
+CKE                               00000006
+CKP                               00000004
+CREN                              00000004
+CSRC                              00000007
+Carga                             Load
+Case                              
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 30
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+CaseF                             
+ClrPin                            
+Concluye                          00000027
+D                                 00000005
+DATA_ADDRESS                      00000005
+DC                                00000001
+D_A                               00000005
+D_NOT_A                           00000005
+DirIn                             
+DirOut                            
+EEADR                             0000010D
+EEADRH                            0000010F
+EECON1                            0000018C
+EECON2                            0000018D
+EEDATA                            0000010C
+EEDATH                            0000010E
+EEIE                              00000004
+EEIF                              00000004
+EEPGD                             00000007
+EndCase                           
+EndPoll                           
+EndSelect                         
+Estado                            00000026
+Evaluar                           00000001
+F                                 00000001
+FERR                              00000002
+FSR                               00000004
+FinAeqB                           00000012
+Flags                             00000075
+For                               
+Forf                              
+GCEN                              00000007
+GIE                               00000007
+GO                                00000002
+GO_DONE                           00000002
+GO_NOT_DONE                       00000002
+GetStak                           
+GoSub                             
+GoTab                             
+I2C_DATA                          00000005
+I2C_READ                          00000002
+I2C_START                         00000003
+I2C_STOP                          00000004
+IBF                               00000007
+IBOV                              00000005
+INDF                              00000000
+INTCON                            0000000B
+INTE                              00000004
+INTEDG                            00000006
+INTF                              00000001
+IRP                               00000007
+IfWEQF                            
+IfWEQL                            
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 31
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+IfWGEF                            
+IfWGEL                            
+IfWGTF                            
+IfWGTL                            
+IfWLEF                            
+IfWLEL                            
+IfWLTF                            
+IfWLTL                            
+IfWNEF                            
+IfWNEL                            
+Inicio                            00000033
+JpEq                              SaltaSiIgual
+JumpIfEqual                       SaltaSiIgual
+K0                                00000000
+K10                               0000000A
+K20                               00000014
+K50                               00000032
+LlegoFin                          000000AA
+Load                              
+NOT_A                             00000005
+NOT_ADDRESS                       00000005
+NOT_BO                            00000000
+NOT_BOR                           00000000
+NOT_DONE                          00000002
+NOT_PD                            00000003
+NOT_POR                           00000001
+NOT_RBPU                          00000007
+NOT_RC8                           00000006
+NOT_T1SYNC                        00000002
+NOT_TO                            00000004
+NOT_TX8                           00000006
+NOT_W                             00000002
+NOT_WRITE                         00000002
+Next                              
+Nextf                             
+Nextl                             
+OBF                               00000006
+OERR                              00000001
+OK                                00000000
+OPTION_REG                        00000081
+Otra                              00000028
+P                                 00000004
+PCFG0                             00000000
+PCFG1                             00000001
+PCFG2                             00000002
+PCFG3                             00000003
+PCL                               00000002
+PCLATH                            0000000A
+PCON                              0000008E
+PEIE                              00000006
+PEN                               00000002
+PIE1                              0000008C
+PIE2                              0000008D
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 32
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+PIR1                              0000000C
+PIR2                              0000000D
+PORTA                             00000005
+PORTB                             00000006
+PORTC                             00000007
+PORTD                             00000008
+PORTE                             00000009
+PR2                               00000092
+PS0                               00000000
+PS1                               00000001
+PS2                               00000002
+PSA                               00000003
+PSPIE                             00000007
+PSPIF                             00000007
+PSPMODE                           00000004
+PasoElse                          000000FF
+PasoThen                          00000000
+Pass0                             00000076
+Pass1                             00000077
+Poll                              
+Proceso                           00000055
+Pull1                             
+Pull2                             
+Pull3                             
+Push1                             
+Push2                             
+Push3                             
+R                                 00000002
+RA0                               00000000
+RA1                               00000001
+RA2                               00000002
+RA3                               00000003
+RA4                               00000004
+RA5                               00000005
+RB0                               00000000
+RB1                               00000001
+RB2                               00000002
+RB3                               00000003
+RB4                               00000004
+RB5                               00000005
+RB6                               00000006
+RB7                               00000007
+RBIE                              00000003
+RBIF                              00000000
+RC0                               00000000
+RC1                               00000001
+RC2                               00000002
+RC3                               00000003
+RC4                               00000004
+RC5                               00000005
+RC6                               00000006
+RC7                               00000007
+RC8_9                             00000006
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 33
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+RC9                               00000006
+RCD8                              00000000
+RCEN                              00000003
+RCIE                              00000005
+RCIF                              00000005
+RCREG                             0000001A
+RCSTA                             00000018
+RD                                00000000
+RD0                               00000000
+RD1                               00000001
+RD2                               00000002
+RD3                               00000003
+RD4                               00000004
+RD5                               00000005
+RD6                               00000006
+RD7                               00000007
+RE0                               00000000
+RE1                               00000001
+RE2                               00000002
+READ_WRITE                        00000002
+RP0                               00000005
+RP1                               00000006
+RSEN                              00000001
+RX9                               00000006
+RX9D                              00000000
+R_NOT_W                           00000002
+R_W                               00000002
+Reg1                              00000020
+Reg2                              00000021
+Reg3                              00000022
+Repeat                            
+S                                 00000003
+SEN                               00000000
+SMP                               00000007
+SPBRG                             00000099
+SPEN                              00000007
+SREN                              00000005
+SSPADD                            00000093
+SSPBUF                            00000013
+SSPCON                            00000014
+SSPCON2                           00000091
+SSPEN                             00000005
+SSPIE                             00000003
+SSPIF                             00000003
+SSPM0                             00000000
+SSPM1                             00000001
+SSPM2                             00000002
+SSPM3                             00000003
+SSPOV                             00000006
+SSPSTAT                           00000094
+STATUS                            00000003
+SYNC                              00000004
+SaltaSiIgual                      
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 34
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+SavStak                           
+Select                            
+SetPin                            
+Stack                             00000074
+T0CS                              00000005
+T0IE                              00000005
+T0IF                              00000002
+T0SE                              00000004
+T1CKPS0                           00000004
+T1CKPS1                           00000005
+T1CON                             00000010
+T1INSYNC                          00000002
+T1OSCEN                           00000003
+T1SYNC                            00000002
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             00000012
+TMR0                              00000001
+TMR0IE                            00000005
+TMR0IF                            00000002
+TMR1                              0000000E
+TMR1CS                            00000001
+TMR1H                             0000000F
+TMR1IE                            00000000
+TMR1IF                            00000000
+TMR1L                             0000000E
+TMR1ON                            00000000
+TMR2                              00000011
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2ON                            00000002
+TOUTPS0                           00000003
+TOUTPS1                           00000004
+TOUTPS2                           00000005
+TOUTPS3                           00000006
+TRISA                             00000085
+TRISA0                            00000000
+TRISA1                            00000001
+TRISA2                            00000002
+TRISA3                            00000003
+TRISA4                            00000004
+TRISA5                            00000005
+TRISB                             00000086
+TRISB0                            00000000
+TRISB1                            00000001
+TRISB2                            00000002
+TRISB3                            00000003
+TRISB4                            00000004
+TRISB5                            00000005
+TRISB6                            00000006
+TRISB7                            00000007
+TRISC                             00000087
+TRISC0                            00000000
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 35
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+TRISC1                            00000001
+TRISC2                            00000002
+TRISC3                            00000003
+TRISC4                            00000004
+TRISC5                            00000005
+TRISC6                            00000006
+TRISC7                            00000007
+TRISD                             00000088
+TRISD0                            00000000
+TRISD1                            00000001
+TRISD2                            00000002
+TRISD3                            00000003
+TRISD4                            00000004
+TRISD5                            00000005
+TRISD6                            00000006
+TRISD7                            00000007
+TRISE                             00000089
+TRISE0                            00000000
+TRISE1                            00000001
+TRISE2                            00000002
+TRMT                              00000001
+TX8_9                             00000006
+TX9                               00000006
+TX9D                              00000000
+TXD8                              00000000
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXREG                             00000019
+TXSTA                             00000098
+Temp1                             00000071
+Temp2                             00000072
+Temp3                             00000073
+Tempw                             00000070
+UA                                00000001
+UntilEq                           
+UntilNe                           
+VarX                              00000023
+VarY                              00000024
+VarZ                              00000025
+W                                 00000000
+WCOL                              00000007
+WR                                00000001
+WREN                              00000002
+WRERR                             00000003
+WaitUntil                         
+WaitWhile                         
+Z                                 00000002
+ZonaElse                          0000000D
+ZonaThen                          00000010
+_BODEN_OFF                        00003FBF
+_BODEN_ON                         00003FFF
+_BOREN_OFF                        00003FBF
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 36
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+_BOREN_ON                         00003FFF
+_CONFIG                           00002007
+_CPD_OFF                          00003FFF
+_CPD_ON                           00003EFF
+_CP_ALL                           00000FCF
+_CP_HALF                          00001FDF
+_CP_OFF                           00003FFF
+_CP_UPPER_256                     00002FEF
+_DEBUG_OFF                        00003FFF
+_DEBUG_ON                         000037FF
+_DEVID1                           00002006
+_FOSC_EXTRC                       00003FFF
+_FOSC_HS                          00003FFE
+_FOSC_LP                          00003FFC
+_FOSC_XT                          00003FFD
+_HS_OSC                           00003FFE
+_IDLOC0                           00002000
+_IDLOC1                           00002001
+_IDLOC2                           00002002
+_IDLOC3                           00002003
+_LP_OSC                           00003FFC
+_LVP_OFF                          00003F7F
+_LVP_ON                           00003FFF
+_PWRTE_OFF                        00003FFF
+_PWRTE_ON                         00003FF7
+_RC_OSC                           00003FFF
+_WDTE_OFF                         00003FFB
+_WDTE_ON                          00003FFF
+_WDT_OFF                          00003FFB
+_WDT_ON                           00003FFF
+_WRT_ENABLE_OFF                   00003DFF
+_WRT_ENABLE_ON                    00003FFF
+_WRT_OFF                          00003DFF
+_WRT_ON                           00003FFF
+_XT_OSC                           00003FFD
+__16F877                          00000001
+__DEBUG                           1
+_alwknt                           00000000
+_casknt                           00000000
+_castot                           00000000
+_forknt                           00000000
+_nxtknt                           00000000
+_pollk                            00000000
+_pollt                            00000000
+_rptknt                           00000000
+_selknt                           00000000
+_seltot                           00000000
+_untknt                           00000000
+_waitk                            00000000
+MPASM  5.51                         COMPA.ASM   9-27-2017  7:59:16         PAGE 37
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+
+0000 : XXXXXXXXXXXXXXXX XXXXX----------- ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:    21
+Program Memory Words Free:  8171
+
+
+Errors   :     0
+Warnings :     0 reported,     0 suppressed
+Messages :     2 reported,     0 suppressed
+
+

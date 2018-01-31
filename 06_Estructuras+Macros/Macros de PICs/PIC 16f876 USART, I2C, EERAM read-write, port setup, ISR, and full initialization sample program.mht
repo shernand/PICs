@@ -1,0 +1,1308 @@
+From: <Guardado por Microsoft Internet Explorer 5>
+Subject: PIC 16f876 USART, I2C, EERAM read/write, port setup, ISR, and full initialization sample program
+Date: Mon, 9 May 2005 06:55:44 -0600
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	type="text/html";
+	boundary="----=_NextPart_000_0005_01C55464.1F27C510"
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2900.2180
+
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_0005_01C55464.1F27C510
+Content-Type: text/html;
+	charset="Windows-1252"
+Content-Transfer-Encoding: quoted-printable
+Content-Location: http://www.sxlist.com/techref/microchip/16f877/snipp.htm
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" =
+"http://www.w3c.org/TR/1999/REC-html401-19991224/loose.dtd">
+<HTML><HEAD><TITLE>PIC 16f876 USART, I2C, EERAM read/write, port setup, =
+ISR, and full initialization sample program</TITLE>
+<META http-equiv=3DContent-Type content=3D"text/html; =
+charset=3Dwindows-1252"><!-- Created with AOLpress/2.0 -->
+<META content=3D"MSHTML 6.00.2900.2627" name=3DGENERATOR></HEAD>
+<BODY onload=3D"javascript:et=3Dnew Date();eol();">
+<SCRIPT type=3Dtext/javascript><!--
+var st=3Dnew Date();				=09
+var et=3Dnew Date();				=09
+var avgBndWdth=3D0;					=09
+function eol() {					=09
+var s=3D28855;				=09
+var i=3Ddocument.images;			=09
+ for (var j=3D0;j<i.length;j++) 	=09
+  { s +=3D parseInt(i[j].fileSize); };=09
+ avgBndWdth =3D s/((et-st)||1);			=09
+ s=3D ' '+parseInt(s/1024)+'KB'; 	=09
+ i=3D' ('+(document.images.length-1)+' imgs) in '+((et-st)||1)/1000+'s =
+is ';=09
+ if (document.getElementById) 	=09
+  =
+{document.getElementById('lt').innerText=3Ds+i+parseInt(avgBndWdth)+'KBps=
+';}
+ else {document.info.lt.value=3Di;}	=09
+ };					=09
+//--></SCRIPT>
+<A onclick=3D"return false;"=20
+href=3D"http://www.sxlist.com/techref/indexok.asp?38481.2055787037"><IMG =
+height=3D1=20
+alt=3D"please dont rip this site" =
+src=3D"http://www.sxlist.com/images/null.gif"=20
+width=3D1 align=3Dleft border=3D0></A>=20
+<H1><A =
+href=3D"http://www.sxlist.com/techref/microchip/index.htm">PIC</A> <A=20
+href=3D"http://www.sxlist.com/techref/microchip/devices.htm#16F87x">16f87=
+6</A>=20
+USART, I2C, EERAM read/write, port setup, ISR, and full initialization =
+sample=20
+program </H1>
+<H2>from Tony K=FCbek of Flintab AB&nbsp;[tony.kubek at flintab.com] =
+</H2><PRE>;**************************************************************=
+********
+;                Something to do with a PIC                           *
+;**********************************************************************
+;                                                                     *
+;    Filename:	    	snipp.asm                                    *
+;    Date: 		2000-09-19                                    *
+;    File Version:  	0.1B                                          *
+;                                                                     *
+;    Author: 		Tony K=FCbek                                    *
+;    Company:           Flintab AB                                    *
+;                                                                     *=20
+;                                                                     *
+;**********************************************************************
+;                                                                     *
+;    Files required:                                                  *
+;                                                                     *
+;                                                                     *
+;                                                                     *
+;**********************************************************************
+;                                                                     *
+;    Notes:                                                           *
+;                                                                     *
+;**********************************************************************
+
+
+	list      p=3D16f876            ; list directive to define processor
+	#include &lt;p16f876.inc&gt;        ; processor specific variable =
+definitions
+	#include &lt;macros.asm&gt;         ; macro definitions
+
+
+	__CONFIG _CP_OFF &amp; _WDT_OFF &amp; _BODEN_OFF &amp; _PWRTE_ON &amp; =
+_HS_OSC &amp; _WRT_ENABLE_ON &amp; _LVP_OFF&amp; _DEBUG_ON &amp; =
+_CPD_OFF=20
+
+; '__CONFIG' directive is used to embed configuration data within .asm =
+file.
+; The lables following the directive are located in the respective .inc =
+file.
+; See respective data sheet for additional information on configuration =
+word.
+
+; turn off crossing page boundary message
+	ERRORLEVEL -306, -302
+
+
+; base frequency
+XTAL_FREQ	EQU	20000000	; OSC freq in Hz
+
+; caulculates baudrate when BRGH =3D 1, adjust for rounding errors
+#define CALC_HIGH_BAUD(BaudRate)	(((10*XTAL_FREQ/(16*BaudRate))+5)/10)-1
+; caulculates baudrate when BRGH =3D 0, adjust for rounding errors
+#define CALC_LOW_BAUD(BaudRate)		(((10*XTAL_FREQ/(64*BaudRate))+5)/10)-1
+
+; caulculates timer1 delay when prescale is 1:8, adjust for rounding =
+errors
+#define CALC_TIMER(TickTime)	(0xFFFF-((TickTime*XTAL_FREQ)/32000))+1
+; used for I2C calculations
+#define  I2CClock    D'100000'           ; define I2C bite rate
+#define  I2C_ClockValue  (((XTAL_FREQ/I2CClock)/4) -1) ;=20
+
+
+;***** RAM VARIABLES DEFINITIONS
+
+	; *** Bank0 *** 80 bytes
+	CBLOCK	0x020		=09
+	Main_Temp:3			; temporary variables in main loop ( 3 byte ! )
+
+	Temp:1				; temp byte ONLY to be used locally and no calls !
+	EE_Byte:1			; for reading/writing to eeram
+	ENDC
+=09
+	; *** Bank0/1/2/3 mirrored in all banks 0x70, 0xF0, 0x170, 0x1F0, 16 =
+bytes
+	CBLOCK	0x070
+	ICD_Reserved1:1	; for icd
+	; ram variables accesible from all banks mainly used for context saving
+	; ( ram area above 0x70 are mirrored in all banks )
+	Saved_W:1    	; variable used for context saving=20
+	Saved_Status:1  ; variable used for context saving
+	Saved_Pclath:1	;=20
+	Saved_Fsr:1	;
+	Table_Temp:1	; table lookup temp variable
+	ENDC
+=09
+	; *** Bank1 *** 80 bytes
+	CBLOCK	0x0A0
+
+	ENDC
+
+	; *** Bank2 *** extra ram 16 bytes
+	CBLOCK	0x110
+=09
+	ENDC
+
+	; *** Bank2 ***	80 Bytes
+	CBLOCK	0x120
+	ENDC
+
+	; *** Bank3 *** extra ram 16 bytes
+	CBLOCK	0x190
+
+	ENDC
+	; *** Bank3 *** 80 bytes
+	CBLOCK	0x1A0
+
+	ENDC
+	CBLOCK	0x1EB
+	ICD_Reserved2:5 ; for icd
+	ENDC
+=09
+
+; ****************** Macro definitions ********************************
+;+++++
+;	PAGE/BANK0/1/2/3 selects register bank 0/1/2/3.
+;	Leave set to BANK0 normally.
+
+BANK0	MACRO
+	BCF	STATUS,RP0	; clear bank select bits
+	BCF	STATUS,RP1
+	BCF	STATUS,IRP	; clear indirect adressing bit
+	ENDM
+
+BANK1	MACRO
+	BSF	STATUS,RP0	;=20
+	BCF	STATUS,RP1	;=20
+	BCF	STATUS,IRP	; clear indirect adressing bit
+	ENDM
+
+BANK2	MACRO
+	BCF	STATUS,RP0	;=20
+	BSF	STATUS,RP1
+	BSF	STATUS,IRP	; set bit for indirect adressing
+	ENDM
+
+BANK3	MACRO
+	BSF	STATUS,RP0	;
+	BSF	STATUS,RP1
+	BSF	STATUS,IRP	; set bit for indirect adressing
+	ENDM
+	; macros for accessing page's directly
+PAGE0	MACRO
+	BCF	PCLATH,3
+	BCF	PCLATH,4
+	ENDM
+
+PAGE1	MACRO
+	BSF	PCLATH,3
+	BCF	PCLATH,4
+	ENDM
+
+PAGE2	MACRO
+	BCF	PCLATH,3
+	BSF	PCLATH,4
+	ENDM
+
+PAGE3	MACRO
+	BSF	PCLATH,3
+	BSF	PCLATH,4
+	ENDM
+
+;+++++
+;	TABLE_JUMP Calculates an eventuntual table boundary crossing =20
+;	set's up the PCLATH register correctly
+;	Offset must be in w-reg, offset 0 jumps to the next instr.=20
+;
+TABLE_JUMP	MACRO=09
+	MOVWF	Table_Temp	; save wanted offset
+	MOVLW	LOW($+8)	; get low adress ( of first instr. after macro )
+	ADDWF	Table_Temp,F	; add offset
+	MOVLW	HIGH($+6)	; get highest 5 bits ( of first instr. after macro )
+	BTFSC	STATUS,C	; page crossed ? ( 256 byte )
+	ADDLW	0x01		; Yes add one to high adress
+	MOVWF	PCLATH		; load high adress in latch
+	MOVF	Table_Temp,W	; get computed adress
+	MOVWF   PCL	           ; And jump
+	ENDM
+
+;+++++
+;	SET_PCLATH 'help' macro for LONG_CALL
+;	Set's/clears PCLATH bits 3:4 according to=20
+; 	'variable' PCLATH_34
+;  =09
+SET_PCLATH	MACRO   PCLATH_34
+	IF(PCLATH_34&amp;0x10)
+	BSF	PCLATH,4=09
+	ELSE
+	BCF	PCLATH,4
+	ENDIF
+	IF(PCLATH_34&amp;0x08)
+	BSF	PCLATH,3=09
+	ELSE
+	BCF	PCLATH,3
+	ENDIF
+	ENDM
+
+;+++++
+;	SET_PCLATH4 'help' macro for LONG/SHORT_CALL
+;	Set's/clears PCLATH bit 4 according to=20
+; 	'variable' PCLATH_4
+;  =09
+SET_PCLATH4	MACRO   PCLATH_4
+	IF(PCLATH_4&amp;0x10)
+	BSF	PCLATH,4=09
+	ELSE
+	BCF	PCLATH,4
+	ENDIF
+	ENDM
+
+;+++++
+;	SET_PCLATH3 'help' macro for LONG/SHORT_CALL
+;	Set's/clears PCLATH bit 3 according to=20
+; 	'variable' PCLATH_3
+;  =09
+SET_PCLATH3	MACRO   PCLATH_3
+	IF(PCLATH_3&amp;0x08)
+	BSF	PCLATH,3=09
+	ELSE
+	BCF	PCLATH,3
+	ENDIF
+	ENDM
+
+;+++++
+;	LONG_CALL long call, sets the page bits 4:5 of PCLATH
+;	so call can cross ANY page boundary, reset's PCLATH after call.
+; 	w-reg is left untouched.
+
+LONG_CALL	MACRO	LABEL=09
+	LOCAL	DEST_HIGH, SOURCE_HIGH, DIFF_HIGH
+
+DEST_HIGH  	SET	(HIGH(LABEL)&amp;0x18)  	; save bit's 4:5 of dest adress
+SOURCE_HIGH	SET	(HIGH($)&amp;0x18)		; --- || ---  source adress
+DIFF_HIGH	SET     DEST_HIGH ^ SOURCE_HIGH ; get difference ( XOR )
+
+	IF	(DIFF_HIGH =3D=3D 0) ; same page, SHOULD generate no extra code, =
+delta 0 pages
+	MESSG	"Call on same page, replace LONG_CALL with PCALL " LABEL
+	NOP	; redundant NOP's=20
+	NOP
+	CALL	LABEL
+	NOP
+	NOP
+	ELSE=09
+		; test if both bits must be set ? i.e. page0&lt;-&gt;page3 or =
+page2&lt;-&gt;page3
+		IF	(DIFF_HIGH =3D=3D 0x18) ; difference in BOTH bit's, delta 2 pages
+		;MESSG  "Setting page bit's for long page crossing call"
+		SET_PCLATH	DEST_HIGH   ; set both bits in PCLATH
+		CALL	LABEL	=09
+		SET_PCLATH	SOURCE_HIGH ; reset both bits in pclath=09
+		ELSE
+			; if we end up here then one BSF/BCF is enough, i.e. delta 1 page
+			; i.e. page0&lt;-&gt;1 or page2&lt;-&gt;3
+			MESSG "Call only one page, replace LONG_CALL with SHORT_CALL " LABEL
+			IF	(DIFF_HIGH =3D=3D 0x10) ; diff in high bit
+			NOP	; redundant NOP
+			SET_PCLATH4 	DEST_HIGH ; set high(4) bit of PCLATH
+			CALL	LABEL
+			SET_PCLATH4	SOURCE_HIGH
+			NOP	; redundant NOP
+			ELSE
+			; lowest bit only
+			NOP	; redundant NOP
+			SET_PCLATH3 	DEST_HIGH ; set low(3) bit of PCLATH
+			CALL	LABEL
+			SET_PCLATH3	SOURCE_HIGH
+			NOP
+			ENDIF
+		ENDIF
+	ENDIF
+=09
+	ENDM
+
+;+++++
+;	SHORT_CALL short call, code for calling between page0&lt;-&gt;1 or =
+page2&lt;-&gt;3
+;	Reset's PCLATH after call.
+; 	w-reg is left untouched.
+
+SHORT_CALL	MACRO	LABEL=09
+	LOCAL	DEST_HIGH, SOURCE_HIGH, DIFF_HIGH
+DEST_HIGH  	SET	(HIGH(LABEL)&amp;0x18)  	; save bit's 4:5 of dest adress
+SOURCE_HIGH	SET	(HIGH($)&amp;0x18)		; --- || ---  source adress
+DIFF_HIGH	SET     DEST_HIGH ^ SOURCE_HIGH ; get difference ( XOR )
+
+	IF	(DIFF_HIGH =3D=3D 0) ; same page, SHOULD generate no extra code, =
+delta 0 pages
+	MESSG	"Call on same page, replace SHORT_CALL with PCALL " LABEL
+	NOP	; redundant NOP's=20
+	CALL	LABEL
+	NOP
+	ELSE=09
+		; for safety check so we do not require LONG_CALL
+		IF	((DIFF_HIGH&amp;0x18)=3D=3D0x18)
+		MESSG  " WARNING ! Replace SHORT_CALL with LONG_CALL " LABEL
+		ENDIF
+
+		;MESSG  "Setting page bit's for short page crossing call"
+		IF	(DIFF_HIGH =3D=3D 0x10) ; diff in high bit
+		SET_PCLATH4 	DEST_HIGH ; set high(4) bit of PCLATH
+		CALL	LABEL
+		SET_PCLATH4	SOURCE_HIGH
+		ELSE
+		; lowest bit only
+		SET_PCLATH3 	DEST_HIGH ; set low(3) bit of PCLATH
+		CALL	LABEL
+		SET_PCLATH3	SOURCE_HIGH
+		ENDIF
+	ENDIF
+=09
+	ENDM
+
+;+++++
+;	PCALL page call, code for calling on same page
+;	outputs messages if LONG/SHORT call could/must be used
+;
+
+PCALL	MACRO	LABEL=09
+	LOCAL	DEST_HIGH, SOURCE_HIGH, DIFF_HIGH
+DEST_HIGH  	SET	(HIGH(LABEL)&amp;0x18)  	; save bit's 4:5 of dest adress
+SOURCE_HIGH	SET	(HIGH($)&amp;0x18)		; --- || ---  source adress
+DIFF_HIGH	SET     DEST_HIGH ^ SOURCE_HIGH ; get difference ( XOR )
+
+	IF	(DIFF_HIGH =3D=3D 0) ; same page, call ok
+	CALL	LABEL
+	ELSE=09
+		; for safety check so we do not require LONG_CALL
+		IF	((DIFF_HIGH&amp;0x18)=3D=3D0x18)
+		MESSG  " WARNING ! Replace PCALL with LONG_CALL " LABEL
+		CALL	LABEL	; INCORRECT Call !!!
+		ELSE
+		MESSG  " WARNING ! Replace PCALL with SHORT_CALL " LABEL
+		CALL	LABEL
+		ENDIF
+	ENDIF
+=09
+	ENDM
+
+
+;+++++
+;	PUSH/PULL save and restore W,PCLATH,STATUS and FSR registers -
+;	used on interrupt entry/exit=20
+
+PUSH	MACRO
+	MOVWF	Saved_W		; save w reg
+	SWAPF	STATUS,W	;The swapf instruction, unlike the movf, affects NO =
+status bits, which is why it is used here.
+	CLRF	STATUS		; sets to BANK0
+	MOVWF	Saved_Status	; save status reg
+	MOVF	PCLATH,W
+	MOVWF	Saved_Pclath	; save pclath
+	CLRF	PCLATH
+	MOVF	FSR,W
+	MOVWF	Saved_Fsr	; save fsr reg
+	ENDM
+
+PULL	MACRO
+	MOVF	Saved_Fsr,W	; get saved fsr reg
+	MOVWF	FSR		; restore=09
+	MOVF	Saved_Pclath,W	; get saved pclath
+	MOVWF	PCLATH		; restore
+	SWAPF	Saved_Status,W	; get saved status in w=20
+	MOVWF	STATUS		; restore status ( and bank )
+	SWAPF	Saved_W,F	; reload into self to set status bits
+	SWAPF	Saved_W,W	; and restore
+	ENDM
+
+
+;+++++
+;	DISABLE_IRQ disable global irq=20
+
+DISABLE_IRQ MACRO
+	LOCAL	STOP_INT
+STOP_INT	BCF	INTCON,GIE	; disable global interrupt
+		BTFSC	INTCON,GIE	; check if disabled=20
+		GOTO	STOP_INT	; nope, try again
+	ENDM
+=09
+;+++++
+;	ENABLE_IRQ enable global irq=20
+
+ENABLE_IRQ MACRO
+	BSF	INTCON,GIE	; enable global interrupt
+	ENDM
+
+
+
+; ******************* END macro definitions ***************************
+
+;**********************************************************************
+	ORG     0x000          	; processor reset vector
+	NOP			; required for the ICD=20
+	CLRF	STATUS		; ensure we are at bank0=09
+	CLRF    PCLATH        	; ensure page bits are cleared ( before GOTO xxx =
+!!! )
+	GOTO	INIT           	; go to initialisation of program
+
+;**************** Interrupt service routine **************************
+
+
+	ORG     0x004             ; interrupt vector location
+	PUSH	; save registers	=09
+INT
+	=09
+	; Interrupt code
+
+INT_TEST_IRQ
+	BTFSS	INTCON,INTF	; test if external irq
+	GOTO	INT_TEST_RX_IRQ ; nope check next
+	; ad irq
+	PCALL	IRQ_INT_HANDLER	; dummy
+	BCF	INTCON,INTF	; clear int pin flag
+
+INT_TEST_RX_IRQ
+	BTFSS	PIR1,RCIF	; test if serial recive irq
+	GOTO	INT_TEST_TX_IRQ ; nope check next
+	; rx irq
+	PCALL	RX_INT_HANDLER	; dummy
+	BCF	PIR1,RCIF	; clear rx int flag
+INT_TEST_TX_IRQ
+	BTFSS	PIR1,TXIF	; test if serial transmit irq
+	GOTO	INT_TEST_TIMER1
+	; tx irq
+	PCALL	TX_INT_HANDLER	; dummy
+	BCF	PIR1,TXIF	; clear tx int flag
+INT_TEST_TIMER1
+	BANKSEL PIE1                     ; select SFR bank
+	BTFSS	PIE1,TMR1IE              ; test if interrupt is enabled
+	GOTO	INT_EXIT                 ; no, so exit ISR
+	BCF	STATUS,RP0               ; select SFR bank
+	BTFSS   PIR1,TMR1IF              ; test if Timer1 rollover occured
+	GOTO    INT_EXIT                 ; no so exit isr
+	BCF	PIR1,TMR1IF              ; clear Timer1 H/W flag
+	BANKSEL	T1CON                    ; select SFR bank
+	MOVLW	LOW(CALC_TIMER(D'100'))
+	MOVWF	TMR1L   ; initialize Timer1 low
+	MOVLW	HIGH(CALC_TIMER(D'100'))    ;
+	MOVWF	TMR1H   ; initialize Timer1 high
+	BSF	T1CON,TMR1ON             ; turn ON Timer1 module
+INT_EXIT
+	PULL	; restore registers
+	RETFIE  ; return from interrupt
+
+
+;*************** end int routine *************************************
+
+
+; =
+***********************************************************************
+;
+;  RX_INT_HANDLER - handles the received commands on serial com=20
+;  called from inside int.
+;
+
+RX_INT_HANDLER
+
+	RETURN
+
+; =
+***********************************************************************
+;
+;  TX_INT_HANDLER - handles the tramission of bytes on serial com=20
+;  called from inside int.
+;
+
+TX_INT_HANDLER
+
+	RETURN
+
+; =
+***********************************************************************
+; EE_WRITE_BYTE - Routine to write a byte to ee ram=20
+; Adress in W, byte MUST be in EE_Byte
+
+EE_WRITE_BYTE
+	BANK2			; select bank2
+	MOVWF	EEADR		; setup adress
+	BANK0			;=20
+	MOVF	EE_Byte,W	; get byte
+	BANK2
+	MOVWF	EEDATA		; setup byte to write
+	BSF	STATUS,RP0	; bank3 !!
+	BCF	EECON1,EEPGD	; set to data ee ram
+	BSF	EECON1,WREN	; enable writes
+	DISABLE_IRQ		; disable irq's
+=09
+	MOVLW	H'55'		; required sequence !!
+	MOVWF	EECON2
+	MOVLW	H'AA'
+	MOVWF	EECON2
+	BSF	EECON1,WR	; begin write procedure
+=09
+	ENABLE_IRQ		; enable irq's again
+=09
+	BCF	EECON1,WREN	; disable writes ( does not affect current write cycle =
+)
+=09
+	BANK0			; reset to bank0
+	; wait for the write to complete before we return
+	BTFSS  PIR2,EEIF	; wait for interrupt flag to be set
+	GOTO   $-1		=20
+	; clear interupt bit and write enable bit
+	BCF    PIR2,EEIF	;clear eewrite irq flag
+
+	RETURN
+
+; =
+***********************************************************************
+; EE_READ_BYTE - Routine to read a byte from ee ram=20
+; Adress in W, byte will be delivered in W
+EE_READ_BYTE
+	BANK2
+	MOVWF	EEADR		; put in adress reg.
+	BSF	STATUS,RP0	; bank3 !!
+	BCF	EECON1,EEPGD	; set to read data memory
+	BSF	EECON1,RD	; set bit to read
+	BCF	STATUS,RP0	; bank2 !!
+	MOVF	EEDATA,W	; move data to W
+	BANK0			; Reset to BANK0 !
+	RETURN			; and return
+
+; =
+***********************************************************************
+; IS_HEX - Routine to check if value in W is ASCII hex digit 0-9, A-F or =
+a-f
+; Returns with zero SET if NOT hex ( value preserved )
+; Else returns with zero flag clear and value of input as binary in W
+;
+IS_HEX
+				;     0-9         A-F        a-f       Z
+				; 0x30-0x39  0x41-0x46   0x61-0x66   0x4A
+
+	ADDLW	0xC6		; 0xF6-0xFF  0x07-0x0C   0x27-0x2C   0x10
+	ADDLW	0x0A		; 0x00-0x09  0x11-0x16   0x31-0x36   0x1A
+	BTFSC	STATUS,C
+	GOTO	IS_09
+
+	ADDLW	0xE9		;            0xFA-0xFF   0x1A-0x1F   0x03
+	ADDLW	0x06		;            0x00-0x05   0x20-0x25   0x09
+	BTFSC	STATUS,C
+	GOTO	IS_AF
+
+	ADDLW	0xDA		;                        0xFA-0xFF   0xE3
+	ADDLW	0x06		;                        0x00-0x05   0xE9
+	BTFSC	STATUS,C
+	GOTO	IS_AF
+
+	ADDLW	0x61		;                                    0x4A
+	BSF	STATUS,Z	; SET zero flag value is not HEX and return
+	RETURN
+
+IS_AF	ADDLW	0x0A		; add ten ( range is A-F )
+IS_09	BCF	STATUS,Z	; clear zero flag value is HEX
+	RETURN
+
+
+; =
+***********************************************************************
+; INIT - Cold start vector, called at startup
+;=20
+; initilaize all ports to known state before setup routines are called
+;
+INIT
+	; pclath and status is already cleared !
+	; before entering this init routine
+  	CLRF	INTCON		; ensure int reg is clear =20
+	CLRF	PIR1	; clear periphial irq's
+	CLRF	PIR2	; ditto
+=09
+	; make sure all individual irq's are disabled
+	MOVLW	PIE1	; get adress for periphial irq enable
+	MOVWF	FSR	; setup fsr
+	CLRF	INDF	; and clear irq enable flags
+
+	MOVLW	PIE2	; get adress for second periphial irq enable
+	MOVWF	FSR	; setup fsr
+	CLRF	INDF	; and clear irq enable flags
+
+	; note porta as is set as ANALOGUE i/o as default
+
+	; clear output data latches
+	CLRF	PORTA
+	CLRF	PORTB
+	CLRF	PORTC
+
+	; call initialize routines for periphials/ports
+	; note must be at bank0 during initializing
+
+	; NOTE ! DO NOT CHANGE ORDER OF THESE ROUTINES !!
+
+	; clear all user ram ( set to all 0's )
+	SHORT_CALL	CLEAR_RAM
+	; setup our ports to in/out/analogue/rx/tx/spi/etc
+	; must be done before calling any other INIT_XXX routine
+	; as most of them depends on pin settings=09
+	SHORT_CALL	INIT_PORTS=09
+	; setup uart
+	SHORT_CALL	INIT_UART
+	; setup I2C
+	SHORT_CALL	INIT_I2C
+	; setup timer1
+	SHORT_CALL	INIT_TIMER1
+	; setup configurable parameters ( read from EE ram )
+	SHORT_CALL	INIT_PARAMS
+	; all pins/periphials configured, enable global irq
+	ENABLE_IRQ
+
+	BANK0
+
+
+MAIN_LOOP
+	; main loop
+
+	; test for specific events
+MAIN_DONE
+	NOP
+	NOP
+	NOP
+	NOP
+
+	; and return to main loop
+	GOTO	MAIN_LOOP
+
+
+
+
+
+	ORG	0x0800	; second page
+
+
+
+
+	ORG	0x1000	; third page
+; =
+***********************************************************************
+;
+;  CLEAR_RAM - Reset all general purpose ram to 0's
+;  Note ! does not clear watchdog, add CLRWDT where appropiate if =
+enabled
+;  Make sure to be at bank0
+
+CLEAR_RAM
+	MOVLW	0x20		; start ram bank0
+	MOVWF	FSR
+CLEAR_BANK0=09
+	CLRF	INDF		; Clear a register pointed to be FSR
+	INCF	FSR,F
+	MOVLW	0x7F		; Test if at top of memory bank0
+	SUBWF	FSR,W
+	BNZ	CLEAR_BANK0	; Loop until all cleared
+
+	MOVLW	0xA0		; start ram bank1
+	MOVWF	FSR
+CLEAR_BANK1=09
+	CLRF	INDF		; Clear a register pointed to be FSR
+	INCF	FSR,F
+	=09
+	; note this could also be set to 0xFF or 0xEF as the top 16 bytes are =
+mirrored from
+	; bank0
+
+	MOVLW	0xEF		; Test if at top of memory bank1
+	SUBWF	FSR,W
+	BNZ	CLEAR_BANK1	; Loop until all cleared
+
+	BANK2			; select bank2/3 ( with indirect adressing )
+
+	MOVLW	0x10		; start ram bank2
+	MOVWF	FSR
+CLEAR_BANK2=09
+	CLRF	INDF		; Clear a register pointed to be FSR
+	INCF	FSR,F
+=09
+	; note this could also be set to 0x7F or 0x70 as the top 16 bytes are =
+mirrored from
+	; bank0
+	MOVLW	0x70		; Test if at top of memory bank2
+	SUBWF	FSR,W
+	BNZ	CLEAR_BANK2	; Loop until all cleared
+
+	MOVLW	0x90		; start ram bank3
+	MOVWF	FSR
+CLEAR_BANK3=09
+	CLRF	INDF		; Clear a register pointed to be FSR
+	INCF	FSR,F
+	; note this could also be set to 0xFF or 0xEF as the top 16 bytes are =
+mirrored from
+	; bank0
+	MOVLW	0xEF		; Test if at top of memory bank3
+	SUBWF	FSR,W
+	BNZ	CLEAR_BANK3	; Loop until all cleared
+=09
+	BANK0			; set back to bank0
+
+	RETURN
+; =
+***********************************************************************
+;
+;  INIT_PORTS - Initialises all ports on the PIC
+;  i.e sets the pins as in/out/analog/etc
+;  Make sure to be at bank0
+
+INIT_PORTS
+	=09
+	; setup PORTA=20
+	; set all porta pins digital
+	MOVLW	ADCON1	; get adress for ad/module config1 reg
+	MOVWF	FSR	; setup fsr
+	MOVLW	(1&lt;&lt;PCFG3)|(1&lt;&lt;PCFG2)|(1&lt;&lt;PCFG1);RA0 analoge =
+the rest digital !!
+							  ; result LEFT justified=20
+	MOVWF	INDF	; and store it
+
+	; shutoff ad/module
+	MOVLW	ADCON0	; get adress for ad/module config reg
+	MOVWF	FSR	; setup fsr
+	MOVLW	(1&lt;&lt;ADCS1)|(1&lt;&lt;ADON) ; enable ad-module, ad clock is =
+osc/32
+	MOVWF	INDF	; and set it
+
+	; set in/out for porta pins
+	MOVLW	TRISA	; get adress for porta control reg
+	MOVWF	FSR	; setup fsr
+	MOVLW	b'00000011'	; bit 0 is analoge input from keyboard, bit 1 is key =
+available
+				; the rest is outputs
+	MOVWF	INDF	; and set it
+
+	; setup PORTB
+	; set in/out for portb pins
+	MOVLW	TRISB	; get adress for portb control reg
+	MOVWF	FSR	; setup fsr
+	MOVLW	b'00000001'	;  RB0 input ( int ) ( se also option ) the rest =
+outputs
+	MOVWF	INDF	; and set it
+
+	; setup PORTC
+	; note PORTC must be setup properly when using SPI/UART/CCP/TIMER
+	; look in data sheet, some setups are 'unlogical' and/or overridden
+	; as TX pin configured as input etc.
+
+	; set in/out for portc pins
+	MOVLW	TRISC	; get adress for portc control reg
+	MOVWF	FSR	; setup fsr
+=09
+	MOVLW	b'11011100';b'11010100'; 7-6 for uart must be set,4 (SDI) MUST be =
+input i.e set
+			   ;  5 ( SDO ) must be cleared, 3 (SCK) must be cleared
+			   ; for master mode. 1-2 is for CCP module, 0 is for timer inp.
+	MOVWF	INDF	; and set it
+
+	; setup OPTION reg
+=09
+	MOVLW	OPTION_REG; get adress for option reg
+	MOVWF	FSR	; setup fsr
+	MOVLW	b'00000000'	; pull up portb by latch, int edge falling,TMR0 =
+source internal
+				; TMR0 source edge inc on low-&gt;high, prescaler to Timer0, TMR0 =
+rate 1:2
+	MOVWF	INDF	; and set it
+
+
+	RETURN
+
+; =
+***********************************************************************
+;
+;  INIT_TIMER1 - Initialises Timer1 module
+; =20
+;  Make sure to be at bank0
+
+INIT_TIMER1
+=09
+	MOVLW	T1CON 	; get adress for timer1 control reg
+	MOVWF	FSR	; setup fsr
+	MOVLW   b'00110000'   ; 1:8 prescale, 100mS rollover
+	MOVWF	INDF	; initialize Timer1
+
+	MOVLW	LOW(CALC_TIMER(D'100'))
+	MOVWF	TMR1L   ; initialize Timer1 low
+	MOVLW	HIGH(CALC_TIMER(D'100'))    ;
+	MOVWF	TMR1H   ; initialize Timer1 high
+	BCF	PIR1,TMR1IF  ; ensure flag is reset
+	BSF	T1CON,TMR1ON ; turn on Timer1 module
+
+	; enable TIMER1 interrupt
+	MOVLW	PIE1	; get adress for periphial irq's
+	MOVWF	FSR	; setup fsr
+	BSF	INDF,TMR1IE ; enable TIMER1 irq
+	BSF	INTCON,PEIE ; and periphial irq must also be enabled
+	RETURN               ; return from subroutine
+
+=09
+; =
+***********************************************************************
+;
+;  INIT_UART - Initialises UART
+;  enables recevier and transmitter
+;  Make sure to be at bank0
+
+INIT_UART
+	; make sure pins are setup before calling this routine
+	; TRISC:6 and TRISC:7 must be set ( as for output, but operates as =
+input/output )
+	; furthermore its advised that interrupts are disabled during this =
+routine
+=09
+	; setup baudrate
+	MOVLW	SPBRG 	; get adress for serial baud reg
+	MOVWF	FSR	; setup fsr
+	MOVLW	CALC_LOW_BAUD(19200) ;BAUD_9600 ; get baudrate
+	MOVWF	INDF	; and store it
+
+	; enable transmitter
+	MOVLW	TXSTA	; get adress for serial enable reg
+	MOVWF	FSR	; setup fsr
+	MOVLW	(1&lt;&lt;TXEN) ;|(1&lt;&lt;BRGH); preset enable transmitter and =
+high speed mode
+	MOVWF	INDF	; and set it
+
+	; enable recevier
+	MOVLW	(1&lt;&lt;SPEN)|(1&lt;&lt;CREN) ; preset serial port enable and =
+continous recevie
+	MOVWF	RCSTA	; set it
+
+	; enable reciever interrupt
+	MOVLW	PIE1	; get adress for periphial irq's
+	MOVWF	FSR	; setup fsr
+	BSF	INDF,RCIE ; enable reciever irq
+	BSF	INTCON,PEIE ; and periphial irq must also be enabled
+
+	RETURN
+
+; =
+***********************************************************************
+;
+;  INIT_I2C - Initialises I2C, module, 100Khz, master mode,=20
+;  Make sure to be at bank0=09
+
+INIT_I2C
+	; make sure pins are setup before calling this routine
+
+	; setup MSSP adress register
+	MOVLW	SSPADD	; get adress for synch serial port status reg
+	MOVWF	FSR	; setup fsr
+	MOVLW	I2C_ClockValue ; setup clock rate
+	MOVWF	INDF	; and store it
+
+
+	; setup MSSP status reg
+	MOVLW	SSPSTAT	; get adress for synch serial port status reg
+	MOVWF	FSR	; setup fsr
+	MOVLW	(1&lt;&lt;SMP) ; enable slewrate control
+	MOVWF	INDF	; and store it
+
+	; setup MSSP control reg
+	MOVLW	SSPCON	; get adress for synch serial port control reg
+	MOVWF	FSR	; setup fsr
+	MOVLW	((1&lt;&lt;SSPEN)|(1&lt;&lt;CKP)|(1&lt;&lt;SSPM3)); enable =
+syncronous port, enable clock ,
+						; I2C master mode clock =3D OSC/(4*(SSPADD)+1)
+	MOVWF	INDF	; and set it
+
+	; enable MSSP interrupt
+	MOVLW	PIE1	; get adress for periphial irq's
+	MOVWF	FSR	; setup fsr
+	BSF	INDF,SSPIE  ; enable MSSP irq
+	BSF	INTCON,PEIE ; and periphial irq must also be enabled (if not =
+already )
+
+
+	RETURN
+
+; =
+***********************************************************************
+;
+;  INIT_PARAMS - Initialises user ram with parameters stored in EE ram
+;  I.e. load values from ee ram offset 0 to ram area offset Ad_ModeReg
+;  parameters must be in contignous ram area.
+;  Make sure to be at bank0=09
+;=20
+INIT_PARAMS
+	MOVLW	EERAM_End	; number of bytes
+	MOVWF	Temp		; store temporarily
+	MOVLW	StartRam ; get base adress ( of first byte in contignous ram )
+	MOVWF	FSR	; setup FSR
+	CLRF	EE_Byte	; start adress in EE ram
+INIT_PARAMS_LOOP
+	MOVF	EE_Byte,W ; store adress
+	SHORT_CALL EE_READ_BYTE	; get byte
+	MOVWF	INDF	; put it in ram
+	INCF	FSR,F	; increase dest. adress
+	INCF	EE_Byte,F ; increase source adress
+	DECF	Temp,F  ; decrement byte counter
+	BTFSS	STATUS,Z
+	GOTO	INIT_PARAMS_LOOP ; continue
+
+	RETURN	; all ram filled
+
+
+
+	ORG	0x2100	; 256 bytes of eeram
+EERAM_Base EQU	$
+ADModeEE	EQU	$-EERAM_Base	; two bytes of ad mode
+		DW	0x31
+		DW	0x80	; cont. conv. 24 bit, 0-10mV, unipolar, 5 V ref,
+				; channel Ain1+ Ain1-
+
+EERAM_End	EQU	$-EERAM_Base	=20
+	=09
+
+	END 		; directive 'end of program'
+
+
+
+</PRE>
+<P>Questions:=20
+<UL>
+  <LI>
+  <LI><!-- 37725.1967824074 EOR -->
+  <LI><A title=3DKdC-DLSU-234=20
+  =
+href=3D"http://www.sxlist.com/techref/member/KdC-DLSU-234/index.htm">Khri=
+stine=20
+  Joyce de Jesus Cruz of De La Salle University</A> asks:=20
+  <BLOCKQUOTE><A name=3DKdC-DLSU-234></A>I've successfully implemented =
+an ADC=20
+    and a USART project in f877. However, I can't make the two work as =
+one=20
+    project. Can anyone provide me the correct order for initialization? =
+Any=20
+    comments will be valued. Thanks.</BLOCKQUOTE><!-- 37543.8933912037 =
+EOR -->
+  <LI><A title=3D212.56.128.189=20
+  href=3D"mailto:stevex@onvol.net">stevex@onvol.net</A> asks:=20
+  <BLOCKQUOTE><A name=3D212.56.128.189></A>Hi, <BR>I'm in the process of =
+
+    designing a humidity data logger. The sensor i'm using is the =
+sensirion=20
+    SHT11 (datasheets are found on http://www.sensirion.com ) I am =
+having some=20
+    problems with I2C initialisation.. Could you please help me? Could =
+you=20
+    please suggest how best to connect sensor and a simple code to read=20
+    data...<BR>Thanks,=20
+    <P>Regards,=20
+    <P>Steve</P></BLOCKQUOTE><!-- EOR -->
+  <LI><A title=3D202.131.133.39=20
+  =
+href=3D"mailto:muthukumar_eee@rediffmail.com">muthukumar_eee@rediffmail.c=
+om</A>=20
+  asks: "<A name=3D202.131.133.39> </A>please send me the full =
+intialisation=20
+  program for pic16f877. <!-- EOR --></LI></UL>
+<P>Interested:=20
+<UL></UL>
+<P>See:=20
+<UL>
+  <LI><A title=3D193.155.33.99=20
+  href=3D"http://www.sxlist.com/techref/microchip/16f876-hint-tk.htm"=20
+  target=3D_top>/techref/microchip/16f876-hint-tk.htm</A> PIC 16F876 =
+Specific=20
+  RS232 routine by Tony K=FCbek <!-- 37635.1628356481 EOR --></LI></UL>
+<HR>
+
+<TABLE>
+  <FORM name=3Dinfo action=3D/techref/postsearch.asp method=3Dpost>
+  <TBODY>
+  <TR>
+    <TD><SMALL>file: /techref/microchip/16f877/snipp.htm, <SPAN id=3Dlt=20
+      NAME=3D"lt">28KB, <INPUT size=3D30 name=3Dlt></SPAN>, updated: =
+2004/7/19 23:24,
+      <SCRIPT type=3Dtext/javascript><!--
+ eol();
+ for (var j=3D0;j<document.images.length;j++) 	=09
+  { document.images[j].onload =3D new Function('eol();'); };=09
+//-->
+</SCRIPT>
+       </SMALL>
+      <DIV id=3Dupperright=20
+      =
+onmouseover=3D"this.style.backgroundColor=3D'#FFFF00';this.style.borderSt=
+yle=3D'outset';"=20
+      style=3D"BORDER-TOP-WIDTH: 2px; BORDER-LEFT-WIDTH: 2px; RIGHT: =
+0px; FILTER: progid:DXImageTransform.Microsoft.Alpha(opacity=3D75); =
+BORDER-BOTTOM-WIDTH: 2px; COLOR: gray; POSITION: absolute; TOP: 0px; =
+BACKGROUND-COLOR: #ffffff; TEXT-ALIGN: right; BORDER-RIGHT-WIDTH: 2px"=20
+      =
+onmouseout=3D"this.style.backgroundColor=3D'#FFFFFF';this.style.borderSty=
+le=3D'ridge';"=20
+      NAME=3D"upperright"><SMALL><SUP><A title=3D"Go to the top page"=20
+      style=3D"COLOR: #af4040; TEXT-DECORATION: none"=20
+      href=3D"http://www.sxlist.com/techref/index.htm">TOP</A> <A=20
+      title=3D"Monthly Change Log for this folder"=20
+      style=3D"COLOR: #af4040; TEXT-DECORATION: none"=20
+      =
+href=3D"http://www.sxlist.com/techref/microchip/16f877/new200505.txt">NEW=
+</A>
+      <SCRIPT>
+<!--- Hide script from old browsers.
+document.write('<A style=3D"color:#AF4040;text-decoration:none;" =
+TITLE=3D"More pages like this." =
+HREF=3D"/techref/postsearch.asp\077from=3D%2Ftechref%2Fmicrochip%2F16f877=
+%2Fsnipp%2Ehtm">MORE</A> ')
+// End the hiding here. -->
+</SCRIPT>
+       <A=20
+      title=3D"I'm willing to pay for help, please refer me to a =
+qualified consultant"=20
+      style=3D"COLOR: #af4040; TEXT-DECORATION: none"=20
+      href=3D"mailto:webmaster@sxlist.com?subject=3DI need someone to =
+help me with:">HELP</A>=20
+      <A title=3D"Advanced search" style=3D"COLOR: #af4040; =
+TEXT-DECORATION: none"=20
+      =
+href=3D"http://www.sxlist.com/techref/postsearch.asp">FIND:</A>&nbsp;<BR>=
+<INPUT=20
+      id=3Dsearch title=3D"Free text search"=20
+      style=3D"BORDER-RIGHT: #af0000 1px solid; PADDING-RIGHT: 0px; =
+BORDER-TOP: #af0000 1px solid; PADDING-LEFT: 0px; FONT-SIZE: small; =
+PADDING-BOTTOM: 0px; BORDER-LEFT: #af0000 1px solid; PADDING-TOP: 0px; =
+BORDER-BOTTOM: #af0000 1px solid; BACKGROUND-COLOR: transparent"=20
+      onclick=3D"this.value=3D'';" maxLength=3D100 value=3DSearch =
+name=3DSearchString>=20
+      <INPUT type=3Dhidden value=3DON name=3DFreeText> <INPUT =
+type=3Dhidden=20
+      value=3D/techref/microchip/16f877/snipp.htm name=3Dfrom> =
+</SUP></SMALL></DIV>
+      <DIV id=3Dupperleft=20
+      =
+onmouseover=3D"this.style.backgroundColor=3D'#FFFF00';this.style.borderSt=
+yle=3D'outset';"=20
+      style=3D"FILTER: =
+progid:DXImageTransform.Microsoft.Alpha(opacity=3D75); LEFT: 0px; COLOR: =
+gray; POSITION: absolute; TOP: 0px"=20
+      =
+onmouseout=3D"this.style.backgroundColor=3D'transparent';this.style.borde=
+rStyle=3D'none';"=20
+      NAME=3D"upperleft"><SMALL><A=20
+      =
+href=3D"http://www.sxlist.com/techref/indexok.asp?top"></A><SUP>148.226.1=
+8.114:<A=20
+      style=3D"COLOR: #af4040"=20
+      =
+href=3D"http://www.sxlist.com/techref/login/default.asp?req=3D403%3Bhttp%=
+3A%2F%2Fwww%2Esxlist%2Ecom%2Ftechref%2Fmicrochip%2F16f877%2Fsnipp%2Ehtm">=
+LOG=20
+      IN</A></SUP></SMALL></DIV>
+      <DIV style=3D"LEFT: 25%; WIDTH: 25%; POSITION: absolute; TOP: 0px" =
+
+      align=3Dcenter><SMALL><SUP><FONT color=3D#ff0000><B><A=20
+      title=3D"Why does RIP/GRAB/SPIDERing lead to ads and sponsors? =
+Click here."=20
+      style=3D"COLOR: red" =
+href=3D"http://www.sxlist.com/dontripthissite.htm">PLEASE=20
+      DON'T RIP!</A></B></FONT></SUP> </SMALL></DIV>
+      <SCRIPT language=3DJavaScript type=3Dtext/javascript>
+<!--- Hide script from old browsers.
+var old =3D 1;
+var to;
+
+function scrollHold() {
+var pos=3D1;
+	if (to) clearTimeout(to);
+	if (window.innerHeight) {
+		pos =3D window.pageYOffset;
+		}
+	else if (document.documentElement && =
+document.documentElement.scrollTop) {
+		pos =3D document.documentElement.scrollTop;
+		}
+	else if (document.body) {
+		pos =3D document.body.scrollTop;
+		}
+	if (pos < 0) pos =3D 1;
+	else pos +=3D 1;
+	if (pos !=3D old) {
+		upperright.style.top =3D pos;
+		upperleft.style.top =3D pos;
+		}
+	old =3D pos;
+	if (window.onscroll=3D=3Dnull) {to=3DsetInterval('scrollHold()',100);}
+}
+
+window.onscroll =3D scrollHold;
+scrollHold();
+
+// End the hiding here. -->
+</SCRIPT>
+    </TD></TD></FORM></TR></TBODY></TABLE>
+<HR>
+
+<DIV>
+<TABLE width=3D"30%" align=3Dright>
+  <TBODY>
+  <TR>
+    <TD>&nbsp;</TD>
+    <TD>These pages are served without commercial sponsorship. (No popup =
+ads,=20
+      etc...).Bandwidth abuse increases hosting cost forcing sponsorship =
+or=20
+      shutdown. This server aggressively defends against automated =
+copying for=20
+      any reason including offline viewing, duplication, etc... Please =
+respect=20
+      this requirement and <FONT face=3D"Comic Sans MS" =
+color=3D#ff0000>DO NOT RIP=20
+      THIS SITE</FONT>.<A=20
+      =
+href=3D"http://www.sxlist.com/dontripthissite.htm">Questions?</A></TD></T=
+R></TBODY></TABLE>Did=20
+you find what you needed? From: "<I><A=20
+href=3D"http://www.sxlist.com/techref/microchip/mpasm.htm">/microchip/mpa=
+sm.htm</A></I>"=20
+
+<UL>
+  <SCRIPT>
+<!--- Hide script from old browsers.
+document.write('<LI><I>&quot;Not quite. <A =
+HREF=3D"/techref/postsearch.asp\077from=3D%2Ftechref%2Fmicrochip%2F16f877=
+%2Fsnipp%2Ehtm"> Look for more pages like this one.&quot;</A></I> ')
+// End the hiding here. -->
+</SCRIPT>
+
+  <LI>
+  <FORM action=3D/techref/postsearch.asp#result method=3Dpost><I>"No. =
+I'm looking=20
+  for: <INPUT maxLength=3D100 size=3D40 name=3DSearchString> <INPUT =
+type=3Dhidden=20
+  value=3Don name=3DFreeText> <INPUT type=3Dhidden=20
+  value=3D/techref/microchip/16f877/snipp.htm name=3Dfrom> <INPUT =
+type=3Dsubmit value=3DFetch name=3DAction>"</I></FORM>
+  <LI><A href=3D"http://www.sxlist.com/techref/postsearch.asp"><I>"No. =
+Take me to=20
+  the search page."</I></A>=20
+  <LI><A href=3D"http://www.sxlist.com/techref/index.htm"><I>"No. Take =
+me to the=20
+  top so I can drill down by catagory"</I></A>=20
+  <LI><A=20
+  href=3D"mailto:webmaster@sxlist.com?subject=3DI need someone to help =
+me with:"><I>"No.=20
+  I'm willing to pay for help, please refer me to a qualified=20
+  consultant"</I></A>=20
+  <LI>
+  <FORM action=3D/techref/update.asp method=3Dpost><INPUT type=3Dhidden=20
+  value=3DInterested: name=3Daction> <INPUT type=3Dhidden value=3Don =
+name=3Dprivate>=20
+  <INPUT type=3Dhidden value=3D148.226.18.114 name=3Did> <INPUT =
+type=3Dhidden=20
+  value=3D/techref/microchip/16f877/snipp.htm name=3Durl> <I>"No. But =
+I'm=20
+  interested. <INPUT type=3Dsubmit value=3DEmail> me at <INPUT =
+name=3Demail> when this=20
+  page is expanded."</I></FORM></LI></UL></DIV>
+<HR>
+<A name=3Dform></A>
+<FORM action=3D/techref/update.asp method=3Dpost><INPUT type=3Dhidden =
+value=3Don=20
+name=3Dprivate> <INPUT type=3Dhidden value=3D148.226.18.114 name=3Did> =
+<INPUT=20
+type=3Dhidden value=3D/techref/microchip/16f877/snipp.htm name=3Durl> =
+After you find=20
+an appropriate page, you are invited to <INPUT type=3Dsubmit =
+value=3DPost> your=20
+<SELECT size=3D4 name=3Daction> <OPTION value=3DQuestions:=20
+  selected>question</OPTION> <OPTION value=3DComments:>comment</OPTION> =
+<OPTION=20
+  value=3D"See also:">link</OPTION> <OPTION value=3DCode:>program=20
+listing</OPTION></SELECT> to this <A=20
+href=3D"http://www.sxlist.com/idea/websites.htm"><I>massmind</I></A> =
+site!=20
+<SMALL>(posts will be reviewed)</SMALL> Just type in the box and press =
+the Post=20
+button. (<A=20
+href=3D"http://www.sxlist.com/techref/language/html/index.htm">HTML</A>=20
+welcomed!): <A=20
+href=3D"http://www.sxlist.com/techref/idea/website/codetutorial.htm">A =
+tutorial is=20
+available</A> <A=20
+href=3D"http://www.sxlist.com/techref/private.asp?req=3Dmembership">Membe=
+rs</A> can=20
+<A=20
+href=3D"http://www.sxlist.com/techref/login/default.asp?req=3D403%3Bhttp%=
+3A%2F%2Fwww%2Esxlist%2Ecom%2Ftechref%2Fmicrochip%2F16f877%2Fsnipp%2Ehtm%2=
+3form">login</A>=20
+to post directly, become page editors, and be credited for their posts. =
+<BR><TEXTAREA name=3Dtext rows=3D4 cols=3D65></TEXTAREA>=20
+<SMALL><BR>Link?&nbsp;Put&nbsp;it&nbsp;here:&nbsp;<INPUT size=3D60 =
+name=3Dfile>=20
+<BR>if&nbsp;you&nbsp;want&nbsp;a&nbsp;response,=20
+please&nbsp;enter&nbsp;your&nbsp;email&nbsp;address:&nbsp;<INPUT =
+size=3D40=20
+name=3Demail> </SMALL></FORM>
+<HR>
+
+<TABLE width=3D"30%" align=3Dleft bgColor=3D#f0f0f0>
+  <TBODY>
+  <TR>
+    <TD>&nbsp;</TD>
+    <TD>
+      <CENTER><BIG><B><A=20
+      href=3D"http://www.sxlist.com/member/pm-csi-com/index.htm">Peter=20
+      Montgomery</A> has new SXKey software! <BR>Download <A=20
+      href=3D"http://www.parallax.com/sx/downloads.asp">verson 2.02 from =
+Parallax=20
+      Inc.</A> </B></BIG></CENTER>
+      <HR width=3D180>
+
+      <CENTER><B><SMALL>Site supported by <BR><A=20
+      href=3D"http://www.sxlist.com/techref/auction.asp">sales</A>, <A=20
+      =
+href=3D"mailto:james@sxlist.com&amp;subject=3DSXLIST_ADVERTIZING">adverti=
+zing</A>,=20
+      <BR>&amp; <A=20
+      href=3D"http://www.sxlist.com/techref/scenix/support.htm"><B>kind=20
+      contributors<BR>just like you!</B></A> <BR><I>Please don't =
+rip/copy=20
+      <BR>(<A href=3D"http://www.sxlist.com/dontripthissite.htm">here's=20
+      why</A></I> <BR><A=20
+      href=3D"http://www.sxlist.com/dontripthissite.htm#copies">Copies =
+of the site=20
+      on CD</A> <BR>are available at minimal cost.=20
+  </SMALL></CENTER></B></TD></TR></TBODY></TABLE>
+<DIV></DIV></TD></TR></TABLE>
+<TABLE width=3D"30%" align=3Dright bgColor=3D#f0f0f0>
+  <TBODY>
+  <TR>
+    <TD>&nbsp;</TD>
+    <TD>
+      <CENTER><BIG><B>Internet enable your X-10 controllers!</B></BIG> =
+<BR><A=20
+      href=3D"http://www.sxlist.com/" target=3D_top>SXList.com</A> <B><A =
+
+      href=3D"http://www.sxlist.com/techref/ubicom/contests.htm" =
+target=3D_top><FONT=20
+      color=3D#fc0335>Andrew Millers virtual X-10 =
+controller</FONT></A></B>=20
+      </CENTER></TD></TR></TBODY></TABLE>
+<P clear=3Dall></P></BODY></HTML>
+
+------=_NextPart_000_0005_01C55464.1F27C510
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+Content-Location: http://www.sxlist.com/images/null.gif
+
+R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==
+
+------=_NextPart_000_0005_01C55464.1F27C510--

@@ -1,0 +1,7 @@
+				#include 	"C:\sfhm\00\00macros\misc.mac"		;Utilerías generales para el ensamblado
+				#include 	"C:\sfhm\00\00macros\def.mac"		;Definiciones y ajustes
+
+				#include 	"C:\sfhm\00\00macros\sfhm0.mac"		;Macros Elementales y Genéricas
+				#include	"C:\sfhm\00\00macros\sfhm1.mac"		;Macros de control de flujo
+				#include	"C:\sfhm\00\00macros\sfhm2.mac"		;Macros de manejo de datos
+				#include	"C:\sfhm\00\00macros\sfhm3.mac"		;Macros auxiliares. Bajo prueba.

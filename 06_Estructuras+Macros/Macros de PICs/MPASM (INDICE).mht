@@ -1,0 +1,699 @@
+From: <Guardado por Microsoft Internet Explorer 5>
+Subject: MPASM
+Date: Mon, 9 May 2005 06:57:33 -0600
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	type="text/html";
+	boundary="----=_NextPart_000_0019_01C55464.600CC6C0"
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2900.2180
+
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_0019_01C55464.600CC6C0
+Content-Type: text/html;
+	charset="Windows-1252"
+Content-Transfer-Encoding: quoted-printable
+Content-Location: http://www.sxlist.com/techref/microchip/mpasm.htm
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" =
+"http://www.w3c.org/TR/1999/REC-html401-19991224/loose.dtd">
+<HTML><HEAD><TITLE>MPASM</TITLE>
+<META http-equiv=3DContent-Type content=3D"text/html; =
+charset=3Dwindows-1252"><!-- Created with AOLpress/2.0 --><!-- AP: Last =
+modified: 8-Oct-2004 -->
+<META content=3D"MSHTML 6.00.2900.2627" name=3DGENERATOR></HEAD>
+<BODY onload=3D"javascript:et=3Dnew Date();eol();">
+<SCRIPT type=3Dtext/javascript><!--
+var st=3Dnew Date();				=09
+var et=3Dnew Date();				=09
+var avgBndWdth=3D0;					=09
+function eol() {					=09
+var s=3D11134;				=09
+var i=3Ddocument.images;			=09
+ for (var j=3D0;j<i.length;j++) 	=09
+  { s +=3D parseInt(i[j].fileSize); };=09
+ avgBndWdth =3D s/((et-st)||1);			=09
+ s=3D ' '+parseInt(s/1024)+'KB'; 	=09
+ i=3D' ('+(document.images.length-1)+' imgs) in '+((et-st)||1)/1000+'s =
+is ';=09
+ if (document.getElementById) 	=09
+  =
+{document.getElementById('lt').innerText=3Ds+i+parseInt(avgBndWdth)+'KBps=
+';}
+ else {document.info.lt.value=3Di;}	=09
+ };					=09
+//--></SCRIPT>
+<A onclick=3D"return false;"=20
+href=3D"http://www.sxlist.com/techref/indexok.asp?38481.2053935185"><IMG =
+height=3D1=20
+alt=3D"please dont rip this site" =
+src=3D"http://www.sxlist.com/images/null.gif"=20
+width=3D1 align=3Dleft border=3D0></A>=20
+<H1><A =
+href=3D"http://www.sxlist.com/techref/microchip/index.htm">Microchip</A> =
+
+MPASM </H1>
+<P><A =
+href=3D"http://www.sxlist.com/techref/microchip/instr/index.htm">Instruct=
+ion=20
+set@</A>=20
+<P><A =
+href=3D"http://www.sxlist.com/techref/microchip/mpasmmotmac.htm">Macros =
+for=20
+useing Motorola ASM code in MPASM</A> (!)=20
+<P>Templates:=20
+<UL>
+  <LI><A=20
+  =
+href=3D"http://www.sxlist.com/techref/microchip/16F877/flashled.htm">Fash=
+ing LED=20
+  program for 16f877</A>=20
+  <LI><A =
+href=3D"http://www.sxlist.com/techref/microchip/16f877adsamp.htm">A/D=20
+  sample programs for 16f877 and 16f873</A>=20
+  <LI><A =
+href=3D"http://www.sxlist.com/techref/microchip/16f877/setup.htm">Minimal=
+=20
+  setup program for 16F877</A>=20
+  <LI><A =
+href=3D"http://www.sxlist.com/techref/microchip/16F877/pwm.htm">Setting=20
+  up a 16F87x for PWM output</A>=20
+  <LI><A =
+href=3D"http://www.sxlist.com/techref/microchip/16f877/snipp.htm">USART, =
+
+  I2C, EERAM read/write, port setup, ISR, and full initialization =
+sample</A>=20
+  from Tony K=FCbek of Flintab AB&nbsp;[tony.kubek at flintab.com] =
+</LI></UL>
+<P>See:=20
+<UL>
+  <LI>MPLAB <A =
+href=3D"http://www.sxlist.com/techref/microchip/icd.htm">ICD</A>=20
+  <LI><A title=3DJMN-EFP-786=20
+  href=3D"http://www.sxlist.com/techref/microchip/mplabbugs.htm" =
+target=3D_top>MPLAB=20
+  Bugs</A> <!-- 37575.9112152778 EOR -->
+  <LI><A =
+href=3D"http://www.sxlist.com/techref/microchip/mpasmpseudo.htm"=20
+  target=3D_top>List of pseudo mnemomics understood by MPASM</A> <!-- =
+37575.9125462963 EOR --></LI></UL>
+<P>See also:=20
+<UL>
+  <LI><A=20
+  =
+href=3D"http://www.microchip.com/Download/Tools/PICmicro/Code/MPASM/asm23=
+000.zip">http://www.microchip.com/Download/Tools/PICmicro/Code/MPASM/asm2=
+3000.zip</A>=20
+
+  <LI><A=20
+  =
+href=3D"http://www.rentron.com/Myke8.htm">http://www.rentron.com/Myke8.ht=
+m</A>=20
+  Using Macros in PIC Assembler languages=20
+  <LI><A=20
+  =
+href=3D"http://www.seanet.com/~karllunt/picmacro.htm">http://www.seanet.c=
+om/~karllunt/picmacro.htm</A>=20
+  Karl Lunts PIC Macros (FOR...NEXT, CASE, REPEAT, POLL, WAIT, etc..) =
+(<A=20
+  =
+href=3D"http://www.sxlist.com/techref/com/seanet/www/http/~karllunt/macro=
+s.htm">cached</A>=20
+  20000317)=20
+  <LI><A=20
+  =
+href=3D"http://www.picbook.com/downloads/zip/MP_SASM.zip">http://www.picb=
+ook.com/downloads/zip/MP_SASM.zip</A>=20
+  Structured Assembler &nbsp;preprocessor for MPASM developed at Georgia =
+Tech by=20
+  Jessica Meremonte Johnson. Implements IF_, ELSE_, ENDIF_, WHILE_, =
+ENDWHILE_,=20
+  REPEAT_, UNTIL_, LOOP_, ENDLOOP_, BREAK_, AND CONTINUE_. </LI></UL>
+<P>Olin Lathrop says:=20
+<BLOCKQUOTE>In this same, spirit I've made my own macros for handling =
+bank=20
+  switching and lots of other stuff public. My "standard" macros come in =
+two=20
+  include files, which are probably too large to attach to this message. =
+I've=20
+  set up a web site at <A=20
+  href=3D"http://www.embedinc.com/pic">http://www.embedinc.com/pic</A> =
+to=20
+  eventually make most of my PIC development environment available to =
+everyone.=20
+</BLOCKQUOTE>
+<P>John [jsand at PIXIE.CO.ZA] says:=20
+<BLOCKQUOTE>After disabling interrupts i.e. <PRE>    bcf    intcon,gie
+</PRE>
+  <P>complete safety is not assured unless you check the global enable =
+bit to=20
+  see that it *really* is as expected (clear, that is).=20
+  <P>My trouble with this magically vanished when I started to use =
+macros for=20
+  int. enable/disable: <PRE>
+int_off         MACRO                ;disables all interrupts
+                     bcf intcon,gie
+                     btfsc intcon,gie  ;make sure bit cleared (int could
+                                       ;have occurred 1/2way thru =
+instruction)
+                     goto $-2
+           ENDM
+
+int_on         MACRO               ;re-enable interrupts
+                     bsf intcon,gie
+           ENDM
+</PRE>
+  <P></P></BLOCKQUOTE>
+<P>Simon Niel says:=20
+<BLOCKQUOTE>...this might help avoid a few headaches with the '877 =
+series... <PRE>; Bank[3:0] variables - 16 bytes accessible in all banks
+          cblock    0x70
+                    lo_save_w                 ; must be here as bank not =
+known when interrupt occurs
+                    program_status            ; flags for program =
+operation
+          ;
+                    end_global_vars:0
+          endc
+          if end_global_vars &gt; 0x80
+                    error "Global variable space overrun"
+          endif
+
+; Bank 0 variables - Must not extend above 0x6F
+          cblock    0x20
+                    some_variable
+          ;
+                    end_bank_0_vars:0
+          endc
+          if end_bank_0_vars &gt; 0x70
+                    error "Bank0 variable space overrun"
+          endif
+
+; Bank 1 variables
+          cblock    0xA0
+                    more_variables:16
+          ;
+                    end_bank_1_vars:0
+          endc
+          if end_bank_1_vars &gt; 0xf0
+                    error "Bank1 variable space overrun"
+          endif
+
+; Bank 2 variables
+          cblock    0x20
+                    you_probably_get_the_point_now
+          ;
+                    end_bank_2_vars:0
+          endc
+          if end_bank_2_vars &gt; 0x70
+                    error "Bank2 variable space overrun"
+          endif
+
+; Bank 3 variables
+          cblock    0xA0
+                    oh_never_mind_then
+          ;
+                    end_bank_3_vars:0
+          endc
+          if end_bank_3_vars &gt; 0xf0
+                    error "Bank3 variable space overrun"
+          endif
+
+</PRE>
+  <P></P></BLOCKQUOTE>
+<P>Jinx says:=20
+<BLOCKQUOTE>OK, I hate unnecessary typing. I like little macros. These =
+are=20
+  some I use. Others will tell you of their distaste for macros. Don't =
+listen to=20
+  them !! ;-))) But you do need to be careful ... although a macro name =
+is just=20
+  one line in the editor, it could be several instructions, depending on =
+what it=20
+  does of course, and that affects things like GOTO $+. If you GOTO =
+labels or=20
+  can actually count the embedded instructions (on your fingers will =
+do), you'll=20
+  be OK. Use them just as normal mnemonics=20
+  <P>For example, an awful lot of code behind these four lines. But the =
+macros=20
+  have been written so that these four easily-typed "instructions" =
+really speed=20
+  up development and minimise typos =
+<PRE>;=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+;pr_v0    lcd_pos ln1+.06      ;position 6 on line 1
+;         disp    0x7f         ;&lt;- on LCD
+;         sec1                 ;1 second delay
+;         clrscrn              ;clear LCD
+;=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+mov      macro   litval,file    ;eg  mov  .57,temp =3D load temp with =
+dec 57
+         movlw   litval
+         movwf   file
+         endm
+
+movfw    macro   litval     ;eg movfw temp =3D copy temp to W
+         movf    litval,w
+         endm
+
+skpnc    macro
+         btfsc   carry
+         endm
+
+skpc     macro
+         btfss   carry
+         endm
+
+clrc     macro               ;clear C
+         bcf     status,0
+         endm
+
+clrz     macro             ;clear Z
+         bcf     status,2
+         endm
+
+setz     macro
+         bsf     status,2
+         endm
+
+skpz     macro            ;skip if Z is set
+         btfss   status,2
+         endm
+
+skpnz    macro
+         btfsc   status,2
+         endm
+
+usec     macro                ;1us delay
+         movff   temp,temp
+         movff   temp,temp
+         movff   temp,temp
+         movff   temp,temp
+         movff   temp,temp
+         endm
+
+usec10   macro                ;10us delay
+         mov     .08,cnt1
+         usec                        ;one macro inside another
+         decfsz  cnt1
+         bra     $-16
+         endm
+</PRE>
+  <P>Here's an example of what to watch for re gotos <PRE>#define  =
+switch  portb,6   ;switch input
+</PRE>
+  <P>For not-the-18 series <PRE>sw_on    macro         ;if switch =3D 1, =
+then switch is on, leave loop
+         btfss   switch
+         goto    $-1        ;loop back to the btfss
+         endm
+</PRE>
+  <P>On the 18 series <PRE>sw_on    macro
+         btfss   switch
+         bra     $-2
+         endm
+</PRE></BLOCKQUOTE>
+<P>Questions:=20
+<UL>
+  <LI>
+  <LI>
+  <LI><A title=3DDM-MC-686=20
+  href=3D"http://www.sxlist.com/techref/member/DM-MC-686/index.htm"=20
+  name=3D37964.5771296296>David McCurley of Microframe Corporation</A> =
+asks:=20
+  <BLOCKQUOTE>I get to modify someone else's PIC code. They have a =
+single .asm=20
+    program separated into 2 pages by ORG statements. I think I have =
+figured out=20
+    the usage for PCLATH, but wish it were easier. It seems there are =
+linker=20
+    directives such as BANKSEL that do this work for me, but I need to =
+have=20
+    linker and object files. I used the standard linker file from =
+Microchip for=20
+    my part; the compiler complains that directives such as CODE and =
+UDATA can=20
+    only be used when creating object files?? Any help on using MPLINK =
+and "code=20
+    sections" would be appreciated. Thanks! </BLOCKQUOTE>
+  <LI>
+  <LI><A title=3DBA-nnn-000>Boris Auguste asks:</A>=20
+  <BLOCKQUOTE><A title=3DBA-nnn-000>...I am a newcomer to Assembly =
+Language=20
+    (MPASM). What puzzles me is those "equ" equates. How does one =
+differentiate=20
+    a register file location in "ram" from a register file VALUE! For =
+example=20
+    indf equ 0x00 c equ 0x00 . Does MPASM have reserved names for fixed=20
+    registers so that equates automatically refer to a location in Ram =
+and not=20
+    an actual value? Thanks for any reply.</A> </BLOCKQUOTE>
+  <P>Answer: It doesn't! or rather, it does only by context. For example =
+the=20
+  program counter is register number 2 and so a reference like movfw 2 =
+would=20
+  result in W being loaded with the value of PC while at the same time =
+movwl 2=20
+  will load w with the value 2 rather than the value of register 2. The =
+equates=20
+  are only to help humans read the code... to the machine, its all just =
+numbers=20
+  anyway. </P></LI></UL>
+<P>Interested:=20
+<UL></UL>
+<P>Archive:=20
+<UL>
+  <LI><A title=3DJMN-EFP-786=20
+  =
+href=3D"http://www.piclist.org/techref/postbot.asp?by=3Dtime&amp;id=3Dpic=
+list\2001\05\09\184425a"=20
+  target=3D_top>PICList post "<I>Ultra Edit Config</I>" for MPASM</A>=20
+  <!-- EOR --></LI></UL>
+<P>
+<P>Comments:=20
+<UL>
+  <LI>
+  <LI><A title=3D68.102.122.246=20
+  =
+href=3D"http://www.microchip.com/download/tools/picmicro/code/mpasm/33014=
+g.pdf"=20
+  target=3D_top=20
+  =
+name=3D37670.4321527778>http://www.microchip.com/download/tools/picmicro/=
+code/mpasm/33014g.pdf</A>=20
+  _MPASM user's guide: with MPLINK and MPLIB_<BR>the full manual is =
+online in=20
+  PDF format.<BR>All (?) the error codes are listed in the =
+appendices.<BR><!-- 37670.4321527778 EOR -->
+  <LI><A title=3D68.102.122.246=20
+  =
+href=3D"http://www.microchip.com/download/tools/picmicro/code/mpasm/30400=
+f.pdf"=20
+  target=3D_top=20
+  =
+name=3D37669.6054282407>http://www.microchip.com/download/tools/picmicro/=
+code/mpasm/30400f.pdf</A>=20
+  MPASM(TM) and MPLINK(TM) PICmicro(R) quick reference guide (.pdf)<!-- =
+37669.6054282407 EOR -->=20
+  <LI><A title=3D68.102.122.246=20
+  href=3D"http://www.sxlist.com/techref/language/asms.htm" target=3D_top =
+
+  name=3D37669.604375>/techref/microchip/../language/asms.htm</A> There =
+are many=20
+  other assembly language compilers for PIC, and other useful tools for =
+dealing=20
+  with PIC assembly language.<!-- 37669.604375 EOR -->=20
+  <LI><A title=3D68.0.123.129=20
+  href=3D"http://www.sxlist.com/techref/microchip/fr.htm" target=3D_top=20
+  name=3D37660.3603125>/techref/microchip/fr.htm</A> bank select<!-- =
+37660.3603125 EOR --> </LI></UL>
+<HR>
+
+<TABLE>
+  <FORM name=3Dinfo action=3D/techref/postsearch.asp method=3Dpost>
+  <TBODY>
+  <TR>
+    <TD><SMALL>file: /techref/microchip/mpasm.htm, <SPAN id=3Dlt =
+NAME=3D"lt">10KB,=20
+      <INPUT size=3D30 name=3Dlt></SPAN>, updated: 2004/10/8 19:20,
+      <SCRIPT type=3Dtext/javascript><!--
+ eol();
+ for (var j=3D0;j<document.images.length;j++) 	=09
+  { document.images[j].onload =3D new Function('eol();'); };=09
+//-->
+</SCRIPT>
+       </SMALL>
+      <DIV id=3Dupperright=20
+      =
+onmouseover=3D"this.style.backgroundColor=3D'#FFFF00';this.style.borderSt=
+yle=3D'outset';"=20
+      style=3D"BORDER-TOP-WIDTH: 2px; BORDER-LEFT-WIDTH: 2px; RIGHT: =
+0px; FILTER: progid:DXImageTransform.Microsoft.Alpha(opacity=3D75); =
+BORDER-BOTTOM-WIDTH: 2px; COLOR: gray; POSITION: absolute; TOP: 0px; =
+BACKGROUND-COLOR: #ffffff; TEXT-ALIGN: right; BORDER-RIGHT-WIDTH: 2px"=20
+      =
+onmouseout=3D"this.style.backgroundColor=3D'#FFFFFF';this.style.borderSty=
+le=3D'ridge';"=20
+      NAME=3D"upperright"><SMALL><SUP><A title=3D"Go to the top page"=20
+      style=3D"COLOR: #af4040; TEXT-DECORATION: none"=20
+      href=3D"http://www.sxlist.com/techref/index.htm">TOP</A> <A=20
+      title=3D"Monthly Change Log for this folder"=20
+      style=3D"COLOR: #af4040; TEXT-DECORATION: none"=20
+      =
+href=3D"http://www.sxlist.com/techref/microchip/new200505.txt">NEW</A>
+      <SCRIPT>
+<!--- Hide script from old browsers.
+document.write('<A style=3D"color:#AF4040;text-decoration:none;" =
+TITLE=3D"More pages like this." =
+HREF=3D"/techref/postsearch.asp\077from=3D%2Ftechref%2Fmicrochip%2Fmpasm%=
+2Ehtm">MORE</A> ')
+// End the hiding here. -->
+</SCRIPT>
+       <A=20
+      title=3D"I'm willing to pay for help, please refer me to a =
+qualified consultant"=20
+      style=3D"COLOR: #af4040; TEXT-DECORATION: none"=20
+      href=3D"mailto:webmaster@sxlist.com?subject=3DI need someone to =
+help me with:">HELP</A>=20
+      <A title=3D"Advanced search" style=3D"COLOR: #af4040; =
+TEXT-DECORATION: none"=20
+      =
+href=3D"http://www.sxlist.com/techref/postsearch.asp">FIND:</A>&nbsp;<BR>=
+<INPUT=20
+      id=3Dsearch title=3D"Free text search"=20
+      style=3D"BORDER-RIGHT: #af0000 1px solid; PADDING-RIGHT: 0px; =
+BORDER-TOP: #af0000 1px solid; PADDING-LEFT: 0px; FONT-SIZE: small; =
+PADDING-BOTTOM: 0px; BORDER-LEFT: #af0000 1px solid; PADDING-TOP: 0px; =
+BORDER-BOTTOM: #af0000 1px solid; BACKGROUND-COLOR: transparent"=20
+      onclick=3D"this.value=3D'';" maxLength=3D100 value=3DSearch =
+name=3DSearchString>=20
+      <INPUT type=3Dhidden value=3DON name=3DFreeText> <INPUT =
+type=3Dhidden=20
+      value=3D/techref/microchip/mpasm.htm name=3Dfrom> =
+</SUP></SMALL></DIV>
+      <DIV id=3Dupperleft=20
+      =
+onmouseover=3D"this.style.backgroundColor=3D'#FFFF00';this.style.borderSt=
+yle=3D'outset';"=20
+      style=3D"FILTER: =
+progid:DXImageTransform.Microsoft.Alpha(opacity=3D75); LEFT: 0px; COLOR: =
+gray; POSITION: absolute; TOP: 0px"=20
+      =
+onmouseout=3D"this.style.backgroundColor=3D'transparent';this.style.borde=
+rStyle=3D'none';"=20
+      NAME=3D"upperleft"><SMALL><A=20
+      =
+href=3D"http://www.sxlist.com/techref/indexok.asp?top"></A><SUP>148.226.1=
+8.114:<A=20
+      style=3D"COLOR: #af4040"=20
+      =
+href=3D"http://www.sxlist.com/techref/login/default.asp?req=3D403%3Bhttp%=
+3A%2F%2Fwww%2Esxlist%2Ecom%2Ftechref%2Fmicrochip%2Fmpasm%2Ehtm">LOG=20
+      IN</A></SUP></SMALL></DIV>
+      <DIV style=3D"LEFT: 25%; WIDTH: 25%; POSITION: absolute; TOP: 0px" =
+
+      align=3Dcenter><SMALL><SUP><FONT color=3D#ff0000><B><A=20
+      title=3D"Why does RIP/GRAB/SPIDERing lead to ads and sponsors? =
+Click here."=20
+      style=3D"COLOR: red" =
+href=3D"http://www.sxlist.com/dontripthissite.htm">PLEASE=20
+      DON'T RIP!</A></B></FONT></SUP> </SMALL></DIV>
+      <SCRIPT language=3DJavaScript type=3Dtext/javascript>
+<!--- Hide script from old browsers.
+var old =3D 1;
+var to;
+
+function scrollHold() {
+var pos=3D1;
+	if (to) clearTimeout(to);
+	if (window.innerHeight) {
+		pos =3D window.pageYOffset;
+		}
+	else if (document.documentElement && =
+document.documentElement.scrollTop) {
+		pos =3D document.documentElement.scrollTop;
+		}
+	else if (document.body) {
+		pos =3D document.body.scrollTop;
+		}
+	if (pos < 0) pos =3D 1;
+	else pos +=3D 1;
+	if (pos !=3D old) {
+		upperright.style.top =3D pos;
+		upperleft.style.top =3D pos;
+		}
+	old =3D pos;
+	if (window.onscroll=3D=3Dnull) {to=3DsetInterval('scrollHold()',100);}
+}
+
+window.onscroll =3D scrollHold;
+scrollHold();
+
+// End the hiding here. -->
+</SCRIPT>
+    </TD></TD></FORM></TR></TBODY></TABLE>
+<HR>
+
+<DIV>
+<TABLE width=3D"30%" align=3Dright>
+  <TBODY>
+  <TR>
+    <TD>&nbsp;</TD>
+    <TD>These pages are served without commercial sponsorship. (No popup =
+ads,=20
+      etc...).Bandwidth abuse increases hosting cost forcing sponsorship =
+or=20
+      shutdown. This server aggressively defends against automated =
+copying for=20
+      any reason including offline viewing, duplication, etc... Please =
+respect=20
+      this requirement and <FONT face=3D"Comic Sans MS" =
+color=3D#ff0000>DO NOT RIP=20
+      THIS SITE</FONT>.<A=20
+      =
+href=3D"http://www.sxlist.com/dontripthissite.htm">Questions?</A></TD></T=
+R></TBODY></TABLE>Did=20
+you find what you needed?=20
+<UL>
+  <SCRIPT>
+<!--- Hide script from old browsers.
+document.write('<LI><I>&quot;Not quite. <A =
+HREF=3D"/techref/postsearch.asp\077from=3D%2Ftechref%2Fmicrochip%2Fmpasm%=
+2Ehtm"> Look for more pages like this one.&quot;</A></I> ')
+// End the hiding here. -->
+</SCRIPT>
+
+  <LI>
+  <FORM action=3D/techref/postsearch.asp#result method=3Dpost><I>"No. =
+I'm looking=20
+  for: <INPUT maxLength=3D100 size=3D40 name=3DSearchString> <INPUT =
+type=3Dhidden=20
+  value=3Don name=3DFreeText> <INPUT type=3Dhidden =
+value=3D/techref/microchip/mpasm.htm=20
+  name=3Dfrom> <INPUT type=3Dsubmit value=3DFetch =
+name=3DAction>"</I></FORM>
+  <LI><A href=3D"http://www.sxlist.com/techref/postsearch.asp"><I>"No. =
+Take me to=20
+  the search page."</I></A>=20
+  <LI><A href=3D"http://www.sxlist.com/techref/index.htm"><I>"No. Take =
+me to the=20
+  top so I can drill down by catagory"</I></A>=20
+  <LI><A=20
+  href=3D"mailto:webmaster@sxlist.com?subject=3DI need someone to help =
+me with:"><I>"No.=20
+  I'm willing to pay for help, please refer me to a qualified=20
+  consultant"</I></A>=20
+  <LI>
+  <FORM action=3D/techref/update.asp method=3Dpost><INPUT type=3Dhidden=20
+  value=3DInterested: name=3Daction> <INPUT type=3Dhidden value=3Don =
+name=3Dprivate>=20
+  <INPUT type=3Dhidden value=3D148.226.18.114 name=3Did> <INPUT =
+type=3Dhidden=20
+  value=3D/techref/microchip/mpasm.htm name=3Durl> <I>"No. But I'm =
+interested. <INPUT type=3Dsubmit value=3DEmail> me at <INPUT =
+name=3Demail> when this page is=20
+  expanded."</I></FORM></LI></UL></DIV>
+<HR>
+<A name=3Dform></A>
+<FORM action=3D/techref/update.asp method=3Dpost><INPUT type=3Dhidden =
+value=3Don=20
+name=3Dprivate> <INPUT type=3Dhidden value=3D148.226.18.114 name=3Did> =
+<INPUT=20
+type=3Dhidden value=3D/techref/microchip/mpasm.htm name=3Durl> After you =
+find an=20
+appropriate page, you are invited to <INPUT type=3Dsubmit value=3DPost> =
+your <SELECT=20
+size=3D4 name=3Daction> <OPTION value=3DQuestions: =
+selected>question</OPTION>=20
+  <OPTION value=3DComments:>comment</OPTION> <OPTION=20
+  value=3D"See also:">link</OPTION> <OPTION value=3DCode:>program=20
+listing</OPTION></SELECT> to this <A=20
+href=3D"http://www.sxlist.com/idea/websites.htm"><I>massmind</I></A> =
+site!=20
+<SMALL>(posts will be reviewed)</SMALL> Just type in the box and press =
+the Post=20
+button. (<A=20
+href=3D"http://www.sxlist.com/techref/language/html/index.htm">HTML</A>=20
+welcomed!): <A=20
+href=3D"http://www.sxlist.com/techref/idea/website/codetutorial.htm">A =
+tutorial is=20
+available</A> <A=20
+href=3D"http://www.sxlist.com/techref/private.asp?req=3Dmembership">Membe=
+rs</A> can=20
+<A=20
+href=3D"http://www.sxlist.com/techref/login/default.asp?req=3D403%3Bhttp%=
+3A%2F%2Fwww%2Esxlist%2Ecom%2Ftechref%2Fmicrochip%2Fmpasm%2Ehtm%23form">lo=
+gin</A>=20
+to post directly, become page editors, and be credited for their posts. =
+<BR><TEXTAREA name=3Dtext rows=3D4 cols=3D65></TEXTAREA>=20
+<SMALL><BR>Link?&nbsp;Put&nbsp;it&nbsp;here:&nbsp;<INPUT size=3D60 =
+name=3Dfile>=20
+<BR>if&nbsp;you&nbsp;want&nbsp;a&nbsp;response,=20
+please&nbsp;enter&nbsp;your&nbsp;email&nbsp;address:&nbsp;<INPUT =
+size=3D40=20
+name=3Demail> </SMALL></FORM>
+<HR>
+
+<TABLE width=3D"30%" align=3Dleft bgColor=3D#f0f0f0>
+  <TBODY>
+  <TR>
+    <TD>&nbsp;</TD>
+    <TD><A href=3D"http://www.sxlist.com/techref/ubicom">SXlist</A> =
+members can=20
+      <A=20
+      =
+href=3D"http://www.sxlist.com/techref/login/default.asp?req=3D403%3Bhttp%=
+3A%2F%2Fwww%2Esxlist%2Ecom%2Ftechref%2Fmicrochip%2Fmpasm%2Ehtm">LOGIN</A>=
+=20
+      to post questions, add public or private comments, links or even =
+new=20
+      pages(!). To start, fill out the <A=20
+      =
+href=3D"http://www.sxlist.com/techref/private.asp?req=3D403%3Bhttp%3A%2F%=
+2Fwww%2Esxlist%2Ecom%2Ftechref%2Fmicrochip%2Fmpasm%2Ehtm">form</A>.=20
+
+      <HR width=3D180>
+
+      <CENTER><B><SMALL>Site supported by <BR><A=20
+      href=3D"http://www.sxlist.com/techref/auction.asp">sales</A>, <A=20
+      =
+href=3D"mailto:james@sxlist.com&amp;subject=3DSXLIST_ADVERTIZING">adverti=
+zing</A>,=20
+      <BR>&amp; <A=20
+      href=3D"http://www.sxlist.com/techref/scenix/support.htm"><B>kind=20
+      contributors<BR>just like you!</B></A> <BR><I>Please don't =
+rip/copy=20
+      <BR>(<A href=3D"http://www.sxlist.com/dontripthissite.htm">here's=20
+      why</A></I> <BR><A=20
+      href=3D"http://www.sxlist.com/dontripthissite.htm#copies">Copies =
+of the site=20
+      on CD</A> <BR>are available at minimal cost.=20
+  </SMALL></CENTER></B></TD></TR></TBODY></TABLE>
+<DIV></DIV></TD></TR></TABLE>
+<TABLE width=3D"30%" align=3Dright bgColor=3D#f0f0f0>
+  <TBODY>
+  <TR>
+    <TD>&nbsp;</TD>
+    <TD>
+      <CENTER><BIG><B>Quick, <U>Easy</U> <I>and</I> <FONT face=3D"Comic =
+Sans MS"=20
+      color=3D#408040>CHEAP</FONT>! <A=20
+      href=3D"http://www.sxlist.com/techref/io/serial/RCL1.htm" =
+target=3D_top>RCL-1=20
+      RS232 Level Converter in a DB9 backshell</A></B></BIG> <BR>Ashley =
+Roll has=20
+      put together a really nice little unit here. Leave off the MAX232 =
+and keep=20
+      these handy for the few times you need true RS232!=20
+</CENTER></TD></TR></TBODY></TABLE>
+<P clear=3Dall></P></BODY></HTML>
+
+------=_NextPart_000_0019_01C55464.600CC6C0
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+Content-Location: http://www.sxlist.com/images/null.gif
+
+R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==
+
+------=_NextPart_000_0019_01C55464.600CC6C0--

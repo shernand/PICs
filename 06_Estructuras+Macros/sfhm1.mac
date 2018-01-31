@@ -1,0 +1,1286 @@
+;==============================================================================
+;  Librería de Macros para microcontroladores PIC
+;
+;Autores:		Varios
+;Adaptación:	Sergio Fco. Hernández Machuca
+;Fecha:			Junio del 2002
+;Lugar:			Xalapa - Veracruz - Mexico
+;version:		1.1
+;
+;-----[ Revisiones  ]-----
+;
+; - Agosto 2017: Se revisa información en general y la de algunos macros.
+; Se ajusta a documentación estándar.
+; - Octubre 2002: Se quitan macros que son sustituidas por instrucciones que 
+; ahora soporta el ensamblador MPASM.
+;		BZ
+;		BNZ
+;  
+;==============================================================================
+	MESSG		"Versión 1.1 de Librerías de Macros [sfhm_clases@hotmail.com]"
+;==============================================================================
+;	Esta librería incluye los macros esenciales para implementar funciones 
+; básicas de control e intepretación en lenguajes de alto nivel.
+;
+;	Para incorporar esta librería a sus propios programas, se debe agregar el 
+; estatuto #INCLUDE inmediatamente después de las directivas que definen el 
+; tipo de uC a emplear y el archivo que contiene las definiciones oficiales 
+; del dispositivo empleado, por ejemplo:
+;
+;-----[ AJUSTES ]-----
+; LIST 	P = PIC16F877	; Identificación del uC en donde se ensamblará.
+; #INCLUDE	P16f877.INC	; Se usarán las variables de Microchip
+; RADIX	Hex				; La base numérica es Hexadecimal por omisión
+;
+; #INCLUDE "sfhm1.mac" ; Este archivo se encuentra en la misma carpeta 
+; que el proyecto.
+;
+; Alternativamente se puede emplear la siguiente línea:
+; #INCLUDE "..\sfhm1.mac" ; Este archivo se encuentra en una carpeta en el
+; directorio previo a donde está el proyecto.
+;
+;==============================================================================
+;-----[ Variables Genéricas ]-----
+;
+;	Declaración de variables que se emplean como referencia en la creación de 
+; diversas instancias de los macros. La mayoría se emplea para la generación de
+; las etiquetas que se requieren.
+
+	variable	_forknt=0
+	variable	_nxtknt=0
+	variable	_rptknt=0
+	variable	_alwknt=0
+	variable	_untknt=0
+	variable	_seltot=0
+	variable	_selknt=0
+	variable	_castot=0
+	variable	_casknt=0
+	variable	_waitk=0
+	variable	_pollk=0
+	variable	_pollt=0
+
+;==============================================================================
+;
+;-----[ Macro FOR, Inicio de la estructura FOR - NEXT ]-----
+;
+;
+;Sintaxis:	For	Variable, Inicio, Fin
+;
+;Operación:	Inicia la estructura FOR - NEXT, los argumentos son: 
+;   "Variable", la cual es una variable en RAM usada como índice para el lazo; 
+;   "Inicio", que es una literal empleada como el valor inicial del índice; 
+;   "Fin", que es una literal usada como el valor final del índice.
+;		
+;	La ejecución de código se realizará en el lazo comprendido entre el
+;	estatuto FOR y el estatuto NEXT, hasta que el valor de "Variable" sea
+;	igual al valor de la literal "Fin", este valor es calculado en la parte
+;	inicial del lazo. En caso de darse una comparación exitosa, el control
+;	se transfiere al punto en donde se encuentra la macro NEXT.
+;
+;	Se puede concluir el estatuto FOR con los macros NEXT, NEXTL, NEXTF.	
+;
+;Altera:	Registro W
+;
+
+For	macro	Variable, Inicio, Fin
+	movlw	Inicio			;Inicia el valor del índice
+	movwf	Variable
+
+_for#v(_forknt)				;Etiqueta de retorno para el NEXT
+
+	movlw	Fin			    ;Prueba si Variable (índice) = FIN
+	subwf	Variable,w
+	bz	_next#v(_forknt)	;Si lo fuera, salta al macro NEXT
+
+_forknt	set	_forknt+1		;Ajusta para las siguientes
+_nxtknt	set	_forknt			;invocaciones
+
+	endm
+;==========================================================================
+;
+;-----[ Macro FORF Inicio de la estructura FORF - NEXT ]-----
+;
+;
+;Sintaxis:	Forf	Variable, Inicio, Fin
+;
+;Operación:	Inicia la estructura FORF - NEXT, los argumentos son:
+;   "Variable", la cual es una variable en RAM usada como índice para el lazo;
+;   "Inicio", que es una literal empleada como el valor inicial del índice; 
+;   "Fin", que es una variable RAM usada como el valor límite de índice.
+;		
+;	La ejecución de código se realizará en el lazo comprendido entre el
+;	estatuto FORF y el estatuto NEXT, hasta que el valor de "Variable" sea
+;	igual al valor de la variable "Fin", este valor es calculado en la parte
+;	inicial del lazo. En caso de darse una comparación exitosa, el control
+;	se transfiere al punto en donde se encuentra la macro NEXT.
+;
+;	Se puede concluir el estatuto FOR con los macros NEXT, NEXTL, NEXTF.	
+;
+;Altera:	Registro W
+;
+
+Forf	macro	Variable, Inicio, Fin
+	movlw	Inicio
+	movwf	Variable
+
+_for#v(_forknt)
+
+	movf	Variable,w
+	subwf	Fin,w
+	bz	_next#v(_forknt)
+
+_forknt	set	_forknt+1
+_nxtknt	set	_forknt
+
+	endm
+;==========================================================================
+;
+;-----[ Macro Next, final de la estructura FOR - NEXT) ]-----
+;
+;
+;Sintaxis:	Next	Variable
+;
+;Operación:	Concluye la estructura FOR - NEXT, el argumento es: "Variable",
+;	la cual es una variable RAM empleada como índice del lazo FOR-NEXT.
+;
+;	La ejecución del macro FOR incrementará el valor de "Variable" y regresará
+;	al inicio del lazo FOR-NEXT para probar si llegó al final. Debe ponerse
+;	mucha atención en que la Variable del macro NEXT sea idéntica a la variable
+;	del macro FOR correspondiente. Estos macros no hacen ningún tipo de revisión
+;	específica al respecto.		
+;
+;	Se puede concluir el estatuto FOR con los macros NEXT, NEXTL, NEXTF.	
+;
+;Altera:	Registro W, contenido de "Variable"
+;
+
+Next	macro	Variable
+
+_nxtknt	set	_nxtknt-1		;Ajuste del índice de FOR´s procesados
+
+	incf	Variable,f		;Incrementa el índice
+	goto	_for#v(_nxtknt)		;Regresa al inicio del lazo
+
+_next#v(_nxtknt)			;Punto de salida del NEXT
+
+	endm
+;==========================================================================
+;
+;-----[ Macro Nextl, final de la estructura FOR - NEXTL ]-----
+;
+;
+;Sintaxis:	Nextl	Variable, Incremento
+;
+;Operación:	Concluye la estructura FOR - NEXT, los argumentos son: "Variable",
+;	la cual es una variable RAM empleada como índice del lazo FOR-NEXT, 
+;	"Incremento" es una literal usada para modificar el índice.
+;
+;	La ejecución del macro FOR agregará el valor de la literal "Incremento"
+;	al valor de "Variable" y regresará al inicio del lazo FOR-NEXTL para probar
+;	si llegó al final. Debe ponerse mucha atención en que la Variable del macro 
+;	NEXT sea idéntica a la variable del macro FOR correspondiente. Estos macros
+;	no hacen ningún tipo de revisión específica al respecto.		
+;
+;	Se puede usar NEXTL para concluir los macros FOR-NEXTL, FORF-NEXTL o FORL-NEXTL
+;
+;Altera:	Registro W, contenido de "Variable"
+;
+
+Nextl	macro	Variable, Incremento
+
+_nxtknt	set	_nxtknt-1
+
+	movf	Variable,w
+	addlw	Incremento
+	movwf	Variable
+	goto	_for#v(_nxtknt)
+
+_next#v(_nxtknt)
+
+	endm
+;==========================================================================
+;
+;-----[ Macro Nextf, final de la estructura FOR - NEXTF ]-----
+;
+;
+;Sintaxis:	Nextf	Variable, Incremento
+;
+;Operación:	Concluye la estructura FOR - NEXT, los argumentos son: "Variable",
+;	la cual es una variable RAM empleada como índice del lazo FOR-NEXT, 
+;	"Incremento" es un registro RAM cuyo contenido es usado para modificar el índice.
+;
+;	La ejecución del macro FOR agregará el valor del registro "Incremento"
+;	al valor de "Variable" y regresará al inicio del lazo FOR-NEXTL para probar
+;	si llegó al final. Debe ponerse mucha atención en que la Variable del macro 
+;	NEXT sea idéntica a la variable del macro FOR correspondiente. Este macro
+;	no hacen ningún tipo de revisión específica al respecto.		
+;
+;	Se puede usar NEXTF para concluir los macros FOR-NEXTF, FORF-NEXTF o FORL-NEXTF
+;
+;Altera:	Registro W, contenido de "Variable"
+;
+
+Nextf	macro	Variable, Incremento
+
+_nxtknt	set	_nxtknt-1
+
+	movf	Incremento,w
+	addwf	Variable,f
+	goto	_for#v(_nxtknt)
+
+_next#v(_nxtknt)
+
+	endm
+;==========================================================================
+;
+;-----[ Macro Repeat, inicia la estructura REPEAT - ALWAYS o REPEAT - UNTIL ]-----
+;
+;
+;Sintaxis:	Repeat
+;
+;Operación:	Marca el inicio de un lazo REPEAT - ALWAYS o un lazo REPEAT - UNTIL.
+;	Siempre se retornará el control al inicio del lazo REPEAT si esta estructura 
+;	concluye con el macro ALWAYS. El control regresará condicionalmente al incio
+;	de la estructura REPEAT si el lazo es terminado con la macro UNTILEQ o la
+;	macro UNTILNE y se cumple la condición propuesta.
+;
+;Altera:	Nada
+;
+
+Repeat	macro
+
+_rpt#v(_rptknt)				;Etiqueta para regresar el control de flujo
+
+_rptknt	set	_rptknt+1		;Contador de macros "Repeat"
+_alwknt	set	_rptknt			;Ajuste del contador de macros "Always"
+_untknt	set	_rptknt			;Ajuste del contador de macros "Until"
+
+	endm
+;==========================================================================
+;
+;-----[ Macro Always, retorna al macro REPEAT correspondiente ]-----
+;
+;
+;Sintaxis:	Always
+;
+;Operación:	Marca el final de un lazo REPEAT - ALWYAS, el control es
+;	pasado automáticamente al macro REPEAT correspondiente.
+;
+;Altera:	Nada.
+;
+
+Always	macro
+
+_alwknt	set	_alwknt-1		;Ajusta el contador de macros "Always"
+
+	goto	_rpt#v(_alwknt)		;Retorna el control al inicio del lazo
+
+	endm
+;==========================================================================
+;
+;-----[ Macro Untileq, retorna (condicionalmente) al macro REPEAT correspondiente ]-----
+;
+;
+;Sintaxis:	Untileq
+;
+;Operación:	Marca el final de un lazo REPEAT - ALWYAS, el control es
+;	pasado  al macro REPEAT correspondiente si la bandera "Z" está en
+;	cero (limpiada) en el momento en que se procesa este macro.
+;
+;Altera:	Nada.
+;
+
+UntilEq	macro
+
+_untknt	set	_untknt-1		;Ajusta el contador de macros "UntilEq"
+
+	bnz	_rpt#v(_untknt)		;Prueba si la bandera de zero está en "0", es decir,
+					;si el resultado previo es distinto a "0"
+	endm
+;==========================================================================
+;
+;-----[ Macro Untilne, retorna (condicionalmente) al macro REPEAT correspondiente ]-----
+;
+;
+;Sintaxis:	Untilne
+;
+;Operación:	Marca el final de un lazo REPEAT - ALWYAS, el control es
+;	pasado  al macro REPEAT correspondiente si la bandera "Z" está en
+;	uno (puesta) en el momento en que se procesa este macro.
+;
+;Altera:	Nada.
+;
+
+UntilNe	macro
+
+_untknt	set	_untknt-1		;Ajusta el contador de macros "UntilEq"
+
+	bz	_rpt#v(_untknt)		;Prueba si la bandera de zero está en "0", es decir,
+					;si el resultado previo es distinto a "0"
+	endm
+;==========================================================================
+;
+;-----[ Macro Select, declara el inicio de una estructura SELECT - EndSELECT  ]-----
+;
+;
+;Sintaxis:	Select
+;
+;Operación:	Marca el inicio de una estructura SELECT - EndSELECT, la cual
+;	típicamente se puede ver como:
+;
+;	SELECT			;Inicio del bloque SELECT
+;	  CASE  5		; Si w = 5 (a la literal 5)
+;	    ...			;Se realizan algunas instrucciones ...
+;	    ...			;
+;	  ENDCASE		;Fin de la claúsula para cuando w = 5
+;	  CASEF Otra		;Si w = Otra (en este caso una variable)
+;	    ...			;
+;           ...			;Se realizan otras instrucciones
+;	  ENDCASE		;Fin de sección para cuando w = al valor de "Otra"
+;	    ...			;Sección que se ejecuta por omisión
+;	    ...			;Si todos los casos anteriores fallan.
+;	ENDSELECT		;Fin del bloque SELECT	
+;
+;Altera:	Nada.
+;
+
+Select	macro
+
+_seltot	set	_seltot+1	;Ajuste del número de "Selects"
+_selknt	set	_seltot		;Ajuste del contador de macros "Selects"
+
+	endm
+;==========================================================================
+;
+;-----[ Macro EndSelect, declara el fin de una estructura SELECT - EndSELECT  ]-----
+;
+;
+;Sintaxis:	EndSelect
+;
+;	Se debe concluir cada macro SELECT con un macro EndSELECT correspondiente,
+;	en caso contrario se reportarán errores por parte del programa ensamblador.
+;
+;Altera:	Nada.
+;
+
+EndSelect	macro
+
+sel#v(_selknt)				;Etiqueta que concluye una sección "Select"
+
+_selknt	set	_selknt-1		;Contador de macros "Select#, ajuste
+
+	endm
+;==========================================================================
+;
+;-----[ Macro Case, declara el inicio de una estructura CASE - ENDCASE ]-----
+;
+;
+;Sintaxis:	Case	Literal
+;
+;Operación:	Cuando se ejecuta el macro CASE, el valor de "w" es comparado
+;	con el valor de la literal propuesta en el argumento, si los valores 
+;	son iguales, el código que sigue a continuación del macro CASE 
+;	es ejecutado. Si los valores de la literal y "w" son distintos, 
+;	el control pasa al código que está a continuación de macro ENDCASE 
+;	correspondiente.
+;
+;Altera:	Nada.
+;
+
+Case	macro	Literal
+
+_castot set	_castot+1		;Ajuste
+_casknt	set	_castot			;Ajuste
+
+	xorlw	Literal			;Comparación de "w" con la literal argumento
+	bz	cas#v(_casknt)		;Si son iguales, ejecuta la sección que continua
+	xorlw	Literal			;Si no, restaura el valor de "w"
+	goto	ecas#v(_casknt)		;Salta al final ("EndCase")
+
+cas#v(_casknt)				
+
+	xorlw	Literal			;Restaura el valor de "w" y continúa ...
+
+	endm
+;==========================================================================
+;
+;-----[ Macro Casef, declara el inicio de una estructura CASEF - ENDCASE ]-----
+;
+;
+;Sintaxis:	Casef	Variable
+;		
+;		En este caso, es usada una "Variable" como selector del CASEF.
+;
+;Operación:	Cuando se ejecuta el macro CASE, el valor de w es comparado
+;	con el valor de la variable del argumento, si son iguales, el código que
+;	sigue a continuación del macro CASE es ejecutado. Si los valores de
+;	la variable y "w" son distintos, el control pasa al código que está
+;	a continuación de macro ENDCASE correspondiente.
+;
+;Altera:	Nada.
+;
+
+CaseF	macro	Variable
+
+_castot set	_castot+1		;Ajuste
+_casknt	set	_castot			;Ajuste
+
+	xorwf	Variable,w		;Comparación de "w" con la variable argumento
+	bz	cas#v(_casknt)		;Si son iguales, ejecuta la sección que continua
+	xorwf	Variable,w		;Si no, restaura el valor de "w"
+	goto	ecas#v(_casknt)		;Salta al final ("EndCase")
+
+cas#v(_casknt)
+
+	xorwf	Variable,w		;Restaura el valor de "w" y continúa ...
+
+	endm
+;==========================================================================
+;
+;-----[ Macro EndCase, declara el final de una estructura CASE-ENDCASE o CASEF - ENDCASE ]-----
+;
+;
+;Sintaxis:	EndCase
+;
+;
+;Operación:	El macro ENDCASE marca el final de una estructura CASE-ENDCASE o de una
+;	estructura CASEF-ENDCASE. Esta macro sirve como un marcador para realizar un
+;	salto para la correspondiente macro CASE o CASEF.
+;
+;	Se debe incluir una macro ENDCASE para cada macro CASE o macro CASEF, en caso de
+;	no hacer ésto, el programa ensamblador reportará errores en su ejecución.
+;
+;Altera:	Nada.
+;
+
+EndCase	macro
+
+	goto	sel#v(_selknt)		;Salta a la siguiente sección.
+
+ecas#v(_casknt)				;Etiqueta de "EndCase"
+
+_casknt	set	_casknt-1		;Ajuste
+
+	endm
+;==============================================================================
+;
+;-----[ Macro WaitWhile, declara un lazo WAIT-WHILE que se ejecuta rápidamente ]-----
+;
+;
+;Sintaxis:	WaitWhile	Variable, AndL, XorL
+;
+;
+;Operación:	Esta macro crea un lazo que se ejecuta de manera eficiente (a una alta
+;	velocidad) a partir de leer un byte localizado en la "Variable" del argumento.
+;	El valor leído en la localidad indicada es puesto en AND con el valor de la literal 
+;	"AndL" para posteriormente poner este resultado parcial en OR exclusivo con la literal "XorL".
+;	Si el valor previamente calculado es "verdadero", es decir, si es distinto a cero, 
+;	el lazo se repite. Si el resultado es "falso", esta macro concluye su ejecución.
+;
+;
+;Altera:	Registro W. No modifica a "Variable"
+
+WaitWhile	macro	Variable,AndL,XorL
+
+waitw#v(_waitk)				;Etiqueta para el retorno
+
+	movf	Variable,w		;Toma el valor de la variable
+	andlw	AndL			;Realiza el AND con la literal AndL
+
+	if	XorL != 0		;Si el valor de XorL es distinto a cero
+	xorlw	XorL			;Calcula el OR con ese dato
+	endif
+
+	bnz	waitw#v(_waitk)		;Prueba para verificar si se concluyó
+
+_waitk	set	_waitk+1		;Ajuste
+
+	endm
+;==========================================================================
+;
+;-----[ Macro WaitUntil, declara un lazo WAIT-UNTIL que se ejecuta rápidamente ]-----
+;
+;
+;Sintaxis:	WaitUntil	Variable, AndL, XorL
+;
+;
+;Operación:	Esta macro crea un lazo que se ejecuta de manera eficiente (a una alta
+;	velocidad) a partir de leer un byte localizado en la "Variable" del argumento.
+;	El valor leído en la localidad indicada es puesto en AND con el valor de la literal 
+;	"AndL" para posteriormente poner este resultado parcial en OR Exclusivo con la literal "XorL".
+;	Si el valor previamente calculado es "falso", es decir, si es distinto a cero, 
+;	el lazo se repite. Si el resultado es "verdadero", esta macro concluye su ejecución.
+;
+;
+;Altera:	Registro w. No altera a "Variable"
+
+WaitUntil	macro	Variable,AndL,XorL
+
+waitw#v(_waitk)				;Etiqueta de retorno
+
+	movf	Variable,w			;Toma el valor de la "Variable"
+	andlw	AndL			;Realiza el AND con la literal
+
+	if	XorL != 0		;Si el dato es adecuado, calcula el OR
+          xorlw	XorL			;
+	endif
+
+	bz	waitw#v(_waitk)		;Prueba para verificar si concluyó
+
+_waitk	set	_waitk+1		;Ajuste
+
+	endm
+;==========================================================================
+;
+;-----[ Macro Poll, inicia una estructura POLL-ENDPOLL ]-----
+;
+;
+;Sintaxis:	Poll	Variable, AndL, XorL
+;
+; 
+;Operación:	Esta macro lee el valor del byte localizado en "Variable", calcula la
+;	operación AND de esta cantidad con la literal "XandL" para posteriormente poner 
+;	en OR Exclusiva con la variable "XorL". Si el resultado es "verdadero" (distinto a
+;	cero), se pasa el control al código que está a continuación. Si el resultado es
+;	"falso" (resultado igual a cero), se salta a la macro ENDPOLL correspondiente.
+;
+;		Por ejemplo, el siguiente comando POLL probará para ver si el bit 3 de la
+;	variable DATO está en un estado de "1":
+;
+;	Poll	DATO,8,0		;Prueba el bit 3 (¿Está en "1"?) (00001000 , 00000000)
+;	...				;Realiza lo que está en estas líneas
+;	...				;  si el resultado 
+;	...				;  fuera "verdadero" ...
+;	...				;
+;	EndPoll				;Salta aquí si el resultado fuera "falso"
+;
+;		El siguiente comando POLL ejecutará un segmento de código específico si
+;	se da el caso de que para lo que se encuentra en la localidad DATO, el bit 3 está
+;	en "1", mientras alguno de los bits 1 o 2 están en "0".
+;
+;	Poll	DATO,0x0e,0x06		;Prueba los bits del 1 al 3: 0x0e=00001110, 0x06=0000110
+;	...				;Realiza esto ...
+;	...				;   si el bit 3 es "1" ...
+;	...				;   y si el bit 1 o el bit 2 son "0"
+;	EndPoll				;
+;
+;Altera:	Registro w. No modifica el valor de "variable"
+;
+
+Poll	macro	Variable, AndL, XorL
+
+_pollt	set	_pollt+1		;Ajuste de variables
+_pollk	set	_pollt
+
+	movf	Variable,w		;Toma el dato a probar
+	andlw	AndL			;Calcula la parte AND
+	xorlw	XorL			;  y la de la XOR
+
+	bz	poll#v(_pollk)		;Si el resultado es falso, sal de la estructura
+	
+	endm
+;==========================================================================
+;
+;-----[ Macro EndPoll, concluye una estructura POLL-ENDPOLL ]-----
+;
+;
+;Sintaxis:	EndPoll
+;
+;
+;Operación:	Esta macro termina una estructura POLL-ENDPOLL. Se llega a este punto
+;	si la macro POLL asociada falla.
+;
+;Altera:	Nada.
+;
+
+EndPoll	macro
+
+poll#v(_pollk)				;Asigna una etiqueta
+
+_pollk	set	_pollk-1		;Ajusta
+
+	endm
+
+;==============================================================================
+;==============================================================================
+;-----[ MACROS genéricos IF ]-----
+;
+;	  Los macros que se describen a continuación implementan estatutos IF 
+; semejantes a los del lenguaje FORTRAN. Se pueden crear alias para adaptarse
+; al lenguaje de programación que le sea más comun al ususraio.
+;		
+;   El formato genérico de estos macros es:
+;
+;		IFcondicionF 	Variable, destino    ó alternativamente
+;
+;		IFcondicionL 	Constante, destino
+;
+;	En donde "condición" podrá ser alguna de las siguientes:
+;	
+;	GT = Más grande que	    GE = Más grande o igual a	EQ = Igual a	
+;	LE = Menor o igual a	LT = Menor a				NE = Distinto a	
+;	
+;	El mecanismo de funcionamiento de cada macro es básicamente como lo 
+; describen los siguientes ejemplos:
+;
+;		IFWEQL 2, Aqui
+;
+;   Probará el valor del registro "W" contra la constante (literal) "2",
+; si W es igual a 2 se transferirá el control hacia la etiqueta "Aqui",
+; en caso contrario se continúa con la ejecución de la siguiente instrucción.
+;
+;	El macro:
+;	
+;		IFWGEF Resultado, Proceso
+;
+;   Trasladará el control a donde se encuentra la etiqueta "Proceso" si el
+; valor actual del registro "W" es Mayor o Igual al contenido actual de la 
+; variable (registro) "Resultado".
+;
+;	NOTA 1: Debe cuidarse que la dirección de destino del salto se encuentre
+; en la misma página en la que se encuentran el macro empleado.
+;
+;	NOTA 2: Se requiere una variable global para preservar el valor del
+; registro w. Se sugiere emplear alguna de las localidades en la zona común
+; ("zona de espejo") entre bancos (0x70 - 0x7F).
+;
+;Alteran:	La bandera de "carry" (posiblemente).
+;         Preservan el valor del registro w
+;
+;==============================================================================
+;	A continuación se definen variables que son comunes a TODOS los bancos
+;
+; La definición que a continuación se establece será válida para todos los
+; programas.
+;
+; ==  ¿AHORA ESTÁN DEFINIDAS EN EL PROGRAMA PRINCIPAL? ==
+
+  CBLOCK  0X70  ; Variables Temperolaes Generales
+    Tempw   ; Variable para preservar temporalmente el valor del registro "W"
+    
+    Temp1   ; Variables Temporales
+    Temp2   ;...
+    Temp3   ;...
+    
+    Stack   ; Apuntador para una zona particular LIFO
+    Flags   ; Banderas que indican el estado de la aplicación.
+    Pass0   ; Indica si se pasó por esta zona de ejecución.
+    Pass1   ;
+  
+  ENDC
+
+;TempW		equ		H'070'		;Variable en donde se aloja temporalmente el registro "w"
+
+;Temp1  	equ  	H'071'		;Variables temporales
+;Temp2  	equ  	H'072'		;
+;Temp3  	equ  	H'073'		;
+
+;Stack  	equ  	H'074'		;Apuntador del "stack" en RAM
+
+;Flags  	equ  	H'075'		;Registro de banderas internas
+
+;Pass0  	equ  	H'076'		;
+;Pass1  	equ  	H'077'		;
+
+;------------------------------------------------------------------------------
+IfWGTF  MACRO   Variable, Destino
+;------------------------------------------------------------------------------
+ 
+  LOCAL   If10			  ;Esta etiqueta es LOCAL a este macro
+ 
+  movwf   TempW			  ;Guarda temporalmente el valor de "w"
+
+  subwf   Variable,W	;Calcula: W - (Variable)
+  bc   If10			      ;Instrucción "macro" (Branch if Carry Set)
+
+  movfw   TempW			  ;Restaura el valor de "w"
+  goto   Destino			;Salta a la etiqueta indicada...
+
+If10:                 ; Saltará hacia acá si la prueba fue fallida.
+  movfw   TempW			  ;Restaura el valor de "w"
+  ENDM
+;------------------------------------------------------------------------------
+ 
+IfWGTL   MACRO   Constante, Destino
+ 
+;------------------------------------------------------------------------------
+ 
+   LOCAL   If15
+ 
+   movwf   TempW
+
+   sublw   Constante
+   bc   If15
+
+   movfw   TempW
+   goto   Destino
+
+If15
+
+   movfw   TempW
+ 
+   ENDM
+;------------------------------------------------------------------------------
+ 
+IfWGEF MACRO Variable, Destino
+ 
+;------------------------------------------------------------------------------
+ 
+   LOCAL   If20,If21
+ 
+   movwf   TempW
+
+   subwf   Variable,W
+   bnc   If20
+   bnz   If21
+
+If20
+
+   movfw   TempW
+   goto   Destino
+
+If21
+
+   movfw   TempW
+ 
+   ENDM
+ 
+;------------------------------------------------------------------------------
+ 
+IfWGEL   MACRO   Constante, Destino
+ 
+;------------------------------------------------------------------------------
+ 
+   LOCAL   If25,If26
+ 
+   movwf   TempW
+
+   sublw   Constante
+   bnc   If25
+   bnz   If26
+
+If25
+
+   movfw   TempW
+   goto   Destino
+
+If26
+
+   movfw   TempW
+ 
+   ENDM
+;------------------------------------------------------------------------------
+ 
+IfWEQF   MACRO   Variable, Destino
+ 
+;------------------------------------------------------------------------------
+ 
+   LOCAL   If30
+ 
+  movwf  TempW
+
+  subwf  Variable,W
+  bnz  If30
+
+  movfw  TempW
+  goto  Destino
+
+If30
+
+  movfw  TempW
+ 
+  ENDM
+;------------------------------------------------------------------------------
+ 
+IfWEQL  MACRO  Constante, Destino
+ 
+;------------------------------------------------------------------------------
+ 
+  LOCAL  If35
+
+  movwf  TempW
+
+  sublw  Constante
+  bnz  If35
+
+  movfw  TempW
+  goto  Destino
+
+If35
+
+  movfw  TempW
+ 
+  ENDM
+;------------------------------------------------------------------------------
+ 
+IfWNEF  MACRO  Variable, Destino
+ 
+;------------------------------------------------------------------------------
+ 
+  LOCAL  If40
+ 
+  movwf  TempW
+
+  subwf  Variable,W
+  bz  If40
+
+  movfw  TempW
+  goto  Destino
+
+If40
+
+  movfw  TempW
+ 
+  ENDM
+;------------------------------------------------------------------------------
+ 
+IfWNEL  MACRO  Constante, Destino
+ 
+;------------------------------------------------------------------------------
+ 
+  LOCAL  If45
+ 
+  movwf  TempW
+
+  sublw  Constante
+  bz  If45
+
+  movfw  TempW
+  goto  Destino
+
+If45
+
+  movfw  TempW
+ 
+  ENDM
+;------------------------------------------------------------------------------
+ 
+IfWLEF  MACRO  Variable, Destino
+ 
+;------------------------------------------------------------------------------
+ 
+  LOCAL  If50
+ 
+  movwf  TempW
+
+  subwf  Variable,W
+  bnc  If50
+
+  movfw  TempW
+  goto  Destino
+
+If50
+
+  movfw  TempW
+ 
+  ENDM
+;------------------------------------------------------------------------------
+ 
+IfWLEL  MACRO  Constante, Destino
+ 
+;------------------------------------------------------------------------------
+ 
+  LOCAL  If55
+ 
+  movwf  TempW
+
+  sublw  Constante
+  bnc  If55
+
+  movfw  TempW
+  goto  Destino
+
+If55
+
+  movfw  TempW
+ 
+  ENDM
+;------------------------------------------------------------------------------
+ 
+IfWLTF  MACRO  Variable, Destino
+ 
+;------------------------------------------------------------------------------
+ 
+  LOCAL  If60
+ 
+  movwf  TempW
+  subwf  Variable,W
+  bnc  If60
+  bz  If60
+  movfw  TempW
+  goto  Destino
+If60
+  movfw  TempW
+ 
+  ENDM
+ 
+;------------------------------------------------------------------------------
+ 
+IfWLTL  MACRO  Constante, Destino
+ 
+;------------------------------------------------------------------------------
+ 
+  LOCAL  If65
+ 
+  movwf  TempW
+
+  sublw  Constante
+  bnc  If65
+  bz  If65
+
+  movfw  TempW
+  goto  Destino
+
+If65
+
+  movfw  TempW
+ 
+  ENDM
+
+;==========================================================================
+;
+;-----[ Macros genéricos para el manejo de Puertos de I/O ]-----
+;
+;==========================================================================
+;
+;	Se requiere la implementación de los macros:
+;
+;	BANK0, BANK1, BANK2, BANK3
+;
+;==========================================================================
+;
+;-----[ Macro DirIn, ajusta como entrada al pin definido para el puerto dado ]-----
+;
+;
+;Sintaxis:	DirIn	Número_Puerto, Número_Pin
+;
+;Operación:	Ajusta como "entrada" al bit propuesto.
+;
+;Altera:	Registro w
+;
+
+DirIn	macro	PortNum,PinNum
+ 
+  		Bank1				;Asegura estar en el banco 1 ("tris")
+  		bsf  	PortNum,PinNum		;Ajusta a "uno"
+		Bank0				;Regresa al banco 0 (se supone que de aquí parte)
+ 
+  		endm
+;==========================================================================
+;
+;-----[ Macro DirOut, ajusta como salida al pin definido para el puerto dado ]-----
+;
+;
+;Sintaxis:	DirOut	Número_Puerto, Número_Pin
+;
+;Operación:	Ajusta como "salida" al bit propuesto.
+;
+;Altera:	Registro w
+;
+ 
+DirOut	macro  	PortNum,PinNum
+ 
+  		Bank1
+  		bcf  	PortNum,PinNum
+  		Bank0
+ 
+  		endm
+;==========================================================================
+;
+;-----[ Macro ClrPin, ajusta a "0" el pin definido para el puerto dado ]-----
+;
+;
+;Sintaxis:	ClrPin	Número_Puerto, Número_Pin
+;
+;Operación:	Ajusta a "cero" al bit propuesto.
+;
+;	NOTA: Se deben dejar libres a las localidades de RAM reservadas para que
+;	sirvan como localidades "espejo" para los puertos
+;
+;	Las localidades espejo se localizan a 27 (0x1B) bytes de las respectivas
+;	localidades de los puertos.
+;
+;	PORTA (0x05) + (0x1b) = 0x20 (localidad de RAM)
+;	PORTB (0x06) + (0x1b) = 0x21 (localidad de RAM)
+;	PORTC (0x07) + (0x1b) = 0x22 (localidad de RAM)
+;	PORTD (0x08) + (0x1b) = 0x23 (localidad de RAM)
+;	PORTE (0x09) + (0x1b) = 0x24 (localidad de RAM)
+;
+;Altera:	Registro w
+;
+ 
+ClrPin		macro	PortNum,PinNum
+ 
+			bcf		PortNum+D'27',PinNum	;Ajusta a "cero" los bits del "espejo"
+
+  			movfw  	PortNum+D'27'			;Copia a "w"
+
+  			movwf  	PortNum					;Traslada al puerto correspondiente
+ 
+  			endm
+;==========================================================================
+;
+;-----[ Macro SetPin, ajusta a "1" al pin definido para el puerto dado ]-----
+;
+;
+;Sintaxis:	SetPin	Número_Puerto, Número_Pin
+;
+;Operación:	Ajusta a "uno" al bit propuesto.
+;
+;	NOTA: Se deben dejar libres a las localidades de RAM reservadas para que
+;	sirvan como localidades "espejo" para los puertos
+;
+;	Las localidades espejo se localizan a 27 (0x1B) bytes de las respectivas
+;	localidades de los puertos.
+;
+;	PORTA (0x05) + (0x1b) = 0x20 (localidad de RAM)
+;	PORTB (0x06) + (0x1b) = 0x21 (localidad de RAM)
+;	PORTC (0x07) + (0x1b) = 0x22 (localidad de RAM)
+;	PORTD (0x08) + (0x1b) = 0x23 (localidad de RAM)
+;	PORTE (0x09) + (0x1b) = 0x24 (localidad de RAM)
+;
+;Altera:	Registro w
+;
+ 
+SetPin		macro	PortNum,PinNum
+ 
+			bsf	PortNum+D'27',PinNum	;Ajusta a "uno" los bits del "espejo"
+
+  			movfw  	PortNum+D'27'		;Copia a "w"
+
+  			movwf  	PortNum			;Traslada al puerto correspondiente
+ 
+  			endm
+;==============================================================================================
+;
+;-----[ Macro GoTab, realiza la búsqueda en una tabla que está en cualquier lugar de memoria ]-----
+;
+;
+;Sintaxis:	GoTab	Tabla
+;
+;Operación:	Salta a una tabla localizada en cualquier localidad de memoria.
+;
+;	La tabla debe empezar con la línea:
+;
+;		ADDWF	PCL, F
+;
+;	La tabla no debe tener más de 256 elementos, tampoco debe cruzar límites de páginas	
+;
+;Altera:	Nada
+;
+ 
+GoTab		macro	Tabla
+
+			ERRORLEVEL -306			;Deshabilita la muestra de errores de este nivel
+ 
+  			movwf	TempW  			;Guarda el valor de "w"
+
+  			movlw  	LOW Tabla		;Toma la parte baja de la dirección de "Tabla"
+  			addwf  	TempW,W			;Agrégale el valor del parámetro (Índice de Búsqueda)
+									;  (índice para acceder a la tabla)
+  			movlw  	HIGH Tabla		;Toma la parte alta de la dirección de "Tabla" 
+
+  			skpnc					;Salta si no se generó un bit de acarreo
+  			addlw  	D'1'			; (en caso contrario, súmale "1", del Carry generado)
+
+  			movwf  	PCLATH			;Toma la parte alta de "Tabla" ya calculada
+
+  			movfw  	TempW			;Restaura el valor de "w"
+  
+  			call  	Tabla			;Salta a la "Tabla"
+ 
+  			movwf  	TempW			;Guarda el valor de "w" regresado
+
+  			movlw  	HIGH $			;Toma la parte alta de la dirección actual
+  			movwf  	PCLATH			; restáurala.
+
+  			movfw  	TempW			;Restaura el valor de "w" (resultado de la tabla)
+  
+  			endm
+ 
+  			ERRORLEVEL +306			;Habilita la muestra de errores de este nivel
+;==============================================================================================
+;
+;-----[ Macro GoSub, realiza una llamada a Subrutina, a cualquier lugar de memoria ]-----
+;
+;
+;Sintaxis:	GoSub	Subrutina
+;
+;Operación:	Salta a ejecutar una Subrutina, pudiendo ésta estar en cualquier lugar.
+;
+;Se usa la variable TempW
+;
+;Altera:	Lo que altere la Subrutina llamada (si altera algo).
+;
+
+GoSub		macro	Subrutina
+
+			ERRORLEVEL	-306		;Deshabilitar cierto rango de errores.
+			
+			movwf	TempW			;Resguarda el valor de "W"
+			
+			movlw	HIGH Subrutina	;Toma la parte alta de la dirección a la que se salta
+			movwf	PCLATH			;Ajusta al PC de acuerdo a lo anterior
+			
+			movfw	TempW			;Restaura el valor de "W" (que podría se Parámetro)
+			
+			call	Subrutina		;Llama a la subrutina en cuestión
+			
+			movwf	TempW			;Resguarda "W"
+
+		 	movlw	HIGH $			;Ahora ajusta el PC para donde se encuentra la macro
+			movwf	PCLATH
+
+			movfw	TempW			;Restaura el valor de "W"
+			
+			endm					;Terminó
+			
+			ERRORLEVEL	+306
+;==========================================================================
+;
+;
+;-----[ Macros para el manejo de una Pila ("Stack") ]-----
+;
+;
+;========================================================================== 
+;
+;	Con las siguientes macros se define y mantiene un "stack" de propósito general.
+;
+;	Lo contenido en el registro "FSR" apunta a la siguiente localidad (libre) de "stack"
+;	disponible.
+; 
+;   El registro "W" es preservado en la variable TempW.
+;
+;   No se utiliza un mecanismo para determinar desbordamiento en el Stack.
+; 
+;	La posición actual del apuntador es preservada en el Stack SOLAMENTE
+;   cuando el macro SavStack es empleado, en cualquier otro caso, Stack es
+;   ajustado a un valor de cero.
+;
+ 
+Push1  		macro
+ 
+			movfw  	Temp1			;Guarda Temp1 en "W"
+			
+  			movwf  	INDF			;Deposita el dato
+  			incf  	FSR,F  			;Incrementa el apuntador del SP
+  			movfw  	TempW			;Guarda el valor a depositar
+  
+  			endm
+ 
+;------------------------------------------------------------------------------
+  
+Push2  MACRO
+ 
+;------------------------------------------------------------------------------
+ 
+  movfw  Temp1
+  movwf  INDF
+  incf  FSR,F  
+  movfw  Temp2
+  movwf  INDF
+  incf  FSR,F  
+  movfw  TempW
+  ENDM
+ 
+;------------------------------------------------------------------------------
+  
+Push3  MACRO
+ 
+;------------------------------------------------------------------------------
+ 
+  movfw  Temp1
+  movwf  INDF
+  incf  FSR,F  
+  movfw  Temp2
+  movwf  INDF
+  incf  FSR,F  
+  movfw  Temp3
+  movwf  INDF
+  incf  FSR,F  
+  movfw  TempW
+  ENDM
+ 
+;------------------------------------------------------------------------------
+  
+Pull1  MACRO
+ 
+;------------------------------------------------------------------------------
+ 
+  movwf  TempW
+  decf  FSR,F
+  movfw  INDF
+  movwf  Temp1
+  movfw  TempW
+  ENDM
+ 
+;------------------------------------------------------------------------------
+  
+Pull2  MACRO
+ 
+;------------------------------------------------------------------------------
+ 
+  movwf  TempW
+  decf  FSR,F
+  movfw  INDF
+  movwf  Temp2
+  decf  FSR,F
+  movfw  INDF
+  movwf  Temp1
+  movfw  TempW
+  ENDM
+ 
+;------------------------------------------------------------------------------
+  
+Pull3  MACRO
+ 
+;------------------------------------------------------------------------------
+ 
+  movwf  TempW
+  decf  FSR,F
+  movfw  INDF
+  movwf  Temp3
+  decf  FSR,F
+  movfw  INDF
+  movwf  Temp2
+  decf  FSR,F
+  movfw  INDF
+  movwf  Temp1
+  movfw  TempW
+  ENDM
+ 
+;------------------------------------------------------------------------------
+ 
+SavStak  MACRO
+ 
+;Temporarily save the System Stack Pointer if it is not already saved.
+;NOTE: This routine guards against a "false pointer" being saved.
+;CAUTION!: W is not preserved.
+;Stack now holds the current stack pointer.
+ 
+;------------------------------------------------------------------------------
+ 
+  LOCAL  SS0
+ 
+  tstf  Stack
+  bnz  SS0
+  movfw  FSR
+  movwf  Stack
+SS0
+  ENDM
+ 
+;------------------------------------------------------------------------------
+ 
+GetStak  MACRO
+ 
+;Restore the System Stack Vector (IRP and FSR).
+;CAUTION!: W is not preserved! 
+;Stack no longer holds the current stack pointer.
+ 
+;------------------------------------------------------------------------------
+ 
+  movfw  Stack
+  movwf  FSR
+  clrf  Stack
+ 
+  ENDM
