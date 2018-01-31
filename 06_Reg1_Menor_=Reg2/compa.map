@@ -1,0 +1,36 @@
+MPLINK 4.49, Linker
+Linker Map File - Created Thu Aug 31 19:47:29 2017
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_0       code   0x000000    program   0x000000
+                   .org_1       code   0x000000    program   0x000028
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x000013      
+            20 out of 8454 program addresses used, program memory utilization is 0%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                  FinAeqB   0x000011    program     static P:\R\- LABs -\06_Reg1_Menor_=Reg2\compa.asm
+                 ZonaElse   0x00000c    program     static P:\R\- LABs -\06_Reg1_Menor_=Reg2\compa.asm
+                 ZonaThen   0x00000f    program     static P:\R\- LABs -\06_Reg1_Menor_=Reg2\compa.asm
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                 ZonaElse   0x00000c    program     static P:\R\- LABs -\06_Reg1_Menor_=Reg2\compa.asm
+                 ZonaThen   0x00000f    program     static P:\R\- LABs -\06_Reg1_Menor_=Reg2\compa.asm
+                  FinAeqB   0x000011    program     static P:\R\- LABs -\06_Reg1_Menor_=Reg2\compa.asm
+
+
