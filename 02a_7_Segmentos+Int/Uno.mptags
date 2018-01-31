@@ -1,0 +1,21 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.5.4	//
+!_TAG_REVISION_NAME	MCHPTags	//
+!_TAG_REVISION_VERSION	6.0.1	//
+Entrada_RESET	E:\R\- LABs -\03\Base.asm	37;"	l	line:37
+INTERRUPCIONES	E:\R\- LABs -\03\Base.asm	44;"	l	line:44
+ISR	E:\R\- LABs -\03\Base.asm	101;"	l	line:101
+Inicio	E:\R\- LABs -\03\Base.asm	52;"	l	line:52
+NoOprimida	E:\R\- LABs -\03\Base.asm	77;"	l	line:77
+OK	E:\R\- LABs -\03\Base.asm	25;"	q	line:25
+Procesa	E:\R\- LABs -\03\Base.asm	82;"	l	line:82
+Repite	E:\R\- LABs -\03\Base.asm	67;"	l	line:67
+SiOprimida	E:\R\- LABs -\03\Base.asm	72;"	l	line:72
+TIPO_uC	E:\R\- LABs -\03\Base.asm	26;"	q	line:26
+Temp0	E:\R\- LABs -\03\Base.asm	30;"	q	line:30
+Temp1	E:\R\- LABs -\03\Base.asm	31;"	q	line:31
+Temp2	E:\R\- LABs -\03\Base.asm	32;"	q	line:32

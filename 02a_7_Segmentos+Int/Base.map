@@ -1,0 +1,64 @@
+MPLINK 4.49, Linker
+Linker Map File - Created Wed Sep 27 07:49:51 2017
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_0       code   0x000000    program   0x000000
+                   .org_1       code   0x000000    program   0x000006
+                   .org_2       code   0x000004    program   0x000090
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x000002      
+                            0x000004    0x00004b      
+            75 out of 8454 program addresses used, program memory utilization is 0%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                       D1   0x000020    program     static E:\R\- LABs -\03\R.asm   
+                      D10   0x000029    program     static E:\R\- LABs -\03\R.asm   
+                     D100   0x000032    program     static E:\R\- LABs -\03\R.asm   
+                   D100_1   0x000038    program     static E:\R\- LABs -\03\R.asm   
+                    D10_1   0x00002d    program     static E:\R\- LABs -\03\R.asm   
+                     D1_1   0x000024    program     static E:\R\- LABs -\03\R.asm   
+                     D500   0x00003f    program     static E:\R\- LABs -\03\R.asm   
+                   D500_1   0x000045    program     static E:\R\- LABs -\03\R.asm   
+            Entrada_RESET   0x000000    program     static E:\R\- LABs -\03\Base.asm
+           INTERRUPCIONES   0x000003    program     static E:\R\- LABs -\03\Base.asm
+                      ISR   0x00001f    program     static E:\R\- LABs -\03\Base.asm
+                   Inicio   0x000007    program     static E:\R\- LABs -\03\Base.asm
+               NoOprimida   0x000014    program     static E:\R\- LABs -\03\Base.asm
+                  Procesa   0x000016    program     static E:\R\- LABs -\03\Base.asm
+                   Repite   0x00000f    program     static E:\R\- LABs -\03\Base.asm
+               SiOprimida   0x000011    program     static E:\R\- LABs -\03\Base.asm
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+            Entrada_RESET   0x000000    program     static E:\R\- LABs -\03\Base.asm
+           INTERRUPCIONES   0x000003    program     static E:\R\- LABs -\03\Base.asm
+                   Inicio   0x000007    program     static E:\R\- LABs -\03\Base.asm
+                   Repite   0x00000f    program     static E:\R\- LABs -\03\Base.asm
+               SiOprimida   0x000011    program     static E:\R\- LABs -\03\Base.asm
+               NoOprimida   0x000014    program     static E:\R\- LABs -\03\Base.asm
+                  Procesa   0x000016    program     static E:\R\- LABs -\03\Base.asm
+                      ISR   0x00001f    program     static E:\R\- LABs -\03\Base.asm
+                       D1   0x000020    program     static E:\R\- LABs -\03\R.asm   
+                     D1_1   0x000024    program     static E:\R\- LABs -\03\R.asm   
+                      D10   0x000029    program     static E:\R\- LABs -\03\R.asm   
+                    D10_1   0x00002d    program     static E:\R\- LABs -\03\R.asm   
+                     D100   0x000032    program     static E:\R\- LABs -\03\R.asm   
+                   D100_1   0x000038    program     static E:\R\- LABs -\03\R.asm   
+                     D500   0x00003f    program     static E:\R\- LABs -\03\R.asm   
+                   D500_1   0x000045    program     static E:\R\- LABs -\03\R.asm   
+
+
