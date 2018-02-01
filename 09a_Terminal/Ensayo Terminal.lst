@@ -1,0 +1,1530 @@
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001 ;******************************************************************************
+                      00002 ;       Ensayo de comunicación por el canal SCI 
+                      00003 ;                                                                   
+                      00004 ;******************************************************************************
+                      00005 ;                                                                     
+                      00006 ;    Nombre del archivo:        Terminal                                           
+                      00007 ;    Fecha:                                     Septiembre del 2010                                     
+                                                   
+                      00008 ;    Versión:                           2.0                                                    
+                      00009 ;    Autor:                                     Sergio Fco. Hernández Machuca                           
+                                                           
+                      00010 ;    Institución:                       IDEAS
+                      00011 ;******************************************************************************
+                      00012 ;                                                                     
+                      00013 ;    Archivos requeridos:       Ninguno.                                                                
+                                                                                   
+                      00014 ;                                                                     
+                      00015 ;******************************************************************************
+                      00016 ;
+                      00017 ;    Notas:                                     Se debe ensamblar con la opción "Quickbuild" de "Project
+                            ".
+                      00018 ;
+                      00019 ;******************************************************************************
+                      00020 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+                      00021 ;-----[ AJUSTES ]-----
+                      00022 
+                      00023         LIST            P = PIC16F877   ; Identificación del uC en donde se ensamblará.
+                      00024                                                                 ; Debe coincidir con lo seleccionado con
+                            : "Configure" --> "Select Device"
+                      00025         #INCLUDE        p16f877.inc             ; Se usarán las variables y constantes proporcionadas po
+                            r Microchip
+                      00001         LIST
+                      00002 
+                      00003 ;==========================================================================
+                      00004 ;  MPASM PIC16F877 processor include
+                      00005 ; 
+                      00006 ;  (c) Copyright 1999-2013 Microchip Technology, All rights reserved
+                      00007 ;==========================================================================
+                      00008 
+Message[301]: MESSAGE: (Processor-header file mismatch.  Verify selected processor.)
+                      00540         LIST
+                      00026                                 
+                      00027         RADIX           dec                             ;La base numérica es Decimal
+  0039                00028         variable        SFHM=57                 ;Versión
+                      00029 
+                      00030         ERRORLEVEL      -302                    ; Evitar las advertencias de cambios de bancos
+                      00031 
+                      00032 ; La siguiente directiva es empleada para configurar dentro del mismo programa  en lenguaje ensamblador 
+                            (internamente)
+                      00033 ; los "fusibles" que determinan el comportamiento del uC en distintas cuestiones.
+                      00034 ; Se debe consultar la hoja de datos para identificar cada una de las opciones.
+                      00035  
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+2007   3F72           00036         __CONFIG _CP_OFF & _WDT_OFF & _BODEN_ON & _PWRTE_ON & _HS_OSC & _WRT_ENABLE_ON & _LVP_OFF & _DEB
+                            UG_OFF & _CPD_OFF 
+                      00037 ;=======================================================================================================
+                            ===============
+                      00038 ;     ---- ETIQUETAS ----
+                      00039 ;=======================================================================================================
+                            ===============
+                      00040 
+                      00041 ; === IDENTIFICADORES GENÉRICOS ===
+                      00042 
+                      00043 ; === IDENTIFICADORES de y para este NODO ===
+                      00044 
+                      00045 ; === COMANDOS ===
+                      00046 
+                      00047 ;                               === Comandos básicos del Sistema de Red ===
+                      00048 
+                      00049 ; === IDENTIFICADORES DE LETREROS DEL SISTEMA ===
+                      00050 
+  00000000            00051 Let_Principal:  EQU                     0x00                    ; Identificación del Sistema.
+  00000001            00052 Let_Prompt:             EQU                     0x01                    ; "Prompt" del sistema.
+  00000002            00053 Let_Aviso:              EQU                     0x02                    ; Aviso al usuario.
+  00000003            00054 Let_03:                 EQU                     0x03                    ; -----
+  00000004            00055 Let_04:                 EQU                     0x04                    ; -----
+  00000005            00056 Let_05:                 EQU                     0x05                    ; -----
+  00000006            00057 Let_06:                 EQU                     0x06                    ; -----
+  00000007            00058 Let_07:                 EQU                     0x07                    ; -----
+  00000008            00059 Let_08:                 EQU                     0x08                    ; -----
+  00000009            00060 Let_09:                 EQU                     0x09                    ; -----
+                      00061 
+  0000000A            00062 Let_Error:              EQU                     0x0A                    ; Error genérico.
+                      00063 
+                      00064 ;==================================================================================================
+                      00065 ;     ---- Variables ----
+                      00066 ;
+                      00067 ; Las variables se definen en bloques. Primero se establece la dirección inicial de cada zona.
+                      00068 ;==================================================================================================
+                      00069 
+  00000020            00070 BANCO_0                 EQU                     0x020                   ; Inicio de Bancos para localida
+                            des RAM.
+  000000A0            00071 BANCO_1                 EQU                     0x0A0                   ; Se da la dirección absoluta, p
+                            ara emplear la
+  00000110            00072 BANCO_2                 EQU                     0x110                   ; directiva PAGESEL.
+  00000190            00073 BANCO_3                 EQU                     0x190
+                      00074 
+  00000050            00075 ZonaTrabajo:    EQU                     0x050                   ; Zona donde se encuentran las variables
+                             empleadas
+                      00076                                                                                         ; por esta plata
+                            forma (Comunicaciones, Control de Red,
+                      00077                                                                                         ; procesaiento d
+                            e comandos, etc.)
+  00000070            00078 ZonaComun:              EQU                     0x070                   ; Zona de variables Globales. So
+                            n 16 localidades.       
+                      00079 
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00080 ;=========================[ ESTRUCTURAS de DATOS ]=========================
+                      00081 
+                      00082 ;----[ Banderas del Sistema ]----
+                      00083 
+  00000000            00084 EnvioMensaje    EQU                     0x00                    ; Bandera que indica que está en tránsit
+                            o un mensaje
+                      00085                                                                                         ; Cuando está en
+                             "1", se está recibiendo parte del mensaje
+  00000001            00086 ReciboMensaje   EQU                     0x01                    ; Bandera que indica que está en tránsit
+                            o un mensaje.
+                      00087                                                                                         ; Cuando está en
+                             "1", se está enviando parte del mensaje.
+                      00088 
+                      00089 ;-----[Variables del BANCO 0]-----
+                      00090 
+                      00091                                 CBLOCK          BANCO_0                 ; Primer bloque de localidades R
+                            AM. Esta zona debe estar
+  00000020            00092                                 Var0                                            ; (0x20)  disponible par
+                            a emplearse. El usuario debe
+  00000021            00093                                 Var1                                            ; (0x21)  "re-mapear" su
+                            s propias variables a estos 
+  00000022            00094                                 Var2                                            ; (0x22)  valores, a tra
+                            vés de directivas EQU.
+  00000023            00095                                 Var3                                            ; (0x23)
+  00000024            00096                                 Var4                                            ; (0x24)    Por ejemplo:
+  00000025            00097                                 Var5                                            ; (0x25)  
+  00000026            00098                                 Var6                                            ; (0x26)   SumaH:       
+                                    EQU             Var0
+  00000027            00099                                 Var7                                            ; (0x27)   SumaL:       
+                                    EQU             Var1
+  00000028            00100                                 Var8                                            ; (0x28)
+  00000029            00101                                 Var9                                            ; (0x29)
+  0000002A            00102                                 VarA                                            ; (0x2A)
+  0000002B            00103                                 VarB                                            ; (0x2B)  
+  0000002C            00104                                 VarC                                            ; (0x2C)  
+  0000002D            00105                                 VarD                                            ; (0x2D)
+  0000002E            00106                                 VarE                                            ; (0x2E)
+  0000002F            00107                                 VarF                                            ; (0x2F)
+                      00108                                 
+                      00109 
+  00000030            00110                                 PDel0                                           ; Variable para rutina d
+                            e retardo.
+  00000031            00111                                 PDel1                                           ; Variable para rutina d
+                            e retardo.
+                      00112 
+                      00113                                 ENDC
+                      00114 
+                      00115 ;-----[Zona de Variables de Trabajo]-----
+                      00116 
+                      00117                                 CBLOCK          ZonaTrabajo             ; Zona de RAM para las variables
+                             de la Plataforma
+                      00118                                                                                         ; El usuario NO 
+                            DEBE acceder a estas localidades.
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00119                                                                                         ; -= Inicialmete
+                             se encuentra a partir de 0x050 =-
+                      00120 
+  00000050            00121                                 Byte_Tx                                         ;(+00) Byte a TRANSMITIR
+                             (Canal Serial ...)
+  00000051            00122                                 Byte_Rx                                         ;(+01) Byte RECIBIDO (Ca
+                            nal Serial ...)
+                      00123 
+  00000052            00124                                 HexByte                                         ;(+02) Resultado de conv
+                            ersión
+                      00125 
+  00000053            00126                                 Tempo                                           ;(+03) ACCESO a EEPROM, 
+                            FLASH-RAM
+  00000054            00127                                 Tempo1                                          ;(+04) ACCESO a EEPROM, 
+                            FLASH-RAM
+  00000055            00128                                 Direccion                                       ;(+05) ACCESO a EEPROM, 
+                            FLASH-RAM
+                      00129 
+  00000056            00130                                 TempBanderas                            ; REVISAR!
+                      00131 
+  00000057            00132                                 TipoError                                       ;(+06) Identifica los er
+                            rores. Un valor de 0x00 indica que
+                      00133                                                                                         ;  todo está bie
+                            n, cualquier valor distinto a 0x00 indica 
+                      00134                                                                                         ;  que ocurrió u
+                            n error en alguna parte. 
+                      00135                                                                                         ; Se van añadien
+                            do errores por medio de operaciones "OR"
+                      00136                                                                                         ;  a esta cantid
+                            ad.
+                      00137 
+                      00138 ;Variables empleadas para ENSAYOS
+                      00139 
+  00000058            00140                                 Empiezo, Incremento, Fin, Contador
+                      00141                                 
+                      00142                                 ENDC
+                      00143 
+                      00144 ;-----[Zona Común de Variables]-----
+                      00145 
+                      00146                                 CBLOCK          ZonaComun               ; Variables GLOBALES, comunes a 
+                            todos los BANCOS
+                      00147                         
+  00000070            00148                                 Temp0                                           ;(0x70)  = Zona de PILA 
+                            (STACK), o para variables                                                                       
+  00000071            00149                                 Temp1                                           ;(0x71)    específicas =
+  00000072            00150                                 Temp2                                           ;(0x72)
+  00000073            00151                                 Temp3                                           ;(0x73)
+  00000074            00152                                 Temp4                                           ;(0x74) 
+  00000075            00153                                 Temp5                                           ;(0x75)
+  00000076            00154                                 Temp6                                           ;(0x76)
+                      00155                                 
+  00000077            00156                                 Acc                                                     ;(0x77) Registro
+                             Acumulador, Auxiliar.
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00157                                 
+  00000078            00158                                 SP                                                      ;(0x78) Apuntado
+                            r de la PILA (STACK), o Registro Índice. 
+                      00159                                 
+  00000079            00160                                 IX                                                      ;(0x79) Registro
+                             Índice genérico.
+  0000007A            00161                                 IY                                                      ;(0x7A) Registro
+                             Índice genérico.
+                      00162                                 
+  0000007B            00163                                 ContH                                           ;(0x7B) Contador de 16 b
+                            its, de uso genérico (Parte ALTA)
+  0000007C            00164                                 ContL                                           ;(0x7C) Contador de 16 b
+                            its, de uso genérico (Parte BAJA)
+                      00165                                                                                         ; Variables de C
+                            ontexto, guardadas en Interrupciones.
+  0000007D            00166                                 TempPCLATH                                      ;(0x7D) Valor temporal d
+                            el PC
+  0000007E            00167                                 TempStatus                                      ;(0x7E) Valor temporal d
+                            e las Banderas.
+  0000007F            00168                                 TempW                                           ;(0x7F) Valor temporal d
+                            el registro "W".
+                      00169                                                                                                         
+                      00170                                 ENDC
+                      00171 
+                      00172 ;-----[Variables del BANCO 1]-----
+                      00173 
+                      00174                                 CBLOCK          BANCO_1                 ;Segundo bloque de RAMs
+                      00175                                 
+  000000A0            00176                                 PtoA                                            ;Registros "Espejo" de l
+                            os
+  000000A1            00177                                 PtoB                                            ; Puertos de I/O
+  000000A2            00178                                 PtoC                                            ;
+  000000A3            00179                                 PtoD                                            ;
+  000000A4            00180                                 PtoE                                            ;
+                      00181 
+                      00182 ;-----[Variables del BANCO 2]-----
+                      00183 
+                      00184                                 ENDC
+                      00185                                 
+                      00186                                 CBLOCK          BANCO_2                 ;Tercer bloque de localidades de
+                             memoria RAM.
+                      00187 
+                      00188                                 ENDC
+                      00189 
+                      00190 ;-----[Variables del BANCO 3]-----
+                      00191 
+                      00192                                 CBLOCK          BANCO_3                 ; Cuarto bloque de localidades d
+                            e memoria RAM.
+                      00193                                                                                         ; Aquí se "Arma"
+                              y "Disecta" el mensaje 
+                      00194                                                                                         ; (Transmitido -
+                             Recibido) para establecer  
+                      00195                                                                                         ; la comunicació
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                            n genérica con otros procesadores.
+                      00196                                                                                         
+                      00197 ; --[ Estrictura del mensaje que se translada ] --
+                      00198 
+  00000190            00199                                 NodoReceptor                            ;Nodo al que se dirige el mensaj
+                            e
+  00000191            00200                                 NodoEmisor                                      ;Nodo quien remite el me
+                            nsaje
+  00000192            00201                                 NumeroBytes                                     ;Bytes que contiene el m
+                            ensaje, a partir del siguiente
+                      00202                                                                                         ; incluyendo el 
+                            CHECKSUM
+  00000193            00203                                 Comando                                         ;Orden a ejecutar
+  00000194            00204                                 Parametro1                                      ;Parámetro - uno -
+  00000195            00205                                 Parametro2                                      ;Parámetro - dos - ...
+  00000196            00206                                 Parametro3
+  00000197            00207                                 Parametro4
+  00000198            00208                                 Parametro5
+                      00209                                 
+                      00210                                 ENDC                                            
+                      00211 ;--------------------------------------------------------------------------------------------------
+                      00212 
+                      00213 ;******************************************************************************
+                      00214 ;       VECTORES de inicio de programa 
+                      00215 ;******************************************************************************
+                      00216 
+0000                  00217                                 ORG     0x000                           ; Vector de RESET del uC.
+0000   3000           00218                                 movlw   HIGH Principal          ; Parte alta de la dirección de Inicio.
+0001   008A           00219                                 movwf   PCLATH                          ; Ajusta a la página adecuada
+0002   2807           00220                                 goto    Principal                       ; -- Se pueden emplear hasta 4
+                      00221 
+                      00222 ;******************************************************************************
+                      00223 ;       VECTORES de inicio de Atención a Interrupciones. 
+                      00224 ;******************************************************************************
+                      00225                 
+0004                  00226                                 ORG     0x004                   ; Vector de ATENCIÓN a INTERRUPCIONES de
+                            l uC.
+0004   3000           00227                                 movlw   HIGH ISR                        ; Parte alta de la dirección de 
+                            Inicio.
+0005   008A           00228                                 movwf   PCLATH                          ; Ajusta a la página adecuada
+0006   28B1           00229                                 goto    ISR                                     ; -- Se pueden emplear h
+                            asta 4
+                      00230 ;******************************************************************************
+                      00231 ; Aquí se coloca el programa que se desea se ejecute en cada inicio del uC.
+                      00232 
+0007                  00233 Principal:
+                      00234 
+                      00235 ;--[AJUSTES GENERALES del SISTEMA]--
+                      00236 
+0007   201E           00237                                 call    SCI_19200               ; Subrutina para preparar el canal SCI. 
+                            Al concluir estamos en el Banco "0"
+                      00238                         
+                      00239                                 ; goto  S02                             ; Sección a probar
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0008   281B           00240                                 goto  S03
+                      00241 
+                      00242 ; >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                            >>>>>>>>>> 
+0009                  00243 S01:
+0009   303E           00244                                 movlw   '>'                             ; Caracter ASCII 'A' en "w"
+000A   2029           00245                                 call    TxW                             ; Escribe por el canal serial.
+000B                  00246 Continua:
+000B   202D           00247                                 call    RecepcionByte   ; Espera hasta que llegue un byte por el canal s
+                            erial.
+Message[305]: Using default destination of 1 (file).
+000C   0AD1           00248                                 incf    Byte_Rx                 ; Incrementa el byte recibido
+000D   0851           00249                                 movf    Byte_Rx, W              ; Copia en "W"
+000E   2029           00250                                 call    TxW                             ; Transmítelo.
+                      00251 
+000F   280B           00252                                 goto    Continua                ; Repite lo anterior
+                      00253 
+                      00254 ;--[Lazo sin fin, para atrapar la salida]--
+0010                  00255 Espera:                                 
+0010   2810           00256                                 goto    Espera                  ; Esto se pone como una protección, en c
+                            aso de desbordamiento.
+                      00257 
+                      00258 ; >->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->-
+                            >->->->->->
+0011                  00259 S02:
+0011   303E           00260                                 movlw   '>'
+0012   2029           00261                                 call    TxW
+0013   302D           00262                                 movlw   '-'
+0014   2029           00263                                 call    TxW
+0015   2032           00264                                 call    TxCRLF  
+                      00265                                 
+0016   202D           00266                                 call    RecepcionByte   ; Espera hasta que llegue un byte por el canal s
+                            erial.
+                      00267                                 ;decf   Byte_Rx                 ; Incrementa el byte recibido
+0017   0851           00268                                 movf    Byte_Rx, W              ; Copia en "W"
+0018   2029           00269                                 call    TxW                             ; Transmítelo.
+                      00270                                 ;call   TxW
+                      00271                                 ;call   TxW
+                      00272                                 ;call   TxCRLF
+                      00273 
+0019   2811           00274                                 goto    S02
+                      00275 
+001A   2810           00276                                 goto    Espera                  ; Esto se pone como una protección, en c
+                            aso de desbordamiento.
+                      00277                                 
+001B                  00278 S03:
+001B   3061           00279         movlw 'a'
+001C   2029           00280         call  TxW
+001D   281B           00281         goto  S03               
+                      00282 
+                      00283 ;##############################################################################
+                      00284 ;               ---[Subrutinas de apoyo específicas a esta aplicación]---
+                      00285 ;##############################################################################
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE  8
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00286 
+                      00287 
+                      00288 ;##############################################################################
+                      00289 ;               ---[Subrutinas de apoyo genéricas, se ocupan en muchas aplicaciones]---
+                      00290 ;##############################################################################
+                      00291 
+                      00292         #include        "subs.asm"
+                      00001 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+                            -=-=-=-=-=-=-=-
+                      00002 ;----[Subrutinas Generales]-----------------------------------------------------------------------------
+                            ---------------
+                      00003 ; Para usar adecuadamente cualquiera de las siguientes subrutinas se parte de lo siguiente:
+                      00004 ; - Quien invoca a la subrutina se encuentra direccionando al Banco "0".
+                      00005 ; - Las subrutinas pueden alterar el valor del regisro "W".
+                      00006 ; -
+                      00007 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+                      00008 ;------[Ajuste de parámetros para la Comunicación Serial]------
+                      00009 ; Descripción:  Ajusta a valores específicos la comunicación SCI.
+                      00010 ; Entrada(s):   Ninguna.
+                      00011 ; Afecta a:             Registro "W", parámetros del SCI.
+                      00012 ; Salida(s):    Registro "W".
+                      00013 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+001E                  00014 SCI_19200:                      
+001E   1683           00015                                 bsf     STATUS,RP0              ; Pasar al Banco "1".
+001F   1303           00016                                 bcf             STATUS,RP1              ;
+                      00017 
+0020   3040           00018                                 movlw   D'64'                       ; Ajustar a 19,200 bauds @ 20 Mhz, s
+                            uponiendo BRGH en "1".
+0021   0099           00019                                 movwf   SPBRG                     ; Deposita el valor en bauds.
+                      00020 
+                      00021 ;        [Bits del registro TXSTA - TRANSMIT STATUS AND CONTROL REGISTER] Se encuentra en el Banco "1".
+                      00022 ; CSRC          H'0007' = 0     -- 
+                      00023 ; TX9           H'0006' = 0     -- Comunicación a 8 bits        
+                      00024 ; TXEN          H'0005' = 1 -- Habilita la Transmisión
+                      00025 ; SYNC          H'0004' = 0 -- Selecciona el modo "Asíncrono"
+                      00026 ; ----          H'0003' = 0
+                      00027 ; BRGH          H'0002' = 1 -- Habilita al uso de ALta Velocidad en "BAUD"
+                      00028 ; TRMT          H'0001' = 0
+                      00029 ; TX9D          H'0000' = 0 
+                      00030                                                                                 ; Este valor puede cambi
+                            ar para otras velocidades.
+0022   3024           00031                                 movlw   B'00100100' ; Se han puesto: BRGH (Baud Rate Alto), TXEN (Habili
+                            ta Transmisión).
+0023   0098           00032                                 movwf   TXSTA                     ; Se han deshabilitado: TX9D, TRMT, SY
+                            C, TX9, CSRC.
+                      00033 
+0024   1283           00034                                 bcf             STATUS, RP0             ; Regresamos al Banco "0".
+                      00035 
+                      00036 ;        [Bits del registro RCSTA] Se encuentra en el Banco "0"
+                      00037 ; SPEN          H'0007' = 1     -- Habilita el Puerto Serial
+                      00038 ; RX9           H'0006' = 0 -- Comunicación a 8 bits
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE  9
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00039 ; SREN          H'0005' = 0
+                      00040 ; CREN          H'0004' = 1     -- Habilita la Recepción
+                      00041 ; ADDEN         H'0003' = 0
+                      00042 ; FERR          H'0002' = 0
+                      00043 ; OERR          H'0001' = 0
+                      00044 ; RX9D          H'0000' = 0
+                      00045 
+0025   3090           00046                                 movlw   B'10010000'   ; Se ponen a "1": CREN (Habilita la Recepción) y S
+                            PEN ... 
+                      00047                                                                                           ; ... (Habilit
+                            a el puerto serial completo)
+0026   0098           00048                                 movwf   RCSTA                       ;
+                      00049 ;--  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+0027   0008           00050                                 return                                        ; Recordar quedar en el Ba
+                            nco "0" 
+                      00051 
+                      00052 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+                      00053 ;------[Transmite un byte por el canal serial, sin manejo de Interrupciones]------
+                      00054 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+0028                  00055 EnvioByte:                                                              
+0028   0850           00056                                 movf    Byte_Tx,w                   ; Toma el dato (Byte_Tx) para escrib
+                            irlo en el canal serial. 
+                      00057                                 
+                      00058 ;------[ENTRADA para escribir el valor de "W"]------
+                      00059 
+0029                  00060 TxW:
+0029   1E0C           00061                                 btfss   PIR1, TXIF                ; Espera hasta que se termine de trans
+                            mitir el byte actual (USART).
+002A   2829           00062                                 goto    $-1                                   ;                         
+                                                                    
+                      00063                                 
+002B   0099           00064                                 movwf   TXREG                         ; Deposita el valor a escribir en 
+                            el Tx (serial) 
+                      00065                                                                                           ; Salta aquí s
+                            i el Buffer del Tx está vacío.                                                                  
+002C   0008           00066                                 return
+                      00067 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+                      00068 ;------[Recibe un byte por el canal serial, sin manejo de Interrupciones]------
+                      00069 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+002D                  00070 RecepcionByte:                                                          
+002D   1E8C           00071                                 btfss   PIR1, RCIF              ; Espera hasta que ... 
+002E   282D           00072                                 goto    RecepcionByte     ;   ... se reciba un byte.
+                      00073                                 
+002F   081A           00074                                 movf    RCREG, W                    ; Toma el byte leído.
+0030   00D1           00075                                 movwf   Byte_Rx                   ; Deposita el dato leído.
+                      00076                                 
+0031   0008           00077                                 return
+                      00078 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE 10
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00079 ;------[Escribe una secuencia de "LineFeed" y "CarriageReturn" hacia el buffer de Tx (Serial)]------
+                      00080 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+0032                  00081 TxCRLF:                                                         
+0032   300A           00082                                 movlw   0x0A                        ; Caracter a escribir...
+0033   2029           00083                                 call    TxW                                 ; ...en el canal serial.
+                      00084 
+0034   300D           00085                                 movlw   0x0D                      ; Caracter a escribir...
+0035   2029           00086                                 call    TxW                                 ; ...en el canal serial.
+                      00087                                                                                                         
+                                                                                                                            
+0036   0008           00088                                 return
+                      00089 ;-----------------------------------------------------------------------------------------------
+                      00090 ;Lee (dos) Bytes del Canal Serial en formato ASCII, correspondiente a (un) caracter HEXADECIMAL
+                      00091 ;-----------------------------------------------------------------------------------------------
+0037                  00092 RxByteHex:
+0037   202D           00093                                 call    RecepcionByte ; Lee un byte del canal serial (Hexadecimal en for
+                            mato ASCII)
+0038   3EBF           00094                                 addlw   0xBF                        ; Resta 'A'. (Caracter leído) - 'A'
+0039   1C03           00095                                 btfss   STATUS, C                 ; Si el resultado fue positivo (dato e
+                            ntre A ... F) salta
+003A   3E07           00096                                 addlw   0x07                        ;   Si no, (dato menor a A), agrega 
+                            17 (dato leído fue 0 ... 9) 
+003B   3E0A           00097                                 addlw   0x0A                        ; De cualquier forma, agrega 10
+                      00098                                 
+003C   00D2           00099                                 movwf   HexByte                   ; Guarda en variable
+003D   0ED2           00100                                 swapf   HexByte, F              ; Mueve el nibble calculado a la posició
+                            n más alta
+                      00101 
+003E   202D           00102                                 call    RecepcionByte   ; Lee un byte del canal serial (Hexadecimal en f
+                            ormato ASCII)
+003F   3EBF           00103                                 addlw   0xBF                        ; Resta 'A'. (Caracter leído) - 'A'
+0040   1C03           00104                                 btfss   STATUS, C                 ; Si el resultado fue positivo (dato e
+                            ntre A ... F) salta
+0041   3E07           00105                                 addlw   0x07                        ;   Si no, (dato menor a A), agrega 
+                            17 (dato leído fue 0 ... 9) 
+0042   3E0A           00106                                 addlw   0x0A                        ; De cualquier forma, agrega 10
+                      00107                                 
+0043   04D2           00108                                 iorwf   HexByte, F              ; Agrega el nibble alto al nibble bajo
+0044   0852           00109                                 movf    HexByte, W              ; Deja el resultado en el registro "W"
+                      00110                                 
+0045   0008           00111                                 return
+                      00112 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+                      00113 ;------[Conversión de un caracter ASCII Hex a Binario]------
+                      00114 ; Entrada:              Registro "W".
+                      00115 ; Resultado:    Registro "W".
+                      00116 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+0046                  00117 ASCII_Bin:      
+0046   3EBF           00118                                 addlw   0xBF                              ; Resta 'A'. -> (Caracter leíd
+                            o) - 'A'
+0047   1C03           00119                                 btfss   STATUS, C                       ; Si el resultado fue positivo (
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE 11
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                            dato entre [A.. F]) salta
+0048   3E07           00120                                 addlw   0x07                              ;    Si no, (dato menor a A), 
+                            agrega 17 (dato leído fue [0..9]) 
+0049   3E0A           00121                                 addlw   0x0A                              ; De cualquier forma, agrega 0
+                            x10
+                      00122 
+004A   0008           00123                                 return
+                      00124 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+                      00125 ;------[Lectura de Datos del EEPROM local]------
+                      00126 ; Descripción:  Lectura de datos de la zona EEPROM local.
+                      00127 ; Entrada(s):   En la variable [Tempo] se debe proporcionar la dirección de la localidad EEPROM que se d
+                            esea leer.
+                      00128 ; Afecta a:             Registro "W"
+                      00129 ; Salida(s):    Resultado de la lectura en el Registro "W".
+                      00130 ;-------------------------------------------------------------------------------------------------------
+                            ---------------                         
+004B                  00131 RD_EEPROM:
+004B   1703           00132                                 bsf             STATUS, RP1             ; Ajusta para apuntar al Banco 2
+                      00133                                                                                         ; (Se encuentra,
+                             por omisión, en el BANCO 0)
+                      00134 
+004C   0853           00135                                 movf    Tempo, W                  ; Dirección...
+004D   008D           00136                                 movwf   EEADR                   ; de la que se desea leer.
+                      00137                                 
+004E   1683           00138                                 bsf     STATUS, RP0     ; Ajusta para apuntar al Banco 3
+                      00139 
+004F   138C           00140                                 bcf     EECON1, EEPGD ; Apunta al dato en memoria EEPROM
+                      00141 
+0050   140C           00142                                 bsf     EECON1, RD              ; Inicia la operación de lectura
+                      00143 
+0051   1283           00144                                 bcf     STATUS, RP0     ; Regresa al banco 2
+0052   080C           00145                                 movf    EEDATA, W               ; En W está el dato que se desea leer (E
+                            EDATA)
+                      00146 
+0053   1303           00147                                 bcf             STATUS, RP1             ; Regresa al Banco 0
+                      00148                                 
+0054   0008           00149                                 return
+                      00150 
+                      00151 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+                      00152 ;------[Escritura de Datos hacia el EEPROM local]------
+                      00153 ; Descripción:  Escritura de datos en la zona EEPROM local.
+                      00154 ; Entrada(s):   Se debe proporcionar en [Tempo] el dato que se desea escribir en la localidad EEPROM esp
+                            ecificada.
+                      00155 ;                               Se debe prooprcionar en [Tempo1] la dirección de la EEPROM en donde se d
+                            esea escribir.
+                      00156 ; Afecta a:             Registro "W"
+                      00157 ; Salida(s):    Resultado de la lectura en el Registro "W".
+                      00158 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+                      00159 
+0055                  00160 WR_EEPROM:
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE 12
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0055   1703           00161                                 bsf     STATUS, RP1     ;
+0056   1683           00162                                 bsf     STATUS, RP0     ; Ajusta al BANCO 3
+0057                  00163 Espera_WR_EE:                           
+0057   188C           00164                                 btfsc   EECON1, WR      ; Espera hasta que...
+0058   2857           00165                                 goto    Espera_WR_EE    ; ...concluya la escitura (previa)
+                      00166 
+0059   1283           00167                                 bcf     STATUS, RP0     ; Vamos al BANCO 2
+                      00168 
+005A   0854           00169                                 movf    Tempo1, W               ; Esta es la dirección...
+005B   008D           00170                                 movwf   EEADR                   ; ...hacia la cual se escribe.
+                      00171                                 
+005C   0853           00172                                 movf    Tempo, W                  ; Este es el...
+005D   008C           00173                                 movwf   EEDATA                  ; ...dato a escribir.
+                      00174                                 
+005E   1683           00175                                 bsf     STATUS, RP0     ; Vamos al BANCO 3
+                      00176 
+005F   138C           00177                                 bcf     EECON1, EEPGD ; Se apunta a la localidad en donde se depositará 
+                            el dato.
+0060   150C           00178                                 bsf     EECON1, WREN    ; Se habilita la escritura.
+                      00179                                                                                         ; Solamente se d
+                            eshabilitan las interrupciones...
+0061   138B           00180                                 bcf     INTCON, GIE     ; ...Si previamente fueron habilitadas.
+                      00181 
+0062   3055           00182                                 movlw   0x55                      ; Secuencia específica a escribir,
+0063   008D           00183                                 movwf   EECON2                  ;  para habilitar el proceso de escritur
+                            a
+0064   30AA           00184                                 movlw   0xAA                      ;  en la memoria EEPROM.
+0065   008D           00185                                 movwf   EECON2                  ;
+                      00186                                 
+0066   148C           00187                                 bsf     EECON1, WR              ; Inicia la operación de escritura
+                      00188                                                                                         ; Se habilitan l
+                            as interrupciones...
+0067   178B           00189                                 bsf     INTCON, GIE     ; ...si previamente se estaban usando.
+                      00190 
+0068   110C           00191                                 bcf     EECON1, WREN    ; Se deshabilita la escritura de la memoria EEPR
+                            OM.
+                      00192                                 
+0069                  00193 Espera_WR_EE2:                          
+0069   188C           00194                                 btfsc   EECON1, WR  ; Espera hasta que...
+006A   2869           00195                                 goto    Espera_WR_EE2 ; ...concluya la escitura (actual)
+                      00196                                 
+006B   1303           00197                                 bcf     STATUS, RP1     ;
+006C   1283           00198                                 bcf     STATUS, RP0     ; Ajusta al BANCO 0
+                      00199 
+006D   0008           00200                                 return
+                      00201 ;-------------------------------------------------------------------------------------------------------
+                            ---------------                         
+                      00202 ;------[Realiza la ESCRITURA hacia una Zona de Memoria de un MENSAJE recibido por el canal serial]------
+                      00203 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+                      00204 ;
+                      00205 ; Esta subrutina realiza el depósito de la información recibida, de acuerdo al siguiente orden:
+                      00206 ;
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE 13
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00207 ;                               NodoReceptor                            ; Nodo al que se dirige el mensa
+                            je
+                      00208 ;                               NodoEmisor                                      ; Nodo quien remite el m
+                            ensaje
+                      00209 ;                               Comando                                           ; Orden a ejecutar
+                      00210 ;                               NumBytes                                          ; Bytes que contiene e
+                            l mensaje, a partir del siguiente
+                      00211                                                                                               ; incluyen
+                            do el CHECKSUM
+                      00212 ;                               Parametro1                                      ; Parámetro - uno -
+                      00213 ;                               Pamametro2                                      ; Parámetro - dos - ...
+                      00214 ;
+                      00215 ;                               CheckSum                                          ; Verificación de inte
+                            gridad del mensaje
+                      00216 ;
+                      00217 ;ALTERA:
+                      00218 ;                               W, Contador, FSR, Banco
+                      00219 ;-----------------------------------------------------------------------------------------------
+                      00220 
+  00000190            00221 Buffer_Temp:    EQU             BANCO_3                         ;Último banco de memoria RAM (empieza en
+                             la localidad 0x190)
+                      00222 
+006E                  00223 Recibe_Mensaje:
+                      00224 
+006E   1456           00225                                 bsf             TempBanderas,EnvioMensaje       ;Avisa que se está recib
+                            iendo un mensaje                                
+                      00226 
+006F   1783           00227                                 bsf             STATUS, IRP                     ;Para acceder a la zona 
+                            de RAM adecuada (Banco 3)
+Warning[202]: Argument out of range.  Least significant bits used.
+0070   3090           00228                                 movlw   Buffer_Temp                     ;Inicio de la zona de depósito
+0071   0084           00229                                 movwf   FSR                                     ;Este es el apuntador
+                      00230                                 
+                      00231                                                                                         ;Lectura del NOD
+                            O_RECEPTOR
+0072   202D           00232                                 call    RecepcionByte           ;Toma un dato del canal serial (en forma
+                            to Hexadecimal)
+                      00233 ;                               call    RxByteHex                       ;Toma un dato del canal serial (
+                            en formato ASCII)
+0073   0080           00234                                 movwf   INDF                            ;Deposita en el lugar adecuado
+0074   0A84           00235                                 incf    FSR, F                          ;Actualiza el apuntador
+                      00236 
+                      00237 ;Probablemente aquí se analize si es conveniente continuar (si es el mensaje para ESTE nodo)
+                      00238 ; o si se deja fluir el mensaje de manera constante, sin ponerle atención
+                      00239 ;
+                      00240 ;                               Compara si el valor leído es igual
+                      00241 ;                               al valor de este nodo
+                      00242 ;                               -- Si lo fuera, continua
+                      00243 ;               -- Si NO lo fuera, aborta la recepción del mensaje.
+                      00244 
+                      00245                                                                                         ;Lectura del NOD
+                            O_EMISOR
+0075   202D           00246                                 call    RecepcionByte           ;Toma un dato del canal serial (en forma
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE 14
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                            to Hexadecimal)
+                      00247 ;                               call    RxByteHex                       ;Toma un dato del canal serial (
+                            en formato ASCII)
+0076   0080           00248                                 movwf   INDF                            ;Deposita en el lugar adecuado
+0077   0A84           00249                                 incf    FSR, F                          ;Actualiza el apuntador
+                      00250                                 
+                      00251                                                                                         ;Lectura del COM
+                            ANDO
+0078   202D           00252                                 call    RecepcionByte           ;Toma un dato del canal serial (en forma
+                            to Hexadecimal)
+                      00253 ;                               call    RxByteHex                       ;Toma un dato del canal serial (
+                            en formato ASCII)
+0079   0080           00254                                 movwf   INDF                            ;Deposita en el lugar adecuado
+007A   0A84           00255                                 incf    FSR, F                          ;Actualiza el apuntador
+                      00256                                         
+                      00257                                                                                         ;Lectura del Num
+                            eroBytes (el número de datos que falta leer)
+007B   202D           00258                                 call    RecepcionByte           ;Toma un dato del canal serial (en forma
+                            to Hexadecimal)
+                      00259 ;                               call    RxByteHex                       ;Toma un dato del canal serial (
+                            en formato ASCII)
+007C   0080           00260                                 movwf   INDF                            ;Deposita en el lugar adecuado
+007D   00FC           00261                                 movwf   ContL                           ;Contador de datos leídos y depo
+                            sitados
+007E   0A84           00262                                 incf    FSR, F                          ;Actualiza el apuntador
+                      00263         
+007F                  00264 Continua_Mensaje:                                                       ;Lectura de Parámetros y Checksu
+                            m
+007F   202D           00265                                 call    RecepcionByte           ;Toma un dato del canal serial (en forma
+                            to Hexadecimal)
+                      00266 ;                               call    RxByteHex                       ;Toma un dato del canal serial (
+                            en formato ASCII)
+0080   0080           00267                                 movwf   INDF                            ;Deposita en el lugar adecuado
+0081   0A84           00268                                 incf    FSR, F                          ;Actualiza el apuntador
+                      00269                                 
+0082   0BFC           00270                                 decfsz  ContL, F                        ;Actualiza el contador
+0083   287F           00271                                 goto    Continua_Mensaje        ;Continua hasta concluir
+                      00272                                 
+0084   1383           00273                                 bcf             STATUS, IRP                     ;Para regresar al estado
+                             natural de acceso (indirecto) a bancos
+                      00274                                 
+0085   1056           00275                                 bcf             TempBanderas,EnvioMensaje       ;Avisa que se terminó de
+                             recibir un mensaje
+                      00276                                 
+0086   0008           00277                                 return                                                  
+                      00278 ;-----------------------------------------------------------------------------------------------
+                      00279 ;Realiza la LECTURA de lo contenido en una Zona de Memoria (MENSAJE) y escritura hacia el canal serial.
+                      00280 ;
+                      00281 ; Esta subrutina toma la información previamente procesada, de acuerdo al siguiente orden:
+                      00282 ;
+                      00283 ;                               NodoReceptor                            ;Nodo al que se dirige el mensaj
+                            e
+                      00284 ;                               NodoEmisor                                      ;Nodo quien remite el me
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE 15
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                            nsaje
+                      00285 ;                               Comando                                         ;Orden a ejecutar
+                      00286 ;                               NumeroBytes                                     ;Bytes que contiene el m
+                            ensaje, a partir del siguiente
+                      00287                                                                                         ; incluyendo el 
+                            CHECKSUM
+                      00288 ;                               Parametro1                                      ;Parámetro - uno -
+                      00289 ;                               Pamametro2                                      ;Parámetro - dos - ...
+                      00290 ;
+                      00291 ;                               CheckSum                                        ;Verificación de integri
+                            dad del mensaje
+                      00292 ;
+                      00293 ;ALTERA:
+                      00294 ;                               W, Contador, FSR, Banco
+                      00295 ;-----------------------------------------------------------------------------------------------
+                      00296 
+  00000190            00297 Buffer_Temp:    EQU             BANCO_3                         ;Último banco de memoria RAM (empieza en
+                             la localidad 0x190)
+                      00298 
+0087                  00299 Envia_Mensaje:
+0087   14D6           00300                                 bsf             TempBanderas,ReciboMensaje      ;Avisa que se está envia
+                            ndo un mensaje                          
+                      00301 
+0088   1783           00302                                 bsf             STATUS, IRP                     ;Para acceder a la zona 
+                            de RAM adecuada (Banco 3)
+Warning[202]: Argument out of range.  Least significant bits used.
+0089   3090           00303                                 movlw   Buffer_Temp                     ;Inicio de la zona de depósito
+008A   0084           00304                                 movwf   FSR                                     ;Este es el apuntador
+                      00305                                 
+                      00306                                                                                         ;Escritura del N
+                            ODO_RECEPTOR
+008B   0800           00307                                 movfw   INDF                            ;Toma el valor depositado en mem
+                            oria RAM
+008C   2029           00308                                 call    TxW                                     ;Envía el dato por el ca
+                            nal serial (en Hexadecimal)
+008D   0A84           00309                                 incf    FSR, F                          ;Actualiza el apuntador
+                      00310 
+                      00311                                                                                         ;Escritura del N
+                            ODO_EMISOR
+008E   0800           00312                                 movfw   INDF                            ;Toma el valor depositado en mem
+                            oria RAM
+008F   2029           00313                                 call    TxW                                     ;Envía el dato por el ca
+                            nal serial (en Hexadecimal)
+0090   0A84           00314                                 incf    FSR, F                          ;Actualiza el apuntador
+                      00315 
+                      00316                                                                                         ;Escritura del C
+                            OMANDO
+0091   0800           00317                                 movfw   INDF                            ;Toma el valor depositado en mem
+                            oria RAM
+0092   2029           00318                                 call    TxW                                     ;Envía el dato por el ca
+                            nal serial (en Hexadecimal)
+0093   0A84           00319                                 incf    FSR, F                          ;Actualiza el apuntador
+                      00320 
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE 16
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00321                                                                                         ;Escritura del N
+                            umeroBytes a enviar
+0094   0800           00322                                 movfw   INDF                            ;Toma el valor depositado en mem
+                            oria RAM
+0095   00FC           00323                                 movwf   ContL                           ;Ajusta el Contador del número d
+                            e bytes a transmitir
+0096   2029           00324                                 call    TxW                                     ;Envía el dato por el ca
+                            nal serial (en Hexadecimal)
+0097   0A84           00325                                 incf    FSR, F                          ;Actualiza el apuntador
+                      00326                                 
+0098                  00327 Continua_Escribiendo:
+                      00328 
+0098   0800           00329                                 movfw   INDF                            ;Toma el valor depositado en mem
+                            oria RAM
+0099   2029           00330                                 call    TxW                                     ;Envía el dato por el ca
+                            nal serial (en Hexadecimal)
+009A   0A84           00331                                 incf    FSR, F                          ;Actualiza el apuntador
+                      00332                                 
+009B   0BFC           00333                                 decfsz  ContL, F                        ;Actualiza el Contador
+009C   2898           00334                                 goto    Continua_Escribiendo    ;Continua hasta concluir
+                      00335 
+009D   1383           00336                                 bcf             STATUS, IRP                     ;Para regresar al estado
+                             natural de acceso (indirecto) a bancos                         
+009E   10D6           00337                                 bcf             TempBanderas,ReciboMensaje      ;Avisa que se terminó de
+                             recibir un mensaje
+                      00338                                 
+009F   0008           00339                                 return
+                      00340 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+                      00341 ; Cálculo de Retardo: 100 milisegundos.
+                      00342 ;
+                      00343 ; --> En esta subrutina se consumen 500,000 ciclos.
+                      00344 ; --> Si se emplea un cristal de 20 MHz, se generan instrucciones a una velocidad
+                      00345 ;               de 200 nanosegundos, de donde el retardo es de:
+                      00346 ;               (200 nanosegundos ) * (500,000 instrucciones ejecutadas) =
+                      00347 ;               100,000,000 de nanosegundos = 100 miliaegundos = 0.1 segundo.
+                      00348 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+                      00349 
+00A0                  00350 PDelay:  
+00A0   30EF           00351                                 movlw           .239                    ; Ajusta el número de repeticion
+                            es (B
+00A1   00B0           00352                         movwf           PDel0                   ; 1 |
+00A2                  00353 PLoop1 
+00A2   30E8           00354                                 movlw           .232                    ; Ajusta el número de repeticion
+                            es (A)
+00A3   00B1           00355                         movwf           PDel1                   ; 1 |
+00A4                  00356 PLoop2:
+00A4   0064           00357                                 clrwdt                          ; 1 Limpieza del WDT.
+00A5                  00358 PDelL1:
+00A5   28A6           00359                                 goto            PDelL2          ; Retardo de 2 ciclos.
+00A6                  00360 PDelL2:
+00A6   28A7           00361                                 goto            PDelL3          ; Retardo de 2 ciclos.
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE 17
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00A7                  00362 PDelL3:
+00A7   0064           00363                                 clrwdt                          ; Retardo de 1 ciclo.
+00A8   0BB1           00364                         decfsz          PDel1, 1                ; 1 + (1) ¿Se acabó en tiempo para (A)?
+00A9   28A4           00365                         goto            PLoop2                  ; 2 No, continúa...
+                      00366                         
+00AA   0BB0           00367                                 decfsz          PDel0,  1               ; 1 + (1) ¿Se acabó el tiempo pa
+                            ra (B)?
+00AB   28A2           00368                         goto            PLoop1                  ; 2 no, Continúa...
+00AC                  00369 PDelL4:
+00AC   28AD           00370                                 goto            PDelL5          ; Retardo de 2 ciclos.
+00AD                  00371 PDelL5:
+00AD   28AE           00372                                 goto            PDelL6          ; Retardo de 2 ciclos.
+00AE                  00373 PDelL6:
+00AE   28AF           00374                                 goto            PDelL7          ; Retardo de 2 ciclos.
+00AF                  00375 PDelL7:
+00AF   0064           00376                                 clrwdt                          ; Retardo de 1 ciclo.
+                      00377                         
+00B0   0008           00378                                 return                          ; Concluido 2+2
+                      00379                                                                 
+                      00380 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+                      00381 ;------[Nombre de la Subrutina]------
+                      00382 ; Descripción:  Lo que hace esta subrutina, en no más de un renglón
+                      00383 ; Entrada(s):   Registro "W".
+                      00384 ; Afecta a:             Registro "W"
+                      00385 ; Salida(s):    Registro "W".
+                      00386 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+                      00387 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+                            -=-=-=-=-=-=-=- 
+                      00293 
+                      00294 ;******************************************************************************
+                      00295 
+                      00296 ;******************************************************************************
+                      00297 ; Aquí debe estar el código (ISR) que atiende a las interrupciones.
+00B1                  00298 ISR:
+                      00299 
+                      00300 ; Debe iniciar con el siguiente segmento de código.
+00B1   00FF           00301                                 movwf   TempW                   ; Guarda el valor actual de "w".
+00B2   0803           00302                                 movf    STATUS,w                ; Mueve contenido de"status" al registro
+                             "w".
+00B3   00FE           00303                                 movwf   TempStatus                      ; Guarda el contenido de "status
+                            ".
+                      00304 
+                      00305 ; Aquí continúa el código del usuario.
+                      00306 
+                      00307 
+                      00308 
+                      00309 ; Debe concluir con el siguiente segmento:
+00B4   087E           00310                                 movf    TempStatus,w            ; Restaura la copia de "status".
+00B5   0083           00311                                 movwf   STATUS                  ; Restaura el contenido previo.
+00B6   0EFF           00312                                 swapf   TempW,f                 ; Intercambia contenidos.               
+00B7   0E7F           00313                                 swapf   TempW,w                 ; Restaura el valor de "w".
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE 18
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00B8   0009           00314                                 retfie                          ; Regresa de la atención a la interrupci
+                            ón.
+                      00315 ;
+                      00316 ;#######################################################################################################
+                            #############
+                      00317                                 END                             ; Directiva que indica "fin" del código.
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE 19
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ACKDT                             00000005
+ACKEN                             00000004
+ACKSTAT                           00000006
+ADCON0                            0000001F
+ADCON1                            0000009F
+ADCS0                             00000006
+ADCS1                             00000007
+ADDEN                             00000003
+ADFM                              00000007
+ADIE                              00000006
+ADIF                              00000006
+ADON                              00000000
+ADRESH                            0000001E
+ADRESL                            0000009E
+ASCII_Bin                         00000046
+Acc                               00000077
+BANCO_0                           00000020
+BANCO_1                           000000A0
+BANCO_2                           00000110
+BANCO_3                           00000190
+BCLIE                             00000003
+BCLIF                             00000003
+BF                                00000000
+BRGH                              00000002
+Buffer_Temp                       00000190
+Byte_Rx                           00000051
+Byte_Tx                           00000050
+C                                 00000000
+CCP1CON                           00000017
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCP1X                             00000005
+CCP1Y                             00000004
+CCP2CON                           0000001D
+CCP2IE                            00000000
+CCP2IF                            00000000
+CCP2M0                            00000000
+CCP2M1                            00000001
+CCP2M2                            00000002
+CCP2M3                            00000003
+CCP2X                             00000005
+CCP2Y                             00000004
+CCPR1                             00000015
+CCPR1H                            00000016
+CCPR1L                            00000015
+CCPR2                             0000001B
+CCPR2H                            0000001C
+CCPR2L                            0000001B
+CHS0                              00000003
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE 20
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+CHS1                              00000004
+CHS2                              00000005
+CKE                               00000006
+CKP                               00000004
+CREN                              00000004
+CSRC                              00000007
+Comando                           00000193
+ContH                             0000007B
+ContL                             0000007C
+Contador                          0000005B
+Continua                          0000000B
+Continua_Escribiendo              00000098
+Continua_Mensaje                  0000007F
+D                                 00000005
+DATA_ADDRESS                      00000005
+DC                                00000001
+D_A                               00000005
+D_NOT_A                           00000005
+Direccion                         00000055
+EEADR                             0000010D
+EEADRH                            0000010F
+EECON1                            0000018C
+EECON2                            0000018D
+EEDATA                            0000010C
+EEDATH                            0000010E
+EEIE                              00000004
+EEIF                              00000004
+EEPGD                             00000007
+Empiezo                           00000058
+Envia_Mensaje                     00000087
+EnvioByte                         00000028
+EnvioMensaje                      00000000
+Espera                            00000010
+Espera_WR_EE                      00000057
+Espera_WR_EE2                     00000069
+F                                 00000001
+FERR                              00000002
+FSR                               00000004
+Fin                               0000005A
+GCEN                              00000007
+GIE                               00000007
+GO                                00000002
+GO_DONE                           00000002
+GO_NOT_DONE                       00000002
+HexByte                           00000052
+I2C_DATA                          00000005
+I2C_READ                          00000002
+I2C_START                         00000003
+I2C_STOP                          00000004
+IBF                               00000007
+IBOV                              00000005
+INDF                              00000000
+INTCON                            0000000B
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE 21
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+INTE                              00000004
+INTEDG                            00000006
+INTF                              00000001
+IRP                               00000007
+ISR                               000000B1
+IX                                00000079
+IY                                0000007A
+Incremento                        00000059
+Let_03                            00000003
+Let_04                            00000004
+Let_05                            00000005
+Let_06                            00000006
+Let_07                            00000007
+Let_08                            00000008
+Let_09                            00000009
+Let_Aviso                         00000002
+Let_Error                         0000000A
+Let_Principal                     00000000
+Let_Prompt                        00000001
+NOT_A                             00000005
+NOT_ADDRESS                       00000005
+NOT_BO                            00000000
+NOT_BOR                           00000000
+NOT_DONE                          00000002
+NOT_PD                            00000003
+NOT_POR                           00000001
+NOT_RBPU                          00000007
+NOT_RC8                           00000006
+NOT_T1SYNC                        00000002
+NOT_TO                            00000004
+NOT_TX8                           00000006
+NOT_W                             00000002
+NOT_WRITE                         00000002
+NodoEmisor                        00000191
+NodoReceptor                      00000190
+NumeroBytes                       00000192
+OBF                               00000006
+OERR                              00000001
+OPTION_REG                        00000081
+P                                 00000004
+PCFG0                             00000000
+PCFG1                             00000001
+PCFG2                             00000002
+PCFG3                             00000003
+PCL                               00000002
+PCLATH                            0000000A
+PCON                              0000008E
+PDel0                             00000030
+PDel1                             00000031
+PDelL1                            000000A5
+PDelL2                            000000A6
+PDelL3                            000000A7
+PDelL4                            000000AC
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE 22
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+PDelL5                            000000AD
+PDelL6                            000000AE
+PDelL7                            000000AF
+PDelay                            000000A0
+PEIE                              00000006
+PEN                               00000002
+PIE1                              0000008C
+PIE2                              0000008D
+PIR1                              0000000C
+PIR2                              0000000D
+PLoop1                            000000A2
+PLoop2                            000000A4
+PORTA                             00000005
+PORTB                             00000006
+PORTC                             00000007
+PORTD                             00000008
+PORTE                             00000009
+PR2                               00000092
+PS0                               00000000
+PS1                               00000001
+PS2                               00000002
+PSA                               00000003
+PSPIE                             00000007
+PSPIF                             00000007
+PSPMODE                           00000004
+Parametro1                        00000194
+Parametro2                        00000195
+Parametro3                        00000196
+Parametro4                        00000197
+Parametro5                        00000198
+Principal                         00000007
+PtoA                              000000A0
+PtoB                              000000A1
+PtoC                              000000A2
+PtoD                              000000A3
+PtoE                              000000A4
+R                                 00000002
+RA0                               00000000
+RA1                               00000001
+RA2                               00000002
+RA3                               00000003
+RA4                               00000004
+RA5                               00000005
+RB0                               00000000
+RB1                               00000001
+RB2                               00000002
+RB3                               00000003
+RB4                               00000004
+RB5                               00000005
+RB6                               00000006
+RB7                               00000007
+RBIE                              00000003
+RBIF                              00000000
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE 23
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+RC0                               00000000
+RC1                               00000001
+RC2                               00000002
+RC3                               00000003
+RC4                               00000004
+RC5                               00000005
+RC6                               00000006
+RC7                               00000007
+RC8_9                             00000006
+RC9                               00000006
+RCD8                              00000000
+RCEN                              00000003
+RCIE                              00000005
+RCIF                              00000005
+RCREG                             0000001A
+RCSTA                             00000018
+RD                                00000000
+RD0                               00000000
+RD1                               00000001
+RD2                               00000002
+RD3                               00000003
+RD4                               00000004
+RD5                               00000005
+RD6                               00000006
+RD7                               00000007
+RD_EEPROM                         0000004B
+RE0                               00000000
+RE1                               00000001
+RE2                               00000002
+READ_WRITE                        00000002
+RP0                               00000005
+RP1                               00000006
+RSEN                              00000001
+RX9                               00000006
+RX9D                              00000000
+R_NOT_W                           00000002
+R_W                               00000002
+RecepcionByte                     0000002D
+Recibe_Mensaje                    0000006E
+ReciboMensaje                     00000001
+RxByteHex                         00000037
+S                                 00000003
+S01                               00000009
+S02                               00000011
+S03                               0000001B
+SCI_19200                         0000001E
+SEN                               00000000
+SFHM                              00000039
+SMP                               00000007
+SP                                00000078
+SPBRG                             00000099
+SPEN                              00000007
+SREN                              00000005
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE 24
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+SSPADD                            00000093
+SSPBUF                            00000013
+SSPCON                            00000014
+SSPCON2                           00000091
+SSPEN                             00000005
+SSPIE                             00000003
+SSPIF                             00000003
+SSPM0                             00000000
+SSPM1                             00000001
+SSPM2                             00000002
+SSPM3                             00000003
+SSPOV                             00000006
+SSPSTAT                           00000094
+STATUS                            00000003
+SYNC                              00000004
+T0CS                              00000005
+T0IE                              00000005
+T0IF                              00000002
+T0SE                              00000004
+T1CKPS0                           00000004
+T1CKPS1                           00000005
+T1CON                             00000010
+T1INSYNC                          00000002
+T1OSCEN                           00000003
+T1SYNC                            00000002
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             00000012
+TMR0                              00000001
+TMR0IE                            00000005
+TMR0IF                            00000002
+TMR1                              0000000E
+TMR1CS                            00000001
+TMR1H                             0000000F
+TMR1IE                            00000000
+TMR1IF                            00000000
+TMR1L                             0000000E
+TMR1ON                            00000000
+TMR2                              00000011
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2ON                            00000002
+TOUTPS0                           00000003
+TOUTPS1                           00000004
+TOUTPS2                           00000005
+TOUTPS3                           00000006
+TRISA                             00000085
+TRISA0                            00000000
+TRISA1                            00000001
+TRISA2                            00000002
+TRISA3                            00000003
+TRISA4                            00000004
+TRISA5                            00000005
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE 25
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+TRISB                             00000086
+TRISB0                            00000000
+TRISB1                            00000001
+TRISB2                            00000002
+TRISB3                            00000003
+TRISB4                            00000004
+TRISB5                            00000005
+TRISB6                            00000006
+TRISB7                            00000007
+TRISC                             00000087
+TRISC0                            00000000
+TRISC1                            00000001
+TRISC2                            00000002
+TRISC3                            00000003
+TRISC4                            00000004
+TRISC5                            00000005
+TRISC6                            00000006
+TRISC7                            00000007
+TRISD                             00000088
+TRISD0                            00000000
+TRISD1                            00000001
+TRISD2                            00000002
+TRISD3                            00000003
+TRISD4                            00000004
+TRISD5                            00000005
+TRISD6                            00000006
+TRISD7                            00000007
+TRISE                             00000089
+TRISE0                            00000000
+TRISE1                            00000001
+TRISE2                            00000002
+TRMT                              00000001
+TX8_9                             00000006
+TX9                               00000006
+TX9D                              00000000
+TXD8                              00000000
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXREG                             00000019
+TXSTA                             00000098
+Temp0                             00000070
+Temp1                             00000071
+Temp2                             00000072
+Temp3                             00000073
+Temp4                             00000074
+Temp5                             00000075
+Temp6                             00000076
+TempBanderas                      00000056
+TempPCLATH                        0000007D
+TempStatus                        0000007E
+TempW                             0000007F
+Tempo                             00000053
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE 26
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+Tempo1                            00000054
+TipoError                         00000057
+TxCRLF                            00000032
+TxW                               00000029
+UA                                00000001
+Var0                              00000020
+Var1                              00000021
+Var2                              00000022
+Var3                              00000023
+Var4                              00000024
+Var5                              00000025
+Var6                              00000026
+Var7                              00000027
+Var8                              00000028
+Var9                              00000029
+VarA                              0000002A
+VarB                              0000002B
+VarC                              0000002C
+VarD                              0000002D
+VarE                              0000002E
+VarF                              0000002F
+W                                 00000000
+WCOL                              00000007
+WR                                00000001
+WREN                              00000002
+WRERR                             00000003
+WR_EEPROM                         00000055
+Z                                 00000002
+ZonaComun                         00000070
+ZonaTrabajo                       00000050
+_BODEN_OFF                        00003FBF
+_BODEN_ON                         00003FFF
+_BOREN_OFF                        00003FBF
+_BOREN_ON                         00003FFF
+_CONFIG                           00002007
+_CPD_OFF                          00003FFF
+_CPD_ON                           00003EFF
+_CP_ALL                           00000FCF
+_CP_HALF                          00001FDF
+_CP_OFF                           00003FFF
+_CP_UPPER_256                     00002FEF
+_DEBUG_OFF                        00003FFF
+_DEBUG_ON                         000037FF
+_DEVID1                           00002006
+_FOSC_EXTRC                       00003FFF
+_FOSC_HS                          00003FFE
+_FOSC_LP                          00003FFC
+_FOSC_XT                          00003FFD
+_HS_OSC                           00003FFE
+_IDLOC0                           00002000
+_IDLOC1                           00002001
+_IDLOC2                           00002002
+_IDLOC3                           00002003
+MPASM  5.51               ENSAYO TERMINAL.ASM   10-3-2017  18:42:08         PAGE 27
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+_LP_OSC                           00003FFC
+_LVP_OFF                          00003F7F
+_LVP_ON                           00003FFF
+_PWRTE_OFF                        00003FFF
+_PWRTE_ON                         00003FF7
+_RC_OSC                           00003FFF
+_WDTE_OFF                         00003FFB
+_WDTE_ON                          00003FFF
+_WDT_OFF                          00003FFB
+_WDT_ON                           00003FFF
+_WRT_ENABLE_OFF                   00003DFF
+_WRT_ENABLE_ON                    00003FFF
+_WRT_OFF                          00003DFF
+_WRT_ON                           00003FFF
+_XT_OSC                           00003FFD
+__16F877A                         00000001
+__DEBUG                           1
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+0000 : XXX-XXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0040 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0080 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXX-------
+2000 : -------X-------- ---------------- ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:   184
+Program Memory Words Free:  8008
+
+
+Errors   :     0
+Warnings :     2 reported,     0 suppressed
+Messages :     2 reported,    16 suppressed
+
+

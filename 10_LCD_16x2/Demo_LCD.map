@@ -1,0 +1,136 @@
+MPLINK 4.49, Linker
+Linker Map File - Created Wed Oct 11 10:35:06 2017
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_0       code   0x000000    program   0x000000
+                   .org_1       code   0x000000    program   0x0002c6
+  .config_2007_DEMO_LCD.O       code   0x002007    program   0x000002
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x000162      
+                            0x002007    0x002007      
+            356 out of 8454 program addresses used, program memory utilization is 4%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                    Ciclo   0x00009c    program     static F:\R\- LABs -\10_LCD_16x2\Demo_LCD.asm
+                   Ensayo   0x00003e    program     static F:\R\- LABs -\10_LCD_16x2\Demo_LCD.asm
+                      L01   0x00011d    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L02   0x00011f    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L03   0x000129    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L04   0x00012b    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L05   0x000134    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L06   0x000136    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L07   0x000145    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L08   0x000147    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L09   0x000149    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L10   0x000154    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L11   0x000156    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L12   0x000158    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                 LCD_Byte   0x0000f9    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+         LCD_ByteCompleto   0x000100    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+             LCD_Caracter   0x0000d3    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+                 LCD_Char   0x0000a2    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+          LCD_CodigoCGROM   0x0000d6    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+                  LCD_Com   0x0000d0    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+   LCD_DosEspaciosBlancos   0x0000f0    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+        LCD_EnheMayuscula   0x0000dd    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+        LCD_EnheMinuscula   0x0000d7    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+         LCD_EnviaBlancos   0x0000f3    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+       LCD_EnviaByteLetra   0x00010c    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+      LCD_EnviaOtroBlanco   0x0000f4    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+             LCD_FinCGROM   0x0000ea    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+   LCD_FinVisualizaDigito   0x00010e    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+                LCD_Grado   0x0000e4    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+               LCD_Inicio   0x0000b2    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+        LCD_LineaEnBlanco   0x0000ec    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+               LCD_Nibble   0x000104    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+  LCD_TresEspaciosBlancos   0x0000f2    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+      LCD_UnEspacioBlanco   0x0000ee    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+        LCD_VisualizaAlto   0x000101    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+        LCD_VisualizaBajo   0x000103    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+                    Line1   0x000001    program     static F:\R\- LABs -\10_LCD_16x2\Demo_LCD.asm
+                    Line2   0x000013    program     static F:\R\- LABs -\10_LCD_16x2\Demo_LCD.asm
+                    Mess1   0x000027    program     static F:\R\- LABs -\10_LCD_16x2\Demo_LCD.asm
+                    Mess2   0x000034    program     static F:\R\- LABs -\10_LCD_16x2\Demo_LCD.asm
+              Otra_Prueba   0x000055    program     static F:\R\- LABs -\10_LCD_16x2\Demo_LCD.asm
+                   OutMes   0x000025    program     static F:\R\- LABs -\10_LCD_16x2\Demo_LCD.asm
+                   PulseE   0x00009d    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+                  SendCom   0x0000d0    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+                   T100mS   0x000132    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                   T100uS   0x000116    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                     T10S   0x000152    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                    T10mS   0x000127    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                    T10uS   0x000111    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      T1S   0x000143    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                     T1mS   0x00011b    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                     T1uS   0x00010f    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                    Line1   0x000001    program     static F:\R\- LABs -\10_LCD_16x2\Demo_LCD.asm
+                    Line2   0x000013    program     static F:\R\- LABs -\10_LCD_16x2\Demo_LCD.asm
+                   OutMes   0x000025    program     static F:\R\- LABs -\10_LCD_16x2\Demo_LCD.asm
+                    Mess1   0x000027    program     static F:\R\- LABs -\10_LCD_16x2\Demo_LCD.asm
+                    Mess2   0x000034    program     static F:\R\- LABs -\10_LCD_16x2\Demo_LCD.asm
+                   Ensayo   0x00003e    program     static F:\R\- LABs -\10_LCD_16x2\Demo_LCD.asm
+              Otra_Prueba   0x000055    program     static F:\R\- LABs -\10_LCD_16x2\Demo_LCD.asm
+                    Ciclo   0x00009c    program     static F:\R\- LABs -\10_LCD_16x2\Demo_LCD.asm
+                   PulseE   0x00009d    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+                 LCD_Char   0x0000a2    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+               LCD_Inicio   0x0000b2    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+                  SendCom   0x0000d0    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+                  LCD_Com   0x0000d0    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+             LCD_Caracter   0x0000d3    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+          LCD_CodigoCGROM   0x0000d6    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+        LCD_EnheMinuscula   0x0000d7    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+        LCD_EnheMayuscula   0x0000dd    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+                LCD_Grado   0x0000e4    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+             LCD_FinCGROM   0x0000ea    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+        LCD_LineaEnBlanco   0x0000ec    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+      LCD_UnEspacioBlanco   0x0000ee    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+   LCD_DosEspaciosBlancos   0x0000f0    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+  LCD_TresEspaciosBlancos   0x0000f2    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+         LCD_EnviaBlancos   0x0000f3    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+      LCD_EnviaOtroBlanco   0x0000f4    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+                 LCD_Byte   0x0000f9    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+         LCD_ByteCompleto   0x000100    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+        LCD_VisualizaAlto   0x000101    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+        LCD_VisualizaBajo   0x000103    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+               LCD_Nibble   0x000104    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+       LCD_EnviaByteLetra   0x00010c    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+   LCD_FinVisualizaDigito   0x00010e    program     static F:\R\- LABs -\10_LCD_16x2\LCD_4Bits_PORTB.inc
+                     T1uS   0x00010f    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                    T10uS   0x000111    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                   T100uS   0x000116    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                     T1mS   0x00011b    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L01   0x00011d    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L02   0x00011f    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                    T10mS   0x000127    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L03   0x000129    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L04   0x00012b    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                   T100mS   0x000132    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L05   0x000134    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L06   0x000136    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      T1S   0x000143    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L07   0x000145    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L08   0x000147    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L09   0x000149    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                     T10S   0x000152    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L10   0x000154    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L11   0x000156    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+                      L12   0x000158    program     static F:\R\- LABs -\10_LCD_16x2\Tiempo.inc
+
+

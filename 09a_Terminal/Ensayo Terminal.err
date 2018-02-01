@@ -1,0 +1,4 @@
+Message[301] C:\PROGRAM FILES (X86)\MICROCHIP\MPASM SUITE\P16F877.INC 33 : MESSAGE: (Processor-header file mismatch.  Verify selected processor.)
+Message[305] C:\USERS\SHERN\DESKTOP\R\- LABS -\09A_TERMINAL\ENSAYO TERMINAL.ASM 248 : Using default destination of 1 (file).
+Warning[202] C:\USERS\SHERN\DESKTOP\R\- LABS -\09A_TERMINAL\SUBS.ASM 228 : Argument out of range.  Least significant bits used.
+Warning[202] C:\USERS\SHERN\DESKTOP\R\- LABS -\09A_TERMINAL\SUBS.ASM 303 : Argument out of range.  Least significant bits used.

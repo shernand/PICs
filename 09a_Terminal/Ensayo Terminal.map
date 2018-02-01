@@ -1,0 +1,98 @@
+MPLINK 4.49, Linker
+Linker Map File - Created Tue Oct 03 18:42:09 2017
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_0       code   0x000000    program   0x000000
+                   .org_1       code   0x000000    program   0x000006
+                   .org_2       code   0x000004    program   0x00016a
+.config_2007_ENSAYO TERMINAL.O       code   0x002007    program   0x000002
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x000002      
+                            0x000004    0x0000b8      
+                            0x002007    0x002007      
+            185 out of 8454 program addresses used, program memory utilization is 2%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                ASCII_Bin   0x000046    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                 Continua   0x00000b    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\Ensayo Terminal.asm
+     Continua_Escribiendo   0x000098    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+         Continua_Mensaje   0x00007f    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+            Envia_Mensaje   0x000087    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                EnvioByte   0x000028    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   Espera   0x000010    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\Ensayo Terminal.asm
+             Espera_WR_EE   0x000057    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+            Espera_WR_EE2   0x000069    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                      ISR   0x0000b1    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\Ensayo Terminal.asm
+                   PDelL1   0x0000a5    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   PDelL2   0x0000a6    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   PDelL3   0x0000a7    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   PDelL4   0x0000ac    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   PDelL5   0x0000ad    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   PDelL6   0x0000ae    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   PDelL7   0x0000af    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   PDelay   0x0000a0    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   PLoop1   0x0000a2    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   PLoop2   0x0000a4    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                Principal   0x000007    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\Ensayo Terminal.asm
+                RD_EEPROM   0x00004b    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+            RecepcionByte   0x00002d    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+           Recibe_Mensaje   0x00006e    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                RxByteHex   0x000037    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                      S01   0x000009    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\Ensayo Terminal.asm
+                      S02   0x000011    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\Ensayo Terminal.asm
+                      S03   0x00001b    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\Ensayo Terminal.asm
+                SCI_19200   0x00001e    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   TxCRLF   0x000032    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                      TxW   0x000029    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                WR_EEPROM   0x000055    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                Principal   0x000007    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\Ensayo Terminal.asm
+                      S01   0x000009    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\Ensayo Terminal.asm
+                 Continua   0x00000b    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\Ensayo Terminal.asm
+                   Espera   0x000010    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\Ensayo Terminal.asm
+                      S02   0x000011    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\Ensayo Terminal.asm
+                      S03   0x00001b    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\Ensayo Terminal.asm
+                SCI_19200   0x00001e    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                EnvioByte   0x000028    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                      TxW   0x000029    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+            RecepcionByte   0x00002d    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   TxCRLF   0x000032    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                RxByteHex   0x000037    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                ASCII_Bin   0x000046    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                RD_EEPROM   0x00004b    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                WR_EEPROM   0x000055    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+             Espera_WR_EE   0x000057    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+            Espera_WR_EE2   0x000069    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+           Recibe_Mensaje   0x00006e    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+         Continua_Mensaje   0x00007f    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+            Envia_Mensaje   0x000087    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+     Continua_Escribiendo   0x000098    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   PDelay   0x0000a0    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   PLoop1   0x0000a2    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   PLoop2   0x0000a4    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   PDelL1   0x0000a5    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   PDelL2   0x0000a6    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   PDelL3   0x0000a7    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   PDelL4   0x0000ac    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   PDelL5   0x0000ad    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   PDelL6   0x0000ae    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                   PDelL7   0x0000af    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\subs.asm
+                      ISR   0x0000b1    program     static C:\Users\shern\Desktop\R\- LABs -\09a_Terminal\Ensayo Terminal.asm
+
+

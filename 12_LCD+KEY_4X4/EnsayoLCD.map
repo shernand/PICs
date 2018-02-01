@@ -1,0 +1,258 @@
+MPLINK 4.49, Linker
+Linker Map File - Created Tue Sep 26 22:52:39 2017
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_0       code   0x000000    program   0x000000
+                   .org_1       code   0x000000    program   0x000006
+                   .org_2       code   0x000004    program   0x000522
+ .config_2007_ENSAYOLCD.O       code   0x002007    program   0x000002
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x000002      
+                            0x000004    0x000294      
+                            0x002007    0x002007      
+            661 out of 8454 program addresses used, program memory utilization is 7%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+   BCD_IncrementaCentenas   0x0000d3    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\BIN_BCD.INC
+    BCD_IncrementaDecenas   0x0000cd    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\BIN_BCD.INC
+              BCD_Resta10   0x0000c9    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\BIN_BCD.INC
+              BIN_BCD_Fin   0x0000d6    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\BIN_BCD.INC
+                BIN_a_BCD   0x0000c6    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\BIN_BCD.INC
+                      Fin   0x000079    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+                     Fin1   0x000071    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+              FinMensajes   0x000062    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+                      ISR   0x000007    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+                   Inicio   0x000062    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+      LCD_2Lineas4Bits5x7   0x00011d    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+                LCD_Borra   0x00011b    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+                 LCD_Byte   0x00014d    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+         LCD_ByteCompleto   0x000154    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+             LCD_Caracter   0x000120    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+          LCD_CodigoCGROM   0x00012a    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+           LCD_CursorIncr   0x000107    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+            LCD_CursorOFF   0x000119    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+             LCD_CursorON   0x000117    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+   LCD_DosEspaciosBlancos   0x000144    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+        LCD_EnheMayuscula   0x000131    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+        LCD_EnheMinuscula   0x00012b    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+                LCD_Envia   0x000122    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+         LCD_EnviaBlancos   0x000147    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+       LCD_EnviaByteLetra   0x000160    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+         LCD_EnviaComando   0x00011e    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+      LCD_EnviaOtroBlanco   0x000148    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+         LCD_EsFinalLinea   0x00017d    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+           LCD_EscribeLCD   0x0000f3    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+             LCD_FinCGROM   0x00013e    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+           LCD_FinMensaje   0x000172    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+        LCD_FinMovimiento   0x00018e    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+   LCD_FinVisualizaDigito   0x000162    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+                LCD_Grado   0x000138    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+           LCD_Inicializa   0x0000d9    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+               LCD_Linea1   0x000109    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+               LCD_Linea2   0x00010b    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+               LCD_Linea3   0x00010d    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+               LCD_Linea4   0x00010f    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+        LCD_LineaEnBlanco   0x000140    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+              LCD_Mensaje   0x000163    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+    LCD_MensajeMovimiento   0x000173    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+               LCD_Nibble   0x000158    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+       LCD_NoEsFinalLinea   0x000182    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+     LCD_NoUltimoCaracter   0x00016f    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+    LCD_NoUltimoCaracter2   0x00018a    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+                  LCD_OFF   0x000115    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+       LCD_PosicionLinea1   0x000111    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+       LCD_PosicionLinea2   0x000113    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+      LCD_PrimeraPosicion   0x000177    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+  LCD_TresEspaciosBlancos   0x000146    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+      LCD_UnEspacioBlanco   0x000142    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+        LCD_VisualizaAlto   0x000155    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+        LCD_VisualizaBajo   0x000157    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+    LCD_VisualizaCaracter   0x000179    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+LCD_VisualizaOtroCaracter   0x000167    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+                 Mensaje0   0x00000a    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+                 Mensaje1   0x00001b    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+                 Mensaje2   0x00002c    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+                 Mensajes   0x000009    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+                   PDelL1   0x000284    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                  PDelL10   0x000293    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PDelL2   0x000285    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PDelL3   0x000286    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PDelL4   0x000287    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PDelL5   0x00028e    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PDelL6   0x00028f    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PDelL7   0x000290    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PDelL8   0x000291    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PDelL9   0x000292    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PLoop0   0x00027f    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PLoop1   0x000281    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PLoop2   0x000283    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                Principal   0x000073    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+               Principal1   0x00006c    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+                  R_100mS   0x00020b    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                  R_100uS   0x0001a5    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                    R_10S   0x00026c    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   R_10mS   0x0001e6    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   R_10uS   0x00018f    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                     R_1S   0x00023c    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                    R_1mS   0x0001c1    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                  R_200mS   0x00021c    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                  R_200uS   0x0001ad    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                    R_20S   0x00027d    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   R_20mS   0x0001f1    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   R_20uS   0x000196    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                     R_2S   0x00024b    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                    R_2mS   0x0001cd    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                  R_500mS   0x00022c    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                  R_500uS   0x0001b5    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   R_50mS   0x0001ff    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   R_50uS   0x00019e    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                     R_5S   0x00025b    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                    R_5mS   0x0001da    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+            Tecl_Columna1   0x0000ae    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+            Tecl_Columna2   0x0000b1    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+            Tecl_Columna3   0x0000b4    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+            Tecl_Columna4   0x0000b7    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+ Tecl_ConvierteOrdenEnHex   0x00008d    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+           Tecl_FinLeeHex   0x00008c    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+       Tecl_FinTecladoLee   0x0000c5    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+         Tecl_GuardaValor   0x0000c3    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+           Tecl_NoPulsada   0x0000c1    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+          Tecl_RevisaFila   0x0000ac    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+     Tecl_TerminaColumnas   0x0000ba    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+ Teclado_EsperaDejePulsar   0x0000a2    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+      Teclado_FinTablaHex   0x00009e    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+       Teclado_Inicializa   0x00009e    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+           Teclado_LeeHex   0x000087    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+    Teclado_LeeOrdenTecla   0x0000aa    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+   Teclado_SigueEsperando   0x0000a4    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                      ISR   0x000007    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+                 Mensajes   0x000009    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+                 Mensaje0   0x00000a    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+                 Mensaje1   0x00001b    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+                 Mensaje2   0x00002c    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+                   Inicio   0x000062    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+              FinMensajes   0x000062    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+               Principal1   0x00006c    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+                     Fin1   0x000071    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+                Principal   0x000073    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+                      Fin   0x000079    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\EnsayoLCD.asm
+           Teclado_LeeHex   0x000087    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+           Tecl_FinLeeHex   0x00008c    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+ Tecl_ConvierteOrdenEnHex   0x00008d    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+      Teclado_FinTablaHex   0x00009e    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+       Teclado_Inicializa   0x00009e    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+ Teclado_EsperaDejePulsar   0x0000a2    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+   Teclado_SigueEsperando   0x0000a4    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+    Teclado_LeeOrdenTecla   0x0000aa    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+          Tecl_RevisaFila   0x0000ac    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+            Tecl_Columna1   0x0000ae    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+            Tecl_Columna2   0x0000b1    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+            Tecl_Columna3   0x0000b4    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+            Tecl_Columna4   0x0000b7    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+     Tecl_TerminaColumnas   0x0000ba    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+           Tecl_NoPulsada   0x0000c1    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+         Tecl_GuardaValor   0x0000c3    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+       Tecl_FinTecladoLee   0x0000c5    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\Teclado.INC
+                BIN_a_BCD   0x0000c6    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\BIN_BCD.INC
+              BCD_Resta10   0x0000c9    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\BIN_BCD.INC
+    BCD_IncrementaDecenas   0x0000cd    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\BIN_BCD.INC
+   BCD_IncrementaCentenas   0x0000d3    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\BIN_BCD.INC
+              BIN_BCD_Fin   0x0000d6    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\BIN_BCD.INC
+           LCD_Inicializa   0x0000d9    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+           LCD_EscribeLCD   0x0000f3    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+           LCD_CursorIncr   0x000107    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+               LCD_Linea1   0x000109    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+               LCD_Linea2   0x00010b    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+               LCD_Linea3   0x00010d    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+               LCD_Linea4   0x00010f    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+       LCD_PosicionLinea1   0x000111    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+       LCD_PosicionLinea2   0x000113    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+                  LCD_OFF   0x000115    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+             LCD_CursorON   0x000117    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+            LCD_CursorOFF   0x000119    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+                LCD_Borra   0x00011b    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+      LCD_2Lineas4Bits5x7   0x00011d    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+         LCD_EnviaComando   0x00011e    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+             LCD_Caracter   0x000120    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+                LCD_Envia   0x000122    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+          LCD_CodigoCGROM   0x00012a    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+        LCD_EnheMinuscula   0x00012b    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+        LCD_EnheMayuscula   0x000131    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+                LCD_Grado   0x000138    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+             LCD_FinCGROM   0x00013e    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+        LCD_LineaEnBlanco   0x000140    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+      LCD_UnEspacioBlanco   0x000142    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+   LCD_DosEspaciosBlancos   0x000144    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+  LCD_TresEspaciosBlancos   0x000146    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+         LCD_EnviaBlancos   0x000147    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+      LCD_EnviaOtroBlanco   0x000148    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+                 LCD_Byte   0x00014d    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+         LCD_ByteCompleto   0x000154    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+        LCD_VisualizaAlto   0x000155    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+        LCD_VisualizaBajo   0x000157    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+               LCD_Nibble   0x000158    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+       LCD_EnviaByteLetra   0x000160    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+   LCD_FinVisualizaDigito   0x000162    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_4BIT.asm
+              LCD_Mensaje   0x000163    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+LCD_VisualizaOtroCaracter   0x000167    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+     LCD_NoUltimoCaracter   0x00016f    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+           LCD_FinMensaje   0x000172    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+    LCD_MensajeMovimiento   0x000173    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+      LCD_PrimeraPosicion   0x000177    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+    LCD_VisualizaCaracter   0x000179    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+         LCD_EsFinalLinea   0x00017d    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+       LCD_NoEsFinalLinea   0x000182    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+    LCD_NoUltimoCaracter2   0x00018a    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+        LCD_FinMovimiento   0x00018e    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\LCD_MENS.INC
+                   R_10uS   0x00018f    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   R_20uS   0x000196    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   R_50uS   0x00019e    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                  R_100uS   0x0001a5    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                  R_200uS   0x0001ad    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                  R_500uS   0x0001b5    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                    R_1mS   0x0001c1    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                    R_2mS   0x0001cd    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                    R_5mS   0x0001da    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   R_10mS   0x0001e6    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   R_20mS   0x0001f1    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   R_50mS   0x0001ff    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                  R_100mS   0x00020b    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                  R_200mS   0x00021c    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                  R_500mS   0x00022c    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                     R_1S   0x00023c    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                     R_2S   0x00024b    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                     R_5S   0x00025b    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                    R_10S   0x00026c    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                    R_20S   0x00027d    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PLoop0   0x00027f    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PLoop1   0x000281    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PLoop2   0x000283    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PDelL1   0x000284    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PDelL2   0x000285    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PDelL3   0x000286    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PDelL4   0x000287    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PDelL5   0x00028e    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PDelL6   0x00028f    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PDelL7   0x000290    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PDelL8   0x000291    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                   PDelL9   0x000292    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+                  PDelL10   0x000293    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\03_LCD+KEY_4X4\RETARDOS.asm
+
+

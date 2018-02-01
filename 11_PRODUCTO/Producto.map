@@ -1,0 +1,42 @@
+MPLINK 4.49, Linker
+Linker Map File - Created Tue Sep 26 22:39:44 2017
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_0       code   0x000000    program   0x000000
+                   .org_1       code   0x000000    program   0x000004
+                   .org_2       code   0x000120    program   0x00002e
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x000001      
+                            0x000120    0x000136      
+            25 out of 8454 program addresses used, program memory utilization is 0%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                  A_Rotar   0x000133    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\00_PRODUCTO\Producto.asm
+                  A_Sumar   0x000127    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\00_PRODUCTO\Producto.asm
+                   Espera   0x000001    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\00_PRODUCTO\Producto.asm
+                 Otro_Bit   0x000130    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\00_PRODUCTO\Producto.asm
+                 Producto   0x000120    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\00_PRODUCTO\Producto.asm
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                   Espera   0x000001    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\00_PRODUCTO\Producto.asm
+                 Producto   0x000120    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\00_PRODUCTO\Producto.asm
+                  A_Sumar   0x000127    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\00_PRODUCTO\Producto.asm
+                 Otro_Bit   0x000130    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\00_PRODUCTO\Producto.asm
+                  A_Rotar   0x000133    program     static F:\R\- uPs y uCs + S. E\_uCs\_DEMOS_\00_PRODUCTO\Producto.asm
+
+

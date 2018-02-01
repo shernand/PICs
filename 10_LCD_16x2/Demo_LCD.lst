@@ -1,0 +1,2337 @@
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001 ;------------------------------------------------------------------------------
+                      00002 ;       Demo_LCD.asm
+                      00003 ; Prueba del funcionamiento de la LCD en PORTB [Para tarjeta dt106]
+                      00004 ; NOTAS: Para la tarjeta dt106, Se usarán 
+                      00005 ;   PORTB<4:7> para LCD<4:7>
+                      00006 ;   PORTB<1> para LCD<RS>, PORTB<2> para LCD<R/W> y PORTB<3> para LCD<E>
+                      00007 ;------------------------------------------------------------------------------
+                      00008         
+                      00009 ;-----[ Tipo de uC y  Librería ]-----
+Warning[215]: Processor superseded by command line.  Verify processor symbol.
+                      00010         LIST            P = PIC16F877A                  ;
+                      00011         INCLUDE <P16F877A.INC>                  ; Etiquetas de registros, constantes del uC
+                      00001         LIST
+                      00002 
+                      00003 ;==========================================================================
+                      00004 ;  MPASM PIC16F877A processor include
+                      00005 ; 
+                      00006 ;  (c) Copyright 1999-2013 Microchip Technology, All rights reserved
+                      00007 ;==========================================================================
+                      00008 
+Message[301]: MESSAGE: (Processor-header file mismatch.  Verify selected processor.)
+                      00566         LIST
+2007   3F72           00012         __CONFIG _CP_OFF & _WDT_OFF & _BODEN_ON & _PWRTE_ON & _HS_OSC & _LVP_OFF & _DEBUG_OFF & _CPD_OFF
+                      00013 ;-----[ MACROS ]-----
+                      00014         #INCLUDE "SelBank.mac"                  ; MACRO para la mejor selección de BANCOS.
+                      00001 ;------------------------------------------------------------------------------
+                      00002 ; MACRO para el reemplazo de la directiva BANKSEL.  
+                      00003 ; Se busca tener un número mínimo de instrucciones bit Set / Clear para
+                      00004 ; cambiar al bando deseado.
+                      00005 ;------------------------------------------------------------------------------
+                      00006 ; Ajusta el estado de los bits RP0 y RP1 del registro STATUS para establecer
+                      00007 ; adecuadamente el BANCO en donde se encuentra el registro "Reg" dado como
+                      00008 ; parámetro.
+                      00009 ;
+                      00010 ; A diferencia de la directiva BANKSEL, este macro recuerda en cuál BANCO se 
+                      00011 ; encuentra el proceso de ensamblado, guardada esta información en la variable
+                      00012 ; "Banco_Actual". Basándose en el valor actual de "Banco_Actual" y del valor 
+                      00013 ; propuesto en la etiqueta "Reg" sólo se ejecutarán las instrucciones bsf ó
+                      00014 ; bcf necesarias sobre RP0 y RP1.
+                      00015 ;
+                      00016 ; Reg = El REGISTRO cuyo BANCO se desea seleccionar.
+                      00017 ;------------------------------------------------------------------------------
+  0000                00018         VARIABLE Banco_Actual = 0x0000              ; 0000 0000 0000 0000
+                      00019 
+                      00020 ; Localidad de Memoria : .... .... .... ....    .... .... .... ....
+                      00021 ; Registros en BANCO 0 : 0000 0000 0000 0000 -> 0000 0000 0111 1111
+                      00022 ; Registros en BANCO 1 : 0000 0000 1000 0000 -> 0000 0000 1111 1111
+                      00023 ; Registros en BANCO 2 : 0000 0001 0000 0000 -> 0000 0001 0111 1111
+                      00024 ; Registros en BANCO 3 : 0000 0001 1000 0000 -> 0000 0001 1111 1111
+                      00025 
+                      00026 SelBanco MACRO Reg
+                      00027         IF Reg & 0x0100                                                                                 
+                                                    ; Reg > 0xFF, (Bancos 2 o 3)
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00028                 IF (Banco_Actual & 0x0100) == 0                                 ; 0000 0001 0000 0000
+                      00029                         bsf STATUS, RP1
+                      00030                 ENDIF
+                      00031         ELSE
+                      00032                 IF (Banco_Actual & 0x0100) == 0x0100            ; 0000 0001 0000 0000
+                      00033                         bcf STATUS, RP1
+                      00034                 ENDIF
+                      00035         ENDIF
+                      00036         IF Reg & 0x0080                                                                                 
+                                                    ; Reg > 0x7F, (Bancos 1, 2 o 3)
+                      00037                 IF (Banco_Actual & 0x0080) == 0                                 ; 0000 0000 0000 0000
+                      00038                         bsf STATUS, RP0
+                      00039                 ENDIF
+                      00040         ELSE
+                      00041                 IF (Banco_Actual & 0x0080) == 0x0080            ; 0000 000 1000 0000
+                      00042                         bcf STATUS, RP0
+                      00043                 ENDIF
+                      00044         ENDIF
+                      00045 Banco_Actual SET Reg & 0x180                                                            ; Banco_Actual 0
+                            000 000X XXXX XXXX
+                      00046                                                                                                         
+                                                                                                    ;                       
+                      00047                                  ENDM
+                      00048 ;------------------------------------------------------------------------------
+                      00049 
+                      00050 
+                      00015         #INCLUDE "Macros_LCD.mac"
+                      00001 ;--------------------------------------------------------------------------------------------------
+                      00002 ; MACROS para el Manejo de la LCD alfanumérica estándar
+                      00003 ;
+                      00004 ;LCD_Init                                                               Inicialización de manejador (Dri
+                            ver) de la LCD [OBLIGATORIA].
+                      00005 ;LCD_GoTo Columna, Hilera       Ajusta la posición del cursor en la DDRAM.
+                      00006 ;LCD_Autoscroll_Off                             Deshabilita la función de "autoscroll" para cuando se es
+                            criben caracteres a la LCD.
+                      00007 ;LCD_Autoscroll_On                              Habilita la función de "autoscroll" para cuando se escri
+                            ben caracteres a la LCD.
+                      00008 ;LCD_Scroll_Right                                       Recorre la pantalla a la Derecha, también se afe
+                            cta la posición del cursor.
+                      00009 ;LCD_Scroll_Left                                        Recorre la pantalla a la Izquierda, también se a
+                            fecta la posición del cursor.
+                      00010 ;LCD_Cursor_Right                                       Mueve el cursor una posición a la Derecha.
+                      00011 ;LCD_Cursor_Left                                        Mueve el cursor una posición a la Izquierda.
+                      00012 ;LCD_Cursor Modo                                        Ajusta el tipo de Cursor. El parámetro Modo pued
+                            e ser:
+                      00013 ;       --> E_LCD_CURSOR_OFF            0x00    [Apagado]
+                      00014 ; --> E_LCD_CURSOR_ON                   0x02    [Encendido, Fijo]
+                      00015 ; --> E_LCD_CURSOR_ON_BLINK 0x03        [Encendido, Parpadeando]
+                      00016 ;LCD_Off                                                                        Apagado de la pantalla d
+                            e la LCD.
+                      00017 ;LCD_On                                                                         Encendido de la pantalla
+                             de la LCD.
+                      00018 ;LCD_Home                                                                       Cursor en posición de "H
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                            ome".
+                      00019 ;LCD_Clear                                                              Borrado de la pantalla, cursor e
+                            n posición "Home".
+                      00020 
+                      00021 
+                      00022 
+                      00023 
+                      00024 ;--------------------------------------------------------------------------------------------------
+                      00025 ; -----[ Definición de BITS en la palabra de control ]-----
+                      00026 ; Entry Mode Set Control Bits
+                      00027 #DEFINE BIT_S_AUTOSCROLL_ON     (1<<0)          ; !< Enable autoscroll. For use with Entry Mode Set comm
+                            and
+                      00028 #DEFINE BIT_S_AUTOSCROLL_OFF    0                               ; !< Disable autoscroll. For use with En
+                            try Mode Set command
+                      00029 #DEFINE BIT_ID_INCREMENT_CURSOR (1<<1)  ; !< Increment cursor position after each char. For use with Ent
+                            ry Mode Set command
+                      00030 #DEFINE BIT_ID_DECREMENT_CURSOR 0                               ; !< Decrement cursor position after eac
+                            h char. For use with Entry Mode Set command
+                      00031 
+                      00032 ; Display On/Off Control Bits
+                      00033 #DEFINE BIT_B_CURSOR_BLINK      (1<<0)
+                      00034 #DEFINE BIT_B_CURSOR_NO_BLINK   0
+                      00035 #DEFINE BIT_C_CURSOR_ON         (1<<1)
+                      00036 #DEFINE BIT_C_CURSOR_OFF        0
+                      00037 #DEFINE BIT_D_DISPLAY_ON        (1<<2)
+                      00038 #DEFINE BIT_D_DISPLAY_OFF       0
+                      00039 
+                      00040 ; Cursor / Display Shift Control Bits
+                      00041 #DEFINE BIT_RL_SHIFT_RIGHT      (1<<2)
+                      00042 #DEFINE BIT_RL_SHIFT_LEFT       0
+                      00043 #DEFINE BIT_SC_SHIFT_DISPLAY    (1<<3)          ;!< Seting this bit causes a display scroll
+                      00044 #DEFINE BIT_SC_SHIFT_CURSOR     0                                               ;!< Clearing this bits c
+                            auses a cursor move
+                      00045 
+                      00046 ; Function set Control Bits
+                      00047 #DEFINE BIT_F_FONT_5_10         (1<<2)
+                      00048 #DEFINE BIT_F_FONT_5_8          0
+                      00049 #DEFINE BIT_N_DISP_LINES_2      (1<<3)
+                      00050 #DEFINE BIT_N_DISP_LINES_1      0
+                      00051 #DEFINE BIT_DL_DATALENGTH_8     (1<<4)
+                      00052 #DEFINE BIT_DL_DATALENGTH_4     0
+                      00053 
+                      00054 ; Define "boolean" values
+                      00055 #IFNDEF TRUE
+                      00056 #DEFINE TRUE 1
+                      00057 #ENDIF
+                      00058 #IFNDEF FALSE
+                      00059 #DEFINE FALSE 0
+                      00060 #ENDIF
+                      00061 ;--------------------------------------------------------------------------------------------------
+                      00062 ; Enumeration defining the HD44780 commands
+                      00063 #DEFINE E_CLEAR_DISPLAY 0x01
+                      00064 #DEFINE E_RETURN_HOME 0x02
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00065 #DEFINE E_ENTRY_MODE_SET 0x04
+                      00066 #DEFINE E_DISPLAY_ON_OFF_CTRL 0x08
+                      00067 #DEFINE E_CURSOR_DISPLAY_SHIFT 0x10
+                      00068 #DEFINE E_FUNCTION_SET 0x20
+                      00069 #DEFINE E_SET_CGRAM_ADDR 0x40
+                      00070 #DEFINE E_SET_DDRAM_ADDR 0x80
+                      00071 ;--------------------------------------------------------------------------------------------------
+                      00072 ; This enumeration defines the available cursor modes
+                      00073 #DEFINE E_LCD_CURSOR_OFF  0x00
+                      00074 #DEFINE E_LCD_CURSOR_ON  0x02
+                      00075 #DEFINE E_LCD_CURSOR_ON_BLINK 0x03
+                      00076 ;--------------------------------------------------------------------------------------------------
+                      00077 ;* Represents the IO pins used to control the LCD
+                      00078 ;       E_D0_PIN = 0,
+                      00079 ;       E_D1_PIN,
+                      00080 ;       E_D2_PIN,
+                      00081 ;       E_D3_PIN,
+                      00082 ;       E_D4_PIN,
+                      00083 ;       E_D5_PIN,
+                      00084 ;       E_D6_PIN,
+                      00085 ;       E_D7_PIN,
+                      00086 ;       E_EN_PIN,
+                      00087 ;       E_RS_PIN,
+                      00088 ;       E_RW_PIN,
+                      00089 ;
+                      00090 ;--------------------------------------------------------------------------------------------------
+                      00091 ;uint8_t lcd_init(void * iodata, uint8_t cols, uint8_t rows)
+                      00092 ;{
+                      00093 ;       // Initialize IO pins
+                      00094 ;       iomode = lcd_ioinit(iodata);
+                      00095 ;       lcdrows = rows;
+                      00096 ;       lcdcolumns = cols;
+                      00097 ;
+                      00098 ;       // Initial delay after power-up
+                      00099 ;       delay_ms(100);
+                      00100 ;
+                      00101 ;       //  Check if LCD interface is 8 or 4 bit mode
+                      00102 ;       if (iomode == 4) {
+                      00103 ;               // Begin LCD controller Initialization (HD44780 page 45-46)
+                      00104 ;               // Put a loop here to send these three?
+                      00105 ;               lcd_iowrite4(0x03);
+                      00106 ;               delay_ms(5);
+                      00107 ;               lcd_iowrite4(0x03);
+                      00108 ;               delay_us(120);
+                      00109 ;               lcd_iowrite4(0x03);
+                      00110 ;               delay_us(120);
+                      00111 ;               lcd_iowrite4(0x02);
+                      00112 ;               delay_us(120);
+                      00113 ;               lcd_command(E_FUNCTION_SET | BIT_DL_DATALENGTH_4 | BIT_N_DISP_LINES_2 | BIT_F_FONT_5_10)
+                            ;
+                      00114 ;               delay_us(50);
+                      00115 ;       } else if (iomode == 8) {
+                      00116 ;               // Begin LCD controller Initialization (HD44780 page 45-46)
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00117 ;               lcd_command(E_FUNCTION_SET);
+                      00118 ;               delay_ms(5);
+                      00119 ;               lcd_command(E_FUNCTION_SET);
+                      00120 ;               delay_us(120);
+                      00121 ;               lcd_command(E_FUNCTION_SET);
+                      00122 ;               delay_us(120);
+                      00123 ;               lcd_command(E_FUNCTION_SET | BIT_DL_DATALENGTH_8 | BIT_N_DISP_LINES_2 | BIT_F_FONT_5_10)
+                            ;
+                      00124 ;               delay_us(50);
+                      00125 ;       }
+                      00126 ;       // Configure display after power up
+                      00127 ;       lcd_command(E_DISPLAY_ON_OFF_CTRL | BIT_D_DISPLAY_OFF);
+                      00128 ;       delay_us(50);
+                      00129 ;       lcd_command(E_CLEAR_DISPLAY);
+                      00130 ;       delay_ms(2);
+                      00131 ;       lcd_command(E_ENTRY_MODE_SET | BIT_S_AUTOSCROLL_OFF | BIT_ID_INCREMENT_CURSOR);
+                      00132 ;       delay_us(50);
+                      00133 ;
+                      00134 ;       return TRUE;
+                      00135 ;}
+                      00136 
+                      00137 ;void lcd_puts(const char * string)
+                      00138 ;{
+                      00139 ;       while (*string != '\0')
+                      00140 ;               lcd_write(*string++);
+                      00141 ;}
+                      00142 
+                      00143 ;void lcd_create_char(uint8_t charnum, const uint8_t * chardata)
+                      00144 ;{
+                      00145 ;       uint8_t i;
+                      00146 ;       charnum &= 0x07;
+                      00147 ;       lcd_command(E_SET_CGRAM_ADDR | (charnum << 3));
+                      00148 ;       for (i = 0; i < 8; i++)
+                      00149 ;               lcd_write(chardata[i]);
+                      00150 ;
+                      00151 ;--------------------------------------------------------------------------------------------------
+                      00152 ;-----[ Inicialización de manejador (Driver) de LCD [OBLIGATORIA] ]-----
+                      00153 LCD_Init  MACRO                                                                                         
+                            ;
+                      00154                                                 VARIABLE dispctrl = 0x00        ; Se emplea en algunos M
+                            acros.
+                      00155                                                 call            LCD_Inicio
+                      00156                                         ENDM
+                      00157 ;--------------------------------------------------------------------------------------------------
+                      00158 ;-----[ Borrado de pantalla, cursor en "Home" ]-----
+                      00159 LCD_Clear       MACRO                                                                                   
+                            ; 
+                      00160                                                         movlw   E_CLEAR_DISPLAY         ;
+                      00161                                                         call    SendCom                                 
+                                    ; Tarda 1.52 mS
+                      00162                                                 ENDM
+                      00163 ;--------------------------------------------------------------------------------------------------     
+                      00164 ;-----[ Cursor en posición de "Home" ]-----                                             
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00165 LCD_Home        MACRO                                                                   ; 
+                      00166                                                         movlw   E_RETURN_HOME   ; 
+                      00167                                                         call    SendCom                         ; Tarda 
+                            1.52 mS
+                      00168                                                 ENDM
+                      00169 ;--------------------------------------------------------------------------------------------------     
+                      00170 ;-----[ Encendido de la pantalla de la LCD ]-----                                               
+                      00171 LCD_On                  MACRO                                                                   ; 
+                      00172 dispctrl SET dispctrl | BIT_D_DISPLAY_ON        ; dispctrl |= BIT_D_DISPLAY_ON;
+                      00173                                                         movlw           E_DISPLAY_ON_OFF_CTRL
+                      00174                                                         iorlw           dispctrl
+                      00175                                                         call            SendCom                 ; lcd_co
+                            mmand(E_DISPLAY_ON_OFF_CTRL | dispctrl);
+                      00176                                                 ENDM
+                      00177 ;--------------------------------------------------------------------------------------------------     
+                      00178 ;-----[ Apagado de la pantalla de la LCD ]-----                                         
+                      00179 LCD_Off                 MACRO                                                                           
+                                    ; 
+                      00180 dispctrl SET dispctrl & ~BIT_D_DISPLAY_ON                       ; dispctrl &= ~BIT_D_DISPLAY_ON;
+                      00181                                                         movlw   E_DISPLAY_ON_OFF_CTRL
+                      00182                                                         iorlw   dispctrl                
+                      00183                                                         call    SendCom                         ; lcd_co
+                            mmand(E_DISPLAY_ON_OFF_CTRL | dispctrl); delay_us(50)
+                      00184                                                 ENDM
+                      00185 ;--------------------------------------------------------------------------------------------------     
+                      00186 ;-----[ Ajusta el tipo de Cursor ]-----
+                      00187 LCD_Cursor      MACRO  Modo                                     ; 
+                      00188 
+                      00189 ;               El parámetro Modo puede ser:
+                      00190 ;       --> E_LCD_CURSOR_OFF            0x00    [Apagado]
+                      00191 ; --> E_LCD_CURSOR_ON                   0x02    [Encendido, Fijo]
+                      00192 ; --> E_LCD_CURSOR_ON_BLINK 0x03        [Encendido, Parpadeando]
+                      00193 
+                      00194 dispctrl SET dispctrl & 0xFC                    ; dispctrl &= 0xFC;
+                      00195 dispctrl SET dispctrl | Modo                    ; dispctrl |= Modo;
+                      00196                                                         movlw   E_DISPLAY_ON_OFF_CTRL
+                      00197                                                         iorlw   dispctrl                
+                      00198                                                         call    SendCom                         ; lcd_co
+                            mmand(E_DISPLAY_ON_OFF_CTRL | dispctrl);
+                      00199                                                 ENDM
+                      00200 ;--------------------------------------------------------------------------------------------------     
+                      00201 ;-----[ Mueve el cursor una posición a la Izquierda ]-----
+                      00202 LCD_Cursor_Left MACRO                                                   ; 
+                      00203 
+                      00204 ; lcd_command(E_CURSOR_DISPLAY_SHIFT | BIT_SC_SHIFT_CURSOR | BIT_RL_SHIFT_LEFT);
+                      00205                                                                         movlw           E_CURSOR_DISPLAY
+                            _SHIFT
+                      00206                                                                         iorlw           BIT_SC_SHIFT_CUR
+                            SOR
+                      00207                                                                         iorlw           BIT_RL_SHIFT_LEF
+                            T
+                      00208                                                                         call            SendCom
+                      00209                                                                 ENDM
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00210 ;--------------------------------------------------------------------------------------------------     
+                                                                                    
+                      00211 ;-----[ Mueve el cursor una posición a la Derecha ]-----
+                      00212 LCD_Cursor_Right        MACRO                                                   ;                       
+                                                                    
+                      00213 ;lcd_command(E_CURSOR_DISPLAY_SHIFT | BIT_SC_SHIFT_CURSOR | BIT_RL_SHIFT_RIGHT);                        
+                                                            
+                      00214                                                                                 movlw           E_CURSOR
+                            _DISPLAY_SHIFT
+                      00215                                                                                 iorlw           BIT_SC_S
+                            HIFT_CURSOR
+                      00216                                                                                 iorlw           BIT_RL_S
+                            HIFT_RIGHT
+                      00217                                                                                 call            SendCom
+                      00218                                                                         ENDM
+                      00219 ;--------------------------------------------------------------------------------------------------     
+                                                                                            
+                      00220 ;-----[ Recorre la pantalla a la Izquierda, también se afecta la posición del cursor ]-----
+                      00221 LCD_Scroll_Left         MACRO                                           ; 
+                      00222 ;lcd_command(E_CURSOR_DISPLAY_SHIFT | BIT_SC_SHIFT_DISPLAY | BIT_RL_SHIFT_LEFT);                        
+                                                                                                                    
+                      00223                                                                                 movlw           E_CURSOR
+                            _DISPLAY_SHIFT
+                      00224                                                                                 iorlw           BIT_SC_S
+                            HIFT_DISPLAY
+                      00225                                                                                 iorlw           BIT_RL_S
+                            HIFT_LEFT
+                      00226                                                                                 call            SendCom
+                      00227                                                                         ENDM
+                      00228 ;--------------------------------------------------------------------------------------------------     
+                                                                                            
+                      00229 ;-----[ Recorre la pantalla a la Derecha, también se afecta la posición del cursor ]-----
+                      00230 LCD_Scroll_Right        MACRO                                           ; 
+                      00231 ;lcd_command(E_CURSOR_DISPLAY_SHIFT | BIT_SC_SHIFT_DISPLAY | BIT_RL_SHIFT_RIGHT);                       
+                                                                                                                    
+                      00232                                                                                 movlw           E_CURSOR
+                            _DISPLAY_SHIFT
+                      00233                                                                                 iorlw           BIT_SC_S
+                            HIFT_DISPLAY
+                      00234                                                                                 iorlw           BIT_RL_S
+                            HIFT_RIGHT
+                      00235                                                                                 call            SendCom
+                      00236                                                                         ENDM                            
+                                                                    
+                      00237 ;--------------------------------------------------------------------------------------------------     
+                                                                                            
+                      00238 ;-----[ Habilita la función de "autoscroll" para cuando se escriben caracteres a la LCD ]-----
+                      00239 LCD_Autoscroll_On               MACRO                                           ; 
+                      00240 ;lcd_command(E_ENTRY_MODE_SET | BIT_S_AUTOSCROLL_ON | BIT_ID_INCREMENT_CURSOR);                         
+                                                                                                            
+                      00241                                                                                         movlw           
+                            E_ENTRY_MODE_SET
+                      00242                                                                                         iorlw           
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE  8
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                            BIT_S_AUTOSCROLL_ON
+                      00243                                                                                         iorlw           
+                            BIT_ID_INCREMENT_CURSOR
+                      00244                                                                                         call            
+                            SendCom
+                      00245                                                                                 ENDM                    
+                      00246 ;--------------------------------------------------------------------------------------------------     
+                      00247 ;-----[ Deshabilita la función de "autoscroll" para cuando se escriben caracteres a la LCD ]-----
+                      00248 LCD_Autoscroll_Off      MACRO                                           ; 
+                      00249 ;lcd_command(E_ENTRY_MODE_SET | BIT_S_AUTOSCROLL_OFF | BIT_ID_INCREMENT_CURSOR);                        
+                                                                                                                    
+                      00250                                                                                         movlw           
+                            E_ENTRY_MODE_SET
+                      00251                                                                                         iorlw           
+                            BIT_S_AUTOSCROLL_OFF
+                      00252                                                                                         iorlw           
+                            BIT_ID_INCREMENT_CURSOR
+                      00253                                                                                         call            
+                            SendCom
+                      00254                                                                                 ENDM                    
+                      00255 ;--------------------------------------------------------------------------------------------------     
+                                                                                                                            
+                      00256 ;-----[ Ajusta la posición del cursor en la DDRAM. Si el cursor está habiilitado, se mostrará. ]
+                      00257 LCD_GoTo                                                MACRO           Columna, Hilera 
+                      00258         LOCAL Direccion_Hilera
+                      00259 ; Se aplican límites para Hileras y Columnas:
+                      00260 ;       IF (Hilera > Hileras)
+                      00261 ;               Hilera_Final SET Hileras - 1
+                      00262 ;       ENDIF
+                      00263 ;       IF (Columna > Columnas) 
+                      00264 ;               Columna_Final SET Columnas - 1
+                      00265 ;       ENDIF
+                      00266 
+                      00267 ; PARA LCD de 20x4
+                      00268 ;#define LCD_LINEA1 0x00 // Direccion de memoria para la primera linea
+                      00269 ;#define LCD_LINEA2 0xC0 // Direccion de memoria para la segunda linea
+                      00270 ;#define LCD_LINEA3 0x94 // Direccion de memoria para la tercera linea
+                      00271 ;#define LCD_LINEA4 0xD4 // Direccion de memoria para la cuarta linea
+                      00272                                         
+                      00273 ; PARA LCD de 16x4
+                      00274 ;#define LCD_LINEA1 0x00 // Direccion de memoria para la primera linea
+                      00275 ;#define LCD_LINEA2 0x40 // Direccion de memoria para la segunda linea
+                      00276 ;#define LCD_LINEA3 0x14 // Direccion de memoria para la tercera linea
+                      00277 ;#define LCD_LINEA4 0x54 // Direccion de memoria para la cuarta linea                                   
+                      00278 
+                      00279 ; Cálculo de la máscara en función del número de línea en donde se coloca el cursor:
+                      00280 ;            |      V I S I B L E S      |     No Mostrados       |
+                      00281 ; LÍNEA 0 --> 00 01 02 03 04 05 ... 0E 0F 10 11 12 13 14 ... 26 27    En Total 40 Caracteres
+                      00282 ; LÍNEA 1 --> 40 41 42 43 44 45 ... 4E 4F 50 51 52 53 54 ... 66 67    En Total 40 Caracteres
+                      00283 ; LÍNEA 2 --> 14 15 16 17 18 19 ... 22 23 24 25 26 27 28 ... 3A 3B    En Total 40 Caracteres
+                      00284 ; LÍNEA 3 --> 54 55 56 57 58 59 ... 62 63 64 65 66 67 68 ... 80 81    En Total 40 Caracteres
+                      00285 
+                      00286         IF (Columnas == 16)
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE  9
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00287                 IF (Hilera == 0)
+                      00288                         Direccion_Hilera SET 0x00
+                      00289                 ENDIF   
+                      00290                 IF (Hilera == 1)
+                      00291                         Direccion_Hilera SET 0x40
+                      00292                 ENDIF
+                      00293                 IF (Hilera == 2)
+                      00294                         Direccion_Hilera SET 0x14
+                      00295                 ENDIF
+                      00296                 IF (Hilera == 3)
+                      00297                         Direccion_Hilera SET 0x54
+                      00298                 ENDIF
+                      00299         ENDIF
+                      00300         
+                      00301         IF (Columnas == 20)
+                      00302                 IF (Hilera == 0)
+                      00303                         Direccion_Hilera SET 0x00
+                      00304                 ENDIF   
+                      00305                 IF (Hilera == 1)
+                      00306                         Direccion_Hilera SET 0xC0
+                      00307                 ENDIF
+                      00308                 IF (Hilera == 2)
+                      00309                         Direccion_Hilera SET 0x94
+                      00310                 ENDIF
+                      00311                 IF (Hilera == 3)
+                      00312                         Direccion_Hilera SET 0xD4
+                      00313                 ENDIF
+                      00314         ENDIF
+                      00315         
+                      00316 ; lcd_command(E_SET_DDRAM_ADDR | (col + rowaddr[ row ]));
+                      00317                                                                                         movlw           
+                            Direccion_Hilera
+                      00318                                                                                         addlw           
+                            Columna
+                      00319                                                                                         iorlw           
+                            E_SET_DDRAM_ADDR
+                      00320                                                                                         call            
+                            SendCom
+                      00321                                                                                 ENDM                    
+                      00322 ;--------------------------------------------------------------------------------------------------     
+                      00323                                                                         
+                      00324                                                                 
+                      00325                                                                 
+                      00326                                                                 
+                      00327 ;--------------------------------------------------------------------------------------------------     
+                                                                                                            
+                      00328                                                                                                         
+                                                            
+                      00016         
+                      00017         IFNDEF LCD_4Bits_PORTB.h
+                      00018                 #INCLUDE "LCD_4Bits_PORTB.h"
+                      00001 ;------------------------------------------------------------------------------
+                      00002 ; CONSTANTES EMPLEADAS en el manejador de la LCD.
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 10
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00003 ;------------------------------------------------------------------------------
+                      00004 ;-----[ CONSTANTES para el manejo de la LCD ]-----
+                      00005 
+                      00006         #DEFINE Hileras 4
+                      00007         ;#DEFINE Columnas 16
+                      00008         #DEFINE Columnas 20
+                      00009                 
+                      00010 ; --> Los siguientes son valores para usar PORTB <--
+  00000006            00011 PORT_LCD        EQU     PORTB   ; Puerto que maneja al LCD 
+  00000086            00012 TRIS_LCD        EQU     TRISB   ; Direcciones del Puerto del LCD
+                      00013 
+                      00014         #DEFINE RS PORTB,1
+                      00015         #DEFINE Pin_RS 1
+                      00016         #DEFINE RW PORTB,2
+                      00017         #DEFINE E PORTB,3
+                      00018 
+                      00019 ; --> Los siguientes valores para emplear PORTD <--     
+                      00020 ;PORT_LCD       EQU     PORTD   ; Puerto        que maneja al LCD
+                      00021 ;TRIS_LCD       EQU     TRISD   ; Direcciones del Puerto del LCD
+                      00022 
+                      00023         ;#DEFINE        RS PORT_LCD,1
+                      00024         ;#DEFINE        Pin_RS 1
+                      00025         ;#DEFINE        E PORT_LCD,2
+                      00026         ;#DEFINE        RW PORT_LCD,0                                                                   
+                                                            
+                      00027 ;##############################################################################
+                      00028 
+                      00029 #DEFINE LCD_4Bits_PORTB.h
+                      00019         ENDIF
+                      00020         
+                      00021 ;-----[ Variables ]-----
+                      00022 
+                      00023         CBLOCK          0x20            ; Omitir el "0x20" para el manejo de estas subrutinas.
+  00000020            00024                 Var                                                     ; Variable para sacar informació
+                            n hacia la LCD.
+  00000021            00025                 Point                                           ; Apuntador para Tablas.
+  00000022            00026                 Select                                  ; Copia del bit asociado con RS en la LCD.
+  00000023            00027                 OutCod                                  ; Variable Temporal para el código de salida.
+  00000024            00028                 LCD_Dato
+  00000025            00029                 LCD_GuardaDato
+  00000026            00030                 LCD_GuardaTRISB
+  00000027            00031                 LCD_Auxiliar1
+  00000028            00032                 LCD_Auxiliar2
+                      00033         ENDC
+                      00034         
+                      00035 ;-----[ CONSTANTES ]----- 
+                      00036 ;------------------------------------------------------------------------------
+                      00037 ;-----[ INICIO ]----- 
+                      00038  
+0000                  00039         ORG             0x00                            ; Inicio del código [Para Ensayos y Pruebas]
+                      00040         
+0000   283E           00041         goto    Ensayo                  ; Salto al programa principal [En PRUEBA]  
+                      00042         
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 11
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00043         ;goto  Otra_Prueba ; Otro ensayo
+                      00044 ;------------------------------------------------------------------------------ 
+                      00045 ;       Tablas de caracteres a enviar, deberá estar en Programa Principal. 
+0001                  00046 Line1:  
+0001   0782           00047         addwf   PCL,F                                                   ; Modifica el Contador del Progr
+                            ama [PC]
+0002   3430 3431 3432 00048         DT "0123456789012345", 0x00
+       3433 3434 3435 
+       3436 3437 3438 
+       3439 3430 3431 
+       3432 3433 3434 
+       3435 3400 
+0013                  00049 Line2:
+0013   0782           00050         addwf   PCL,F                                                   ; Modifica el Contador del Progr
+                            ama [PC]
+0014   3461 3462 3463 00051         DT "abcdefghijklmnop", 0x00
+       3464 3465 3466 
+       3467 3468 3469 
+       346A 346B 346C 
+       346D 346E 346F 
+       3470 3400 
+                      00052          
+                      00053 ; Envío de un mensaje fijo a la LCD [Estará en el Programa Principal]
+0025                  00054 OutMes:
+0025   01A1           00055         clrf                    Point                                   ; Reinicio del Apuntador de la T
+                            abla
+0026   14A2           00056         bsf                             Select,Pin_RS   ; Selección del MODO de DATOS; RS <- "1" 
+0027                  00057 Mess1:
+0027   0821           00058         movf                    Point,W                         ; Carga el dato apuntado... 
+0028   2001           00059         call                    Line1                                   ; Obtén el código ASCII apuntado
+                             en la tabla 
+0029   20A2           00060         call                    LCD_Char                        ; ... Envíalo a la LCD 
+002A   0AA1           00061         incf                    Point,F                         ; Apunta al próximo caracter 
+002B   0821           00062         movf                    Point,W                         ; y carga el apuntador
+002C   3C10           00063         sublw                   D'16'                                   ; Verifica si ya se enviaron tod
+                            os los caracteres 
+002D   1D03           00064         btfss                   STATUS,Z                        ; ... concluye si ya se enviaron 16
+002E   2827           00065         goto                    Mess1                                   ; Continuúa...
+                      00066 
+                      00067         LCD_GoTo  0,1                                           ; Pasa a la columna "0", Línea "1"
+  0000                    M         LOCAL Direccion_Hilera
+                          M ; Se aplican límites para Hileras y Columnas:
+                          M ;       IF (Hilera > Hileras)
+                          M ;               Hilera_Final SET Hileras - 1
+                          M ;       ENDIF
+                          M ;       IF (Columna > Columnas) 
+                          M ;               Columna_Final SET Columnas - 1
+                          M ;       ENDIF
+                          M 
+                          M ; PARA LCD de 20x4
+                          M ;#define LCD_LINEA1 0x00 // Direccion de memoria para la primera linea
+                          M ;#define LCD_LINEA2 0xC0 // Direccion de memoria para la segunda linea
+                          M ;#define LCD_LINEA3 0x94 // Direccion de memoria para la tercera linea
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 12
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                          M ;#define LCD_LINEA4 0xD4 // Direccion de memoria para la cuarta linea
+                          M                                         
+                          M ; PARA LCD de 16x4
+                          M ;#define LCD_LINEA1 0x00 // Direccion de memoria para la primera linea
+                          M ;#define LCD_LINEA2 0x40 // Direccion de memoria para la segunda linea
+                          M ;#define LCD_LINEA3 0x14 // Direccion de memoria para la tercera linea
+                          M ;#define LCD_LINEA4 0x54 // Direccion de memoria para la cuarta linea                                   
+                          M 
+                          M ; Cálculo de la máscara en función del número de línea en donde se coloca el cursor:
+                          M ;            |      V I S I B L E S      |     No Mostrados       |
+                          M ; LÍNEA 0 --> 00 01 02 03 04 05 ... 0E 0F 10 11 12 13 14 ... 26 27    En Total 40 Caracteres
+                          M ; LÍNEA 1 --> 40 41 42 43 44 45 ... 4E 4F 50 51 52 53 54 ... 66 67    En Total 40 Caracteres
+                          M ; LÍNEA 2 --> 14 15 16 17 18 19 ... 22 23 24 25 26 27 28 ... 3A 3B    En Total 40 Caracteres
+                          M ; LÍNEA 3 --> 54 55 56 57 58 59 ... 62 63 64 65 66 67 68 ... 80 81    En Total 40 Caracteres
+                          M 
+                          M         IF (Columnas == 16)
+                          M                 IF (1      == 0)
+                          M                         Direccion_Hilera SET 0x00
+                          M                 ENDIF   
+                          M                 IF (1      == 1)
+                          M                         Direccion_Hilera SET 0x40
+                          M                 ENDIF
+                          M                 IF (1      == 2)
+                          M                         Direccion_Hilera SET 0x14
+                          M                 ENDIF
+                          M                 IF (1      == 3)
+                          M                         Direccion_Hilera SET 0x54
+                          M                 ENDIF
+                          M         ENDIF
+                          M         
+                          M         IF (Columnas == 20)
+                          M                 IF (1      == 0)
+                          M                         Direccion_Hilera SET 0x00
+                          M                 ENDIF   
+                          M                 IF (1      == 1)
+Warning[207]: Found label after column 1. (Direccion_Hilera)
+  000000C0                M                         Direccion_Hilera SET 0xC0
+                          M                 ENDIF
+                          M                 IF (1      == 2)
+                          M                         Direccion_Hilera SET 0x94
+                          M                 ENDIF
+                          M                 IF (1      == 3)
+                          M                         Direccion_Hilera SET 0xD4
+                          M                 ENDIF
+                          M         ENDIF
+                          M         
+                          M ; lcd_command(E_SET_DDRAM_ADDR | (col + rowaddr[ row ]));
+002F   30C0               M                                                                                         movlw           
+                            Direccion_Hilera
+0030   3E00               M                                                                                         addlw           
+                            0
+0031   3880               M                                                                                         iorlw           
+                            E_SET_DDRAM_ADDR
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 13
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0032   20D0               M                                                                                         call            
+                            SendCom
+0033   01A1           00068         clrf                    Point                                   ; Reinicia el Apuntador de la Ta
+                            bla. 
+0034                  00069 Mess2:
+0034   0821           00070         movf                    Point,W                         ; Carga el dato apuntado... 
+0035   2013           00071         call                    Line2                                   ; Obtén el código ASCII apuntado
+                             en la tabla 
+0036   14A2           00072         bsf                             Select,Pin_RS   ; Select command mode 
+0037   20A2           00073         call                    LCD_Char                        ; ... Envíalo a la LCD  
+0038   0AA1           00074         incf                    Point,F                         ; Apunta al próximo caracter 
+0039   0821           00075         movf                    Point,W                         ; y carga el apuntador 
+003A   3C10           00076         sublw                   D'16'                                   ; Verifica si ya se enviaron tod
+                            os los caracteres 
+003B   1D03           00077         btfss                   STATUS,Z                        ; ... concluye si ya se enviaron 16
+003C   2834           00078         goto                    Mess2                                   ; Continuúa...
+                      00079         
+003D   0008           00080         return                                                                  ; Listo
+                      00081         
+                      00082 ;-----[ Programa Principal ]-----
+                      00083  
+003E                  00084 Ensayo: 
+                      00085 
+                      00086   LCD_Init      ; ESTE ES el MACRO que se usará
+  0000                    M                                                 VARIABLE dispctrl = 0x00        ; Se emplea en algunos M
+                            acros.
+003E   20B2               M                                                 call            LCD_Inicio
+003F   2143           00087   call T1S      ; Retardo de tiempo
+0040   2143           00088   call T1S
+0041   2143           00089   call T1S
+                      00090   
+0042   2025           00091         call    OutMes  ; Muestra los letreros
+0043   2143           00092         call T1S      ; Espera un tiempo...
+0044   2143           00093         call T1S
+                      00094         
+                      00095         LCD_Off       ; Apaga la pantalla
+  00000000                M dispctrl SET dispctrl & ~BIT_D_DISPLAY_ON                       ; dispctrl &= ~BIT_D_DISPLAY_ON;
+0045   3008               M                                                         movlw   E_DISPLAY_ON_OFF_CTRL
+0046   3800               M                                                         iorlw   dispctrl                
+0047   20D0               M                                                         call    SendCom                         ; lcd_co
+                            mmand(E_DISPLAY_ON_OFF_CTRL | dispctrl); delay_us(50)
+0048   2143           00096         call T1S      ; Retardo de tiempo
+                      00097         
+                      00098         LCD_On        ; Enciende la pantalla
+  00000004                M dispctrl SET dispctrl | BIT_D_DISPLAY_ON        ; dispctrl |= BIT_D_DISPLAY_ON;
+0049   3008               M                                                         movlw           E_DISPLAY_ON_OFF_CTRL
+004A   3804               M                                                         iorlw           dispctrl
+004B   20D0               M                                                         call            SendCom                 ; lcd_co
+                            mmand(E_DISPLAY_ON_OFF_CTRL | dispctrl);
+004C   2143           00099         call T1S      ; Retardo de tiempo
+                      00100         
+                      00101         LCD_Cursor E_LCD_CURSOR_ON_BLINK        ; Cursor parpadeando 
+                          M 
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 14
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                          M ;               El parámetro Modo puede ser:
+                          M ;       --> E_LCD_CURSOR_OFF            0x00    [Apagado]
+                          M ; --> E_LCD_CURSOR_ON                   0x02    [Encendido, Fijo]
+                          M ; --> E_LCD_CURSOR_ON_BLINK 0x03        [Encendido, Parpadeando]
+                          M 
+  00000004                M dispctrl SET dispctrl & 0xFC                    ; dispctrl &= 0xFC;
+  00000007                M dispctrl SET dispctrl | 0x03                    ; dispctrl |= Modo;
+004D   3008               M                                                         movlw   E_DISPLAY_ON_OFF_CTRL
+004E   3807               M                                                         iorlw   dispctrl                
+004F   20D0               M                                                         call    SendCom                         ; lcd_co
+                            mmand(E_DISPLAY_ON_OFF_CTRL | dispctrl);
+                      00102         LCD_GoTo 9,1  ; en esta posición 
+  0000                    M         LOCAL Direccion_Hilera
+                          M ; Se aplican límites para Hileras y Columnas:
+                          M ;       IF (Hilera > Hileras)
+                          M ;               Hilera_Final SET Hileras - 1
+                          M ;       ENDIF
+                          M ;       IF (Columna > Columnas) 
+                          M ;               Columna_Final SET Columnas - 1
+                          M ;       ENDIF
+                          M 
+                          M ; PARA LCD de 20x4
+                          M ;#define LCD_LINEA1 0x00 // Direccion de memoria para la primera linea
+                          M ;#define LCD_LINEA2 0xC0 // Direccion de memoria para la segunda linea
+                          M ;#define LCD_LINEA3 0x94 // Direccion de memoria para la tercera linea
+                          M ;#define LCD_LINEA4 0xD4 // Direccion de memoria para la cuarta linea
+                          M                                         
+                          M ; PARA LCD de 16x4
+                          M ;#define LCD_LINEA1 0x00 // Direccion de memoria para la primera linea
+                          M ;#define LCD_LINEA2 0x40 // Direccion de memoria para la segunda linea
+                          M ;#define LCD_LINEA3 0x14 // Direccion de memoria para la tercera linea
+                          M ;#define LCD_LINEA4 0x54 // Direccion de memoria para la cuarta linea                                   
+                          M 
+                          M ; Cálculo de la máscara en función del número de línea en donde se coloca el cursor:
+                          M ;            |      V I S I B L E S      |     No Mostrados       |
+                          M ; LÍNEA 0 --> 00 01 02 03 04 05 ... 0E 0F 10 11 12 13 14 ... 26 27    En Total 40 Caracteres
+                          M ; LÍNEA 1 --> 40 41 42 43 44 45 ... 4E 4F 50 51 52 53 54 ... 66 67    En Total 40 Caracteres
+                          M ; LÍNEA 2 --> 14 15 16 17 18 19 ... 22 23 24 25 26 27 28 ... 3A 3B    En Total 40 Caracteres
+                          M ; LÍNEA 3 --> 54 55 56 57 58 59 ... 62 63 64 65 66 67 68 ... 80 81    En Total 40 Caracteres
+                          M 
+                          M         IF (Columnas == 16)
+                          M                 IF (1      == 0)
+                          M                         Direccion_Hilera SET 0x00
+                          M                 ENDIF   
+                          M                 IF (1      == 1)
+                          M                         Direccion_Hilera SET 0x40
+                          M                 ENDIF
+                          M                 IF (1      == 2)
+                          M                         Direccion_Hilera SET 0x14
+                          M                 ENDIF
+                          M                 IF (1      == 3)
+                          M                         Direccion_Hilera SET 0x54
+                          M                 ENDIF
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 15
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                          M         ENDIF
+                          M         
+                          M         IF (Columnas == 20)
+                          M                 IF (1      == 0)
+                          M                         Direccion_Hilera SET 0x00
+                          M                 ENDIF   
+                          M                 IF (1      == 1)
+Warning[207]: Found label after column 1. (Direccion_Hilera)
+  000000C0                M                         Direccion_Hilera SET 0xC0
+                          M                 ENDIF
+                          M                 IF (1      == 2)
+                          M                         Direccion_Hilera SET 0x94
+                          M                 ENDIF
+                          M                 IF (1      == 3)
+                          M                         Direccion_Hilera SET 0xD4
+                          M                 ENDIF
+                          M         ENDIF
+                          M         
+                          M ; lcd_command(E_SET_DDRAM_ADDR | (col + rowaddr[ row ]));
+0050   30C0               M                                                                                         movlw           
+                            Direccion_Hilera
+0051   3E09               M                                                                                         addlw           
+                            9
+0052   3880               M                                                                                         iorlw           
+                            E_SET_DDRAM_ADDR
+0053   20D0               M                                                                                         call            
+                            SendCom
+                      00103         
+0054   2854           00104         goto $        ; Nos esperamos en este punto.
+                      00105 
+0055                  00106 Otra_Prueba:
+                      00107 
+                      00108   LCD_Init      ; ESTE ES el MACRO que se usará
+  0000                    M                                                 VARIABLE dispctrl = 0x00        ; Se emplea en algunos M
+                            acros.
+0055   20B2               M                                                 call            LCD_Inicio
+0056   2143           00109   call T1S      ; Retardo de tiempo
+                      00110         
+                      00111         LCD_Off
+  00000000                M dispctrl SET dispctrl & ~BIT_D_DISPLAY_ON                       ; dispctrl &= ~BIT_D_DISPLAY_ON;
+0057   3008               M                                                         movlw   E_DISPLAY_ON_OFF_CTRL
+0058   3800               M                                                         iorlw   dispctrl                
+0059   20D0               M                                                         call    SendCom                         ; lcd_co
+                            mmand(E_DISPLAY_ON_OFF_CTRL | dispctrl); delay_us(50)
+005A   2143           00112         call T1S
+                      00113         
+                      00114         LCD_Home
+005B   3002               M                                                         movlw   E_RETURN_HOME   ; 
+005C   20D0               M                                                         call    SendCom                         ; Tarda 
+                            1.52 mS
+                      00115         LCD_On
+  00000004                M dispctrl SET dispctrl | BIT_D_DISPLAY_ON        ; dispctrl |= BIT_D_DISPLAY_ON;
+005D   3008               M                                                         movlw           E_DISPLAY_ON_OFF_CTRL
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 16
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+005E   3804               M                                                         iorlw           dispctrl
+005F   20D0               M                                                         call            SendCom                 ; lcd_co
+                            mmand(E_DISPLAY_ON_OFF_CTRL | dispctrl);
+                      00116         LCD_Cursor E_LCD_CURSOR_ON_BLINK        ; Cursor parpadeando 
+                          M 
+                          M ;               El parámetro Modo puede ser:
+                          M ;       --> E_LCD_CURSOR_OFF            0x00    [Apagado]
+                          M ; --> E_LCD_CURSOR_ON                   0x02    [Encendido, Fijo]
+                          M ; --> E_LCD_CURSOR_ON_BLINK 0x03        [Encendido, Parpadeando]
+                          M 
+  00000004                M dispctrl SET dispctrl & 0xFC                    ; dispctrl &= 0xFC;
+  00000007                M dispctrl SET dispctrl | 0x03                    ; dispctrl |= Modo;
+0060   3008               M                                                         movlw   E_DISPLAY_ON_OFF_CTRL
+0061   3807               M                                                         iorlw   dispctrl                
+0062   20D0               M                                                         call    SendCom                         ; lcd_co
+                            mmand(E_DISPLAY_ON_OFF_CTRL | dispctrl);
+                      00117         
+0063   2143           00118         call T1S
+                      00119         LCD_Cursor_Right
+                          M ;lcd_command(E_CURSOR_DISPLAY_SHIFT | BIT_SC_SHIFT_CURSOR | BIT_RL_SHIFT_RIGHT);                        
+                                                            
+0064   3010               M                                                                                 movlw           E_CURSOR
+                            _DISPLAY_SHIFT
+0065   3800               M                                                                                 iorlw           BIT_SC_S
+                            HIFT_CURSOR
+0066   3804               M                                                                                 iorlw           BIT_RL_S
+                            HIFT_RIGHT
+0067   20D0               M                                                                                 call            SendCom
+0068   2143           00120         call T1S
+                      00121         LCD_Cursor_Right
+                          M ;lcd_command(E_CURSOR_DISPLAY_SHIFT | BIT_SC_SHIFT_CURSOR | BIT_RL_SHIFT_RIGHT);                        
+                                                            
+0069   3010               M                                                                                 movlw           E_CURSOR
+                            _DISPLAY_SHIFT
+006A   3800               M                                                                                 iorlw           BIT_SC_S
+                            HIFT_CURSOR
+006B   3804               M                                                                                 iorlw           BIT_RL_S
+                            HIFT_RIGHT
+006C   20D0               M                                                                                 call            SendCom
+006D   2143           00122         call T1S
+                      00123         LCD_Cursor_Right
+                          M ;lcd_command(E_CURSOR_DISPLAY_SHIFT | BIT_SC_SHIFT_CURSOR | BIT_RL_SHIFT_RIGHT);                        
+                                                            
+006E   3010               M                                                                                 movlw           E_CURSOR
+                            _DISPLAY_SHIFT
+006F   3800               M                                                                                 iorlw           BIT_SC_S
+                            HIFT_CURSOR
+0070   3804               M                                                                                 iorlw           BIT_RL_S
+                            HIFT_RIGHT
+0071   20D0               M                                                                                 call            SendCom
+0072   2143           00124         call T1S
+                      00125         LCD_Cursor_Right
+                          M ;lcd_command(E_CURSOR_DISPLAY_SHIFT | BIT_SC_SHIFT_CURSOR | BIT_RL_SHIFT_RIGHT);                        
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 17
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                                                            
+0073   3010               M                                                                                 movlw           E_CURSOR
+                            _DISPLAY_SHIFT
+0074   3800               M                                                                                 iorlw           BIT_SC_S
+                            HIFT_CURSOR
+0075   3804               M                                                                                 iorlw           BIT_RL_S
+                            HIFT_RIGHT
+0076   20D0               M                                                                                 call            SendCom
+                      00126         
+0077   2143           00127         call T1S
+0078   2143           00128         call T1S
+                      00129         
+                      00130         LCD_Cursor_Left
+                          M 
+                          M ; lcd_command(E_CURSOR_DISPLAY_SHIFT | BIT_SC_SHIFT_CURSOR | BIT_RL_SHIFT_LEFT);
+0079   3010               M                                                                         movlw           E_CURSOR_DISPLAY
+                            _SHIFT
+007A   3800               M                                                                         iorlw           BIT_SC_SHIFT_CUR
+                            SOR
+007B   3800               M                                                                         iorlw           BIT_RL_SHIFT_LEF
+                            T
+007C   20D0               M                                                                         call            SendCom
+007D   2143           00131         call T1S
+                      00132         LCD_Cursor_Left
+                          M 
+                          M ; lcd_command(E_CURSOR_DISPLAY_SHIFT | BIT_SC_SHIFT_CURSOR | BIT_RL_SHIFT_LEFT);
+007E   3010               M                                                                         movlw           E_CURSOR_DISPLAY
+                            _SHIFT
+007F   3800               M                                                                         iorlw           BIT_SC_SHIFT_CUR
+                            SOR
+0080   3800               M                                                                         iorlw           BIT_RL_SHIFT_LEF
+                            T
+0081   20D0               M                                                                         call            SendCom
+0082   2143           00133         call T1S
+                      00134         
+                      00135         LCD_Scroll_Right
+                          M ;lcd_command(E_CURSOR_DISPLAY_SHIFT | BIT_SC_SHIFT_DISPLAY | BIT_RL_SHIFT_RIGHT);                       
+                                                                                                                    
+0083   3010               M                                                                                 movlw           E_CURSOR
+                            _DISPLAY_SHIFT
+0084   3808               M                                                                                 iorlw           BIT_SC_S
+                            HIFT_DISPLAY
+0085   3804               M                                                                                 iorlw           BIT_RL_S
+                            HIFT_RIGHT
+0086   20D0               M                                                                                 call            SendCom
+0087   2143           00136         call T1S
+                      00137         LCD_Scroll_Right
+                          M ;lcd_command(E_CURSOR_DISPLAY_SHIFT | BIT_SC_SHIFT_DISPLAY | BIT_RL_SHIFT_RIGHT);                       
+                                                                                                                    
+0088   3010               M                                                                                 movlw           E_CURSOR
+                            _DISPLAY_SHIFT
+0089   3808               M                                                                                 iorlw           BIT_SC_S
+                            HIFT_DISPLAY
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 18
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+008A   3804               M                                                                                 iorlw           BIT_RL_S
+                            HIFT_RIGHT
+008B   20D0               M                                                                                 call            SendCom
+008C   2143           00138         call T1S
+                      00139         LCD_Scroll_Left
+                          M ;lcd_command(E_CURSOR_DISPLAY_SHIFT | BIT_SC_SHIFT_DISPLAY | BIT_RL_SHIFT_LEFT);                        
+                                                                                                                    
+008D   3010               M                                                                                 movlw           E_CURSOR
+                            _DISPLAY_SHIFT
+008E   3808               M                                                                                 iorlw           BIT_SC_S
+                            HIFT_DISPLAY
+008F   3800               M                                                                                 iorlw           BIT_RL_S
+                            HIFT_LEFT
+0090   20D0               M                                                                                 call            SendCom
+0091   2143           00140         call T1S
+                      00141         
+                      00142         LCD_Cursor E_LCD_CURSOR_OFF
+                          M 
+                          M ;               El parámetro Modo puede ser:
+                          M ;       --> E_LCD_CURSOR_OFF            0x00    [Apagado]
+                          M ; --> E_LCD_CURSOR_ON                   0x02    [Encendido, Fijo]
+                          M ; --> E_LCD_CURSOR_ON_BLINK 0x03        [Encendido, Parpadeando]
+                          M 
+  00000004                M dispctrl SET dispctrl & 0xFC                    ; dispctrl &= 0xFC;
+  00000004                M dispctrl SET dispctrl | 0x00                    ; dispctrl |= Modo;
+0092   3008               M                                                         movlw   E_DISPLAY_ON_OFF_CTRL
+0093   3804               M                                                         iorlw   dispctrl                
+0094   20D0               M                                                         call    SendCom                         ; lcd_co
+                            mmand(E_DISPLAY_ON_OFF_CTRL | dispctrl);
+                      00143         LCD_GoTo 6,1
+  0000                    M         LOCAL Direccion_Hilera
+                          M ; Se aplican límites para Hileras y Columnas:
+                          M ;       IF (Hilera > Hileras)
+                          M ;               Hilera_Final SET Hileras - 1
+                          M ;       ENDIF
+                          M ;       IF (Columna > Columnas) 
+                          M ;               Columna_Final SET Columnas - 1
+                          M ;       ENDIF
+                          M 
+                          M ; PARA LCD de 20x4
+                          M ;#define LCD_LINEA1 0x00 // Direccion de memoria para la primera linea
+                          M ;#define LCD_LINEA2 0xC0 // Direccion de memoria para la segunda linea
+                          M ;#define LCD_LINEA3 0x94 // Direccion de memoria para la tercera linea
+                          M ;#define LCD_LINEA4 0xD4 // Direccion de memoria para la cuarta linea
+                          M                                         
+                          M ; PARA LCD de 16x4
+                          M ;#define LCD_LINEA1 0x00 // Direccion de memoria para la primera linea
+                          M ;#define LCD_LINEA2 0x40 // Direccion de memoria para la segunda linea
+                          M ;#define LCD_LINEA3 0x14 // Direccion de memoria para la tercera linea
+                          M ;#define LCD_LINEA4 0x54 // Direccion de memoria para la cuarta linea                                   
+                          M 
+                          M ; Cálculo de la máscara en función del número de línea en donde se coloca el cursor:
+                          M ;            |      V I S I B L E S      |     No Mostrados       |
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 19
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                          M ; LÍNEA 0 --> 00 01 02 03 04 05 ... 0E 0F 10 11 12 13 14 ... 26 27    En Total 40 Caracteres
+                          M ; LÍNEA 1 --> 40 41 42 43 44 45 ... 4E 4F 50 51 52 53 54 ... 66 67    En Total 40 Caracteres
+                          M ; LÍNEA 2 --> 14 15 16 17 18 19 ... 22 23 24 25 26 27 28 ... 3A 3B    En Total 40 Caracteres
+                          M ; LÍNEA 3 --> 54 55 56 57 58 59 ... 62 63 64 65 66 67 68 ... 80 81    En Total 40 Caracteres
+                          M 
+                          M         IF (Columnas == 16)
+                          M                 IF (1      == 0)
+                          M                         Direccion_Hilera SET 0x00
+                          M                 ENDIF   
+                          M                 IF (1      == 1)
+                          M                         Direccion_Hilera SET 0x40
+                          M                 ENDIF
+                          M                 IF (1      == 2)
+                          M                         Direccion_Hilera SET 0x14
+                          M                 ENDIF
+                          M                 IF (1      == 3)
+                          M                         Direccion_Hilera SET 0x54
+                          M                 ENDIF
+                          M         ENDIF
+                          M         
+                          M         IF (Columnas == 20)
+                          M                 IF (1      == 0)
+                          M                         Direccion_Hilera SET 0x00
+                          M                 ENDIF   
+                          M                 IF (1      == 1)
+Warning[207]: Found label after column 1. (Direccion_Hilera)
+  000000C0                M                         Direccion_Hilera SET 0xC0
+                          M                 ENDIF
+                          M                 IF (1      == 2)
+                          M                         Direccion_Hilera SET 0x94
+                          M                 ENDIF
+                          M                 IF (1      == 3)
+                          M                         Direccion_Hilera SET 0xD4
+                          M                 ENDIF
+                          M         ENDIF
+                          M         
+                          M ; lcd_command(E_SET_DDRAM_ADDR | (col + rowaddr[ row ]));
+0095   30C0               M                                                                                         movlw           
+                            Direccion_Hilera
+0096   3E06               M                                                                                         addlw           
+                            6
+0097   3880               M                                                                                         iorlw           
+                            E_SET_DDRAM_ADDR
+0098   20D0               M                                                                                         call            
+                            SendCom
+0099   14A2           00144         bsf                             Select,Pin_RS   ; Selección del MODO de DATOS; RS <- "1" 
+009A   3053           00145         movlw 'S'
+009B   20A2           00146         call  LCD_Char
+                      00147                           ; Inprime un letrero en lugar de una letra...
+                      00148                           ; Realiza una SUBRUTINA GENÉRICA para imprimir letreros
+                      00149         
+                      00150         
+                      00151         
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 20
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+009C                  00152 Ciclo:
+009C   289C           00153         goto Ciclo
+                      00154 ;------------------------------------------------------------------------------
+                      00155 ;-----[ Subrutinas ]-----
+                      00156         #INCLUDE "LCD_4Bits_PORTB.inc"  ; Manejador de la LCD.
+                      00001 ;------------------------------------------------------------------------------
+                      00002 ; Manejador de una LCD empleando comunicación en 4 Bits
+                      00003 ;------------------------------------------------------------------------------
+                      00004 ;
+                      00005         IFNDEF LCD_4Bits_PORTB.h
+                      00006                 #INCLUDE "LCD_4Bits_PORTB.h"
+                      00007         ENDIF
+                      00008         
+                      00009 ;-----[ ALTA de VARIABLES LOCALES ]-----
+                      00010 ;------------------------------------------------------------------------------ 
+                      00011 ;-----[ Subrutinas ]------
+                      00012 ; Genera un pulso en la terminal E, para escribir un dato / comando a la LCD
+009D                  00013 PulseE:
+009D   1586           00014         bsf             E                                                       ; E <- "1" 
+009E   211B           00015         call    T1mS                                    ; Retardo de 1ms 
+009F   1186           00016         bcf             E                                                       ; E <- "0"
+00A0   211B           00017         call    T1mS                                    ; Retardo de 1ms 
+00A1   0008           00018         return                                                  ; Es todo.
+                      00019 ;--------------------------------------------------------------------------------------------------
+                      00020 ; Envío de un caracter (Comando o Dato) en dos partes [baja y alta] por <RB4:RB7>
+                      00021 ;
+                      00022 ; Si se antecede esta
+00A2                  00023 LCD_Char:
+00A2   00A3           00024         movwf           OutCod                                  ; Almacena el (dato / comando)de salida.
+                             
+00A3   39F0           00025         andlw           0xF0                                            ; Limpia la parte baja [low nybb
+                            le]
+00A4   0086           00026         movwf           PORT_LCD                                ; Muestra por el PUERTO la parte alta [h
+                            igh nybble]
+                      00027          
+00A5   18A2           00028         btfsc           Select,Pin_RS           ; Prueba la línea "RS" 
+00A6   1486           00029         bsf                     RS                                                      ; y envía un dat
+                            o
+                      00030         
+00A7   209D           00031         call            PulseE                                  ; Pulsa la señal de reloj pra enviar la 
+                            información... 
+00A8   211B           00032         call            T1mS                                            ; Espera por 1 milisegundo
+                      00033 
+00A9   0EA3           00034         swapf           OutCod,F                                ; Intercambia las partes alta y baja [lo
+                            w - high nybbles]
+00AA   0823           00035         movf            OutCod,W                                ; Recupera el código de salida
+00AB   39F0           00036         andlw           0xF0                                            ; Limpia la parte baja [low nybb
+                            le] 
+00AC   0086           00037         movwf           PORT_LCD                                ; Muestra por el PUERTO la parte baja [l
+                            ow nybble]
+                      00038          
+00AD   18A2           00039         btfsc           Select,Pin_RS           ; Prueba la línea "RS"  
+00AE   1486           00040         bsf                     RS                                                      ; y envía un dat
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 21
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                            o
+                      00041         
+00AF   209D           00042         call            PulseE                                  ; Pulsa la señal de reloj pra enviar la 
+                            información...
+00B0   211B           00043         call            T1mS                                            ; Espera por 1 milisegundo
+00B1   0008           00044         return                                                                  ; Listo.
+                      00045 ;------------------------------------------------------------------------------
+                      00046 ; Inicialización del LCD 
+00B2                  00047 LCD_Inicio:
+                      00048         SelBanco        TRIS_LCD                ; Selecciona el Banco adecuado. 
+                          M         IF TRIS_LCD & 0x0100                                                                            
+                                                    ; Reg > 0xFF, (Bancos 2 o 3)
+                          M                 IF (Banco_Actual & 0x0100) == 0                                 ; 0000 0001 0000 0000
+                          M                         bsf STATUS, RP1
+                          M                 ENDIF
+                          M         ELSE
+                          M                 IF (Banco_Actual & 0x0100) == 0x0100            ; 0000 0001 0000 0000
+                          M                         bcf STATUS, RP1
+                          M                 ENDIF
+                          M         ENDIF
+                          M         IF TRIS_LCD & 0x0080                                                                            
+                                                    ; Reg > 0x7F, (Bancos 1, 2 o 3)
+                          M                 IF (Banco_Actual & 0x0080) == 0                                 ; 0000 0000 0000 0000
+00B2   1683               M                         bsf STATUS, RP0
+                          M                 ENDIF
+                          M         ELSE
+                          M                 IF (Banco_Actual & 0x0080) == 0x0080            ; 0000 000 1000 0000
+                          M                         bcf STATUS, RP0
+                          M                 ENDIF
+                          M         ENDIF
+  00000080                M Banco_Actual SET TRIS_LCD & 0x180                                                       ; Banco_Actual 0
+                            000 000X XXXX XXXX
+                          M                                                                                                         
+                                                                                                    ;                       
+00B3   0103           00049         clrw                                                                    ; Todos los bits de este
+                             PUERTO son salidas. 
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00B4   0086           00050         movwf                   TRIS_LCD                ; 
+                      00051         SelBanco        PORT_LCD                ; Selecciona el Banco adecuado.
+                          M         IF PORT_LCD & 0x0100                                                                            
+                                                    ; Reg > 0xFF, (Bancos 2 o 3)
+                          M                 IF (Banco_Actual & 0x0100) == 0                                 ; 0000 0001 0000 0000
+                          M                         bsf STATUS, RP1
+                          M                 ENDIF
+                          M         ELSE
+                          M                 IF (Banco_Actual & 0x0100) == 0x0100            ; 0000 0001 0000 0000
+                          M                         bcf STATUS, RP1
+                          M                 ENDIF
+                          M         ENDIF
+                          M         IF PORT_LCD & 0x0080                                                                            
+                                                    ; Reg > 0x7F, (Bancos 1, 2 o 3)
+                          M                 IF (Banco_Actual & 0x0080) == 0                                 ; 0000 0000 0000 0000
+                          M                         bsf STATUS, RP0
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 22
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                          M                 ENDIF
+                          M         ELSE
+                          M                 IF (Banco_Actual & 0x0080) == 0x0080            ; 0000 000 1000 0000
+00B5   1283               M                         bcf STATUS, RP0
+                          M                 ENDIF
+                          M         ENDIF
+  00000000                M Banco_Actual SET PORT_LCD & 0x180                                                       ; Banco_Actual 0
+                            000 000X XXXX XXXX
+                          M                                                                                                         
+                                                                                                    ;                       
+00B6   0186           00052         clrf                    PORT_LCD                ; Limpia las salidas.
+00B7   2127           00053         call                    T10mS                           ; Espera por 10 milisegundos.
+                      00054         
+00B8   30F0           00055         movlw           0xF0                            ; Máscara para el código. 
+00B9   00A2           00056         movwf                   Select                  ; Sin alterar la parte alta [High nybble] 
+                      00057  
+00BA   3030           00058         movlw                   0x30                            ; Carga del valor inicial 
+00BB   0086           00059         movwf                   PORT_LCD                ; Traslado a la LCD  
+00BC   209D           00060         call                    PulseE                  ; Captura del código inicial. 
+00BD   211B           00061         call                    T1mS                            ; Espera por 1 milisegundo
+00BE   209D           00062         call                    PulseE                  ; Captura del código inicial, de nuevo.
+00BF   211B           00063         call                    T1mS                            ; Espera por 1 milisegundo
+00C0   209D           00064         call                    PulseE                  ; Captura del código inicial, de nuevo.
+00C1   1206           00065         bcf                             PORT_LCD,4      ; Ajuste al MODO de 4-bit
+00C2   209D           00066         call                    PulseE                  ; Captura de la información.
+                      00067          
+00C3   3028           00068         movlw                   0x28                            ; Ajuste al MODO de 4-bit mode, 2 lineas
+                             
+00C4   20A2           00069         call                    LCD_Char                ; Envío del código
+00C5   3008           00070         movlw                   0x08                            ; Código para el APAGADO de la LCD 
+00C6   20A2           00071         call                    LCD_Char                ; Envío del código
+00C7   3001           00072         movlw                   0x01                            ; Código para la LIMPIEZA de la LCD 
+00C8   20A2           00073         call                    LCD_Char                ; Envío del código
+00C9   3006           00074         movlw                   0x06                            ; Código para la HABILITACIÓN del CURSOR
+                             y AUTO INCREMENTO   
+00CA   20A2           00075         call                    LCD_Char                ; Envío del código
+00CB   3080           00076         movlw                   0x80                            ; Código para el AJUSTE a CERO de la DIR
+                            ECCIÓN de MEMORIA. 
+00CC   20A2           00077         call                    LCD_Char                ; Envío del código
+00CD   300C           00078         movlw                   0x0C                            ; Código para el ENCENDIDO de la LCD
+00CE   20A2           00079         call                    LCD_Char                ; Envío del código
+                      00080  
+00CF   0008           00081         return                                                          ; Se terminó
+                      00082 ;------------------------------------------------------------------------------
+                      00083 ; Envío de un COMANDO a la LCD
+00D0                  00084 LCD_Com:
+00D0                  00085 SendCom:
+00D0   10A2           00086         bcf                             Select,Pin_RS   ; Selecciona el MODO de COMANDO; RS <- "0" 
+00D1   20A2           00087         call                    LCD_Char                        ; Envía el código (Comando en este caso)
+00D2   0008           00088         return
+                      00089 ;------------------------------------------------------------------------------
+                      00090 ; Envío de un CARACTER (Dato) a la LCD
+00D3                  00091 LCD_Caracter:
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 23
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00D3   14A2           00092         bsf                             Select,Pin_RS   ; Selecciona el MODO de DATO; RS <- "1" 
+00D4   20A2           00093         call                    LCD_Char                        ; Envía el código (Dato en este caso)
+00D5   0008           00094         return
+                      00095 
+                      00096 ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                      00097 ; R E V I S A R   subrutinas incorporadas de la versión básica del manejador LCD
+                      00098 
+                      00099 ; Subrutina "LCD_CodigoCGROM" -----------------------------------------------------------
+                      00100 ;
+                      00101 ; A partir del carácter ASCII número 127 los códigos de los caracteres definidos en la
+                      00102 ; tabla CGROM del LM016L no coinciden con los códigos ASCII. Así por ejemplo, el código
+                      00103 ; ASCII de la "Ñ" en la tabla CGRAM del LM016L es EEh.
+                      00104 ;
+                      00105 ; Esta subrutina convierte los códigos ASCII de la "Ñ", "º" y otros, a códigos CGROM para que
+                      00106 ; que puedan ser visualizado en el módulo LM016L.
+                      00107 ; 
+                      00108 ; Entrada:      En (W) el código ASCII del carácter que se desea visualizar.
+                      00109 ; Salida:       En (W) el código definido en la tabla CGROM.
+                      00110 
+00D6                  00111 LCD_CodigoCGROM:
+00D6   00A4           00112         movwf   LCD_Dato                                        ; Guarda el valor del carácter y comprue
+                            ba si es
+00D7                  00113 LCD_EnheMinuscula:                              ; un carácter especial.
+00D7   3CF1           00114         sublw   'ñ'                                                     ; ¿Es la "ñ"?
+00D8   1D03           00115         btfss   STATUS,Z
+00D9   28DD           00116         goto    LCD_EnheMayuscula       ; No es "ñ".
+00DA   30EE           00117         movlw   b'11101110'                             ; Código CGROM de la "ñ".
+00DB   00A4           00118         movwf   LCD_Dato
+00DC   28EA           00119         goto    LCD_FinCGROM
+00DD                  00120 LCD_EnheMayuscula:
+00DD   0824           00121         movf    LCD_Dato,W                              ; Recupera el código ASCII de entrada.
+00DE   3CD1           00122         sublw   'Ñ'                                                     ; ¿Es la "Ñ"?
+00DF   1D03           00123         btfss   STATUS,Z
+00E0   28E4           00124         goto    LCD_Grado                                       ; No es "Ñ".
+00E1   30EE           00125         movlw   b'11101110'                             ; Código CGROM de la "ñ". (No hay símbolo para
+00E2   00A4           00126         movwf   LCD_Dato                                        ; la "Ñ" mayúscula en la CGROM).
+00E3   28EA           00127         goto    LCD_FinCGROM    
+00E4                  00128 LCD_Grado:
+00E4   0824           00129         movf    LCD_Dato,W                              ; Recupera el código ASCII de entrada.
+00E5   3CBA           00130         sublw   'º'                                                     ; ¿Es el símbolo "º"?
+00E6   1D03           00131         btfss   STATUS,Z
+00E7   28EA           00132         goto    LCD_FinCGROM                    ; No es "º".
+00E8   30DF           00133         movlw   b'11011111'                             ; Código CGROM del símbolo "º".
+00E9   00A4           00134         movwf   LCD_Dato
+00EA                  00135 LCD_FinCGROM:
+00EA   0824           00136         movf    LCD_Dato,W                              ; En (W) el código buscado.
+00EB   0008           00137         return
+                      00138 
+                      00139 ; Subrutina "LCD_DosEspaciosBlancos" y "LCD_LineaBlanco" --------------------------------
+                      00140 ; Visualiza espacios en blanco.
+                      00141 
+00EC                  00142 LCD_LineaEnBlanco:
+00EC   3020           00143         movlw           Columnas
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 24
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00ED   28F3           00144         goto            LCD_EnviaBlancos
+00EE                  00145 LCD_UnEspacioBlanco:
+00EE   3001           00146         movlw           .1
+00EF   28F3           00147         goto    LCD_EnviaBlancos
+00F0                  00148 LCD_DosEspaciosBlancos:
+00F0   3002           00149         movlw           .2
+00F1   28F3           00150         goto    LCD_EnviaBlancos
+00F2                  00151 LCD_TresEspaciosBlancos:
+00F2   3003           00152         movlw           .3
+00F3                  00153 LCD_EnviaBlancos:
+00F3   00A7           00154         movwf           LCD_Auxiliar1                                           ; (LCD_Auxiliar1) se uti
+                            liza como contador.
+00F4                  00155 LCD_EnviaOtroBlanco:    
+00F4   3020           00156         movlw           ' '                                                                             
+                                    ; Esto es un espacio en blanco.
+00F5   20D3           00157         call            LCD_Caracter                                            ; Visualiza tanto espaci
+                            os en blanco como se
+00F6   0BA7           00158         decfsz  LCD_Auxiliar1,F                                 ; haya cargado en (LCD_Auxiliar1).
+00F7   28F4           00159         goto            LCD_EnviaOtroBlanco
+00F8   0008           00160         return
+                      00161         
+                      00162 ;--------------------------------------------------------------------------------------------------
+                      00163 ; Subrutinas "LCD_ByteCompleto" y "LCD_Byte" --------------------------------------------
+                      00164 ; Subrutina "LCD_ByteCompleto", visualiza el byte que almacena el registro W en el
+                      00165 ; lugar actual de la pantalla. Por ejemplo, si (W)=b'10101110' visualiza "AE".
+                      00166 ;
+                      00167 ; Subrutina "LCD_Byte" igual que la anterior, pero en caso de que el nibble alto sea cero 
+                      00168 ; visualiza en su lugar un espacio en blanco. Por ejemplo si (W)=b'10101110' visualiza "AE"
+                      00169 ; y si (W)=b'00001110', visualiza " E" (un espacio blanco delante).
+                      00170 ;
+                      00171 ; Utilizan la subrutina "LCD_Nibble" que se analiza más adelante.
+                      00172 ;
+00F9                  00173 LCD_Byte:
+00F9   00A8           00174         movwf           LCD_Auxiliar2                           ; Guarda el valor de entrada.
+00FA   39F0           00175         andlw           b'11110000'                                     ; Analiza si el nibble alto es c
+                            ero.
+00FB   1D03           00176         btfss           STATUS,Z                                                ; Si es cero lo apaga.
+00FC   2901           00177         goto            LCD_VisualizaAlto               ; No es cero y lo visualiza.
+00FD   3020           00178         movlw           ' '                                                                     ; Visual
+                            iza un espacio en blanco.
+00FE   20D3           00179         call            LCD_Caracter                            ;
+00FF   2903           00180         goto            LCD_VisualizaBajo               ;
+                      00181 
+0100                  00182 LCD_ByteCompleto:
+0100   00A8           00183         movwf           LCD_Auxiliar2                           ; Guarda el valor de entrada.
+0101                  00184 LCD_VisualizaAlto:
+0101   0E28           00185         swapf           LCD_Auxiliar2,W                 ; Pone el nibble alto en la parte baja.
+0102   2104           00186         call            LCD_Nibble                                      ; Lo visualiza.
+0103                  00187 LCD_VisualizaBajo:
+0103   0828           00188         movf            LCD_Auxiliar2,W                 ; Repite el proceso con el nibble bajo.
+                      00189 
+                      00190 ; Subrutina "LCD_Nibble" ----------------------------------------------------------------
+                      00191 ;
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 25
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00192 ; Visualiza en el lugar actual de la pantalla, el valor hexadecimal que almacena en el nibble
+                      00193 ; bajo del registro W. El nibble alto de W no es tenido en cuenta. Ejemplos:
+                      00194 ; - Si (W)=b'01010110', se visualizará "6". 
+                      00195 ; - Si (W)=b'10101110', se visualizará "E". 
+                      00196 ;
+0104                  00197 LCD_Nibble:
+0104   390F           00198         andlw           b'00001111'                                                     ; Se queda con l
+                            a parte baja.
+0105   00A7           00199         movwf           LCD_Auxiliar1                                           ; Lo guarda.
+0106   3C09           00200         sublw           0x09                                                                            
+                            ; Comprueba si hay que representarlo con letra.
+0107   1C03           00201         btfss           STATUS,C        
+0108   290C           00202         goto            LCD_EnviaByteLetra
+0109   0827           00203         movf            LCD_Auxiliar1,W
+010A   3E30           00204         addlw           '0'                                                                             
+                                    ; El número se pasa a carácter ASCII sumándole
+010B   290E           00205         goto            LCD_FinVisualizaDigito  ; el ASCII del cero y lo visualiza.
+010C                  00206 LCD_EnviaByteLetra:
+010C   0827           00207         movf            LCD_Auxiliar1,W
+010D   3E37           00208         addlw           'A'-0x0A                                                                ; Sí, po
+                            r tanto, se le suma el ASCII de la 'A'.
+010E                  00209 LCD_FinVisualizaDigito:
+010E   28D3           00210         goto            LCD_Caracter                                            ; Y visualiza el carácte
+                            r. Se hace con un "goto"
+                      00211                                                                                                         
+                                                            ; para no sobrecargar la pila.
+                      00212 ;--------------------------------------------------------------------------------------------------
+                      00213 ;-----[ BAJA de VARIABLES LOCALES ]-----
+                      00214 ;------------------------------------------------------------------------------
+                      00215 ;-----[ SUBRUTINAS LOCALES a ESTE PAQUETE ]-----
+                      00216 ;------------------------------------------------------------------------------
+                      00157   #INCLUDE "Tiempo.inc"                                         ; Retardos y temporizados.
+                      00001 ;--------------------------------------------------------------------------------------------------
+                      00002 ; ------[Subrutinas para el Manejo de Tiempos Exactos]------
+                      00003 ;
+                      00004 ; Se selecciona la opción para las pruebas necesarias, locales o externas.
+                      00005 ; Para el uso común de estas subrutinas se habilitan los contadores [1, 2 y 3] asociándolos a las
+                      00006 ; variables temporales [Temp0, Temp1 y Temp2], que deberían haberse creado previamente.
+                      00007 ;
+                      00008 ;     Retardos de Tiempo Disponibles:
+                      00009 ;
+                      00010 ;               T1uS
+                      00011 ;               T10uS
+                      00012 ;                       T100uS
+                      00013 ;                       T1mS
+                      00014 ;                       T10mS
+                      00015 ;                       T100mS
+                      00016 ;                       T1S
+                      00017 ;                       T10S
+                      00018 
+                      00019         CBLOCK                                                  ; Sustituir por variables TEMPorales
+  00000029            00020                 Contador1       
+  0000002A            00021                 Contador2       
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 26
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+  0000002B            00022                 Contador3                       
+                      00023         ENDC
+                      00024 
+                      00025 ;Contador1 EQU VarTmp1
+                      00026 ;Contador2 EQU VarTmp2
+                      00027 ;Contador3 EQU VarTmp3
+                      00028 ;---------------------------------
+                      00029 ;                       ORG             0x000
+                      00030                         
+                      00031 ;                       call    T10uS           ; Desde aquí se cuenta el tiempo que se consumirá.
+                      00032 ;                       call    T100mS  ;
+                      00033 ;                       call  T1uS
+                      00034 ;                       call  T1uS
+                      00035                                                               ; 
+                      00036 ;                       goto    $       ; AQUÍ se inserta un "breakpoint", para contabilizar el tiempo d
+                            e ejecución
+                      00037                                       ; en el "StopWatch"
+                      00038 ;--------------------------------------------------------------------------------------------------
+                      00039 ;------[Retardo de 1 microsegundo]------
+                      00040 ;--------------------------------------------------------------------------------------------------
+010F                  00041 T1uS:
+010F   0000           00042                         nop                                             ; "A" [1]
+                      00043                         
+0110   0008           00044                         return                          ; "B" [2]
+                      00045 ;--------------------------------------------------------------------------------------------------
+                      00046 ;TEORÍA de FUNCIONAMIENTO:
+                      00047 ;
+                      00048 ;--> Los números entre paréntesis indican los ciclos consumidos. Recuerde que un ciclo de máquina
+                      00049 ; es igual a 200 nS.
+                      00050 ;--> Existen CICLOS que se repiten un cierto numero de veces.
+                      00051 ;--> En algunos casos habrá CICLOS ANIDADOS, es decir, CICLOS dentro de CICLOS.
+                      00052 ;
+                      00053 ;Para esta subrutina el cálculo de los ciclos queda de la siguiente manera:
+                      00054 ;
+                      00055 ;                 [2]                 -->  2    {Instrucción "call" en la "llamada" o "invocación"}
+                      00056 ;       +       [A]                 -->  1        {Instrucción "nop" [A]}
+                      00057 ;   +   [2]                 -->  2    {Instrucción "return" [B]}
+                      00058 ; -----------------------------------                  
+                      00059 ;       T O T A L           -->  5 Ciclos
+                      00060 ;                                5 * 200 nS = 1000 nS = 1 uS
+                      00061 ;--------------------------------------------------------------------------------------------------
+                      00062 ;------[Retardo de 10 microsegundos]------
+                      00063 ;--------------------------------------------------------------------------------------------------
+                      00064                         
+0111                  00065 T10uS:                                                                                          ; "A" [2
+                            ] de la instrucción “call” que le invoca 
+0111   300F           00066                         movlw           0x0F                                            ; "B" [1] de la 
+                            instrucción "movlw"
+0112   00A9           00067                         movwf           Contador1                               ; "C" [1] de la instrucc
+                            ión "movwf"
+                      00068 
+0113   0BA9           00069                         decfsz  Contador1, F            ; "D" [2] si salta, [1] si continúa
+0114   2913           00070                         goto            $ - 1                                           ; "E" [2]
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 27
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00071 
+0115   0008           00072                         return                                                                  ; "F" [2
+                            ]
+                      00073 ;--------------------------------------------------------------------------------------------------
+                      00074 ;TEORÍA de FUNCIONAMIENTO:
+                      00075 ;
+                      00076 ;--> Los números entre paréntesis indican los ciclos consumidos. Recuerde que un ciclo de máquina
+                      00077 ; es igual a 200 nS.
+                      00078 ;--> Existen CICLOS que se repiten un cierto numero de veces.
+                      00079 ;--> En algunos casos habrá CICLOS ANIDADOS, es decir, CICLOS dentro de CICLOS.
+                      00080 ;
+                      00081 ;Para esta subrutina el cálculo de los ciclos queda de la siguiente manera:
+                      00082 ;
+                      00083 ;                       [2] + [1] + [1]     -->  4    {Instrucciones "call", "movlw", "movwf"}
+                      00084 ;       +       14 * [1 + 2]        --> 42        {Repetición del ciclo "decfsz", "goto $ - 1"}
+                      00085 ;   +   [2] + [2]           -->  4    {Del salto de "decfsz" y "return"}
+                      00086 ; -----------------------------------                  
+                      00087 ;       T O T A L           --> 50 Ciclos
+                      00088 ;                               50 * 200 nS = 10,000 nS = 10 uS
+                      00089 ;--------------------------------------------------------------------------------------------------
+                      00090 ;------[Retardo de 100 microsegundos]------
+                      00091 ;--------------------------------------------------------------------------------------------------
+                      00092 
+0116                  00093 T100uS:                                                                                         ; "A" [2
+                            ] de la instrucción “call” que le invoca 
+0116   30A5           00094                         movlw           0xA5                                            ; "B" [1] 
+0117   00A9           00095                         movwf           Contador1                               ; "C" [1]
+                      00096 
+0118   0BA9           00097                         decfsz  Contador1, F            ; "D" [2] si salta, [1] si continúa
+0119   2918           00098                         goto            $ - 1                                           ; "E" [2]
+                      00099 
+011A   0008           00100                         return                                                                  ; "F" [2
+                            ]
+                      00101                         
+                      00102 ;--------[ TEORÍA de FUNCIONAMIENTO---------------------------------------------------------------------
+                            ---------------
+                      00103 ;  Para N igual a 1:
+                      00104 ; A[2] --> B[1] --> C[1] --> D[2] --> F[2]                                                              
+                      00105 ;                       8 Ciclos, 1.6 uSegs.
+                      00106 ;
+                      00107 ;  Para N igual a 2:
+                      00108 ; A[2] --> B[1] --> C[1] --> D[1] --> E[2] --> D[2] --> F[2]
+                      00109 ;                       11 Ciclos, 2.2 uSegs.
+                      00110 ;
+                      00111 ;  Para N igual a 3:
+                      00112 ; A[2] --> B[1] --> C[1] --> D[1] --> E[2] --> D[1] --> E[2] --> D[2] --> F[2]
+                      00113 ;                       14 Ciclos, 2.8 uSegs.
+                      00114 ;
+                      00115 ;  Para N igual a 4:
+                      00116 ; A[2] --> B[1] --> C[1] --> D[1] --> E[2] --> D[1] --> E[2] --> D[1] --> E[2]--> D[2] --> F[2]
+                      00117 ;                       17 Ciclos, 3.4 uSegs.
+                      00118 ;
+                      00119 ; Secuencia de ejecución para cada valor de "N". Cada columna representa una etapa.
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 28
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00120 ; Se indica la instrución que se ejecuta y los ciclos que consume.
+                      00121 ; 
+                      00122 ;  1     2         3             4
+                      00123 ;
+                      00124 ; A-2   A-2       A-2           A-2                                                             * Número
+                             de ciclos fijo: 2
+                      00125 ; B-1   B-1       B-1           B-1                                                                     
+                            * Número de ciclos fijo: 1
+                      00126 ; C-1   C-1       C-1           C-1                                                                     
+                            * Número de ciclos fijo: 1
+                      00127 ; D-2   D-1 D-2   D-1 D-1 D-2   D-1 D-1 D-1 D-2                 * (N-1)*1 + 2
+                      00128 ;       E-2       E-2 E-2       E-2 E-2 E-2                                     * (N-1)*2
+                      00129 ; F-2   F-2       F-2           F-2                                                                     
+                            * Número de ciclos fijo: 2
+                      00130 ;
+                      00131 ;  En general, para cualquier valor "N":
+                      00132 ;
+                      00133 ; Ciclos consumidos = 2 + 1 + 1 + 1*(N-1) + 2 + 2*(N-1) + 2 
+                      00134 ; Ciclos consumidos = 8 + (N-1) + 2*(N-1) 
+                      00135 ; Ciclos consumidos = 8 + 3*(N-1) 
+                      00136 ; Ciclos consumidos = 8 + 3*N - 3 
+                      00137 ; Ciclos consumidos = 5 + 3*N
+                      00138 ;
+                      00139 ; Por ejemplo, para N=255, ciclos consumidos = 770 (154 uSeg).
+                      00140 ; Para un retardo de 10 uSeg se resuelve: 50 = 5 + 3*N, de donde N = 15 (0x0F) .
+                      00141 ;  y para 100 uSeg, se resuelve: 500 = 5 + 3*N, de donde N = 165 (0xA5).
+                      00142 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+                      00143 
+                      00144 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+                      00145 ;------[Retardo de 1 milisegundo]------
+                      00146 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+011B                  00147 T1mS:
+011B   3006           00148                         movlw     .6                            ; 1 | Número de repeticiones externas (B
+                            )
+011C   00A9           00149         movwf     Contador1                     ; 1 |
+                      00150                 
+011D   30CF           00151 L01:    movlw     .207                          ; 1 | Número de repeticiones internas (A)
+011E   00AA           00152         movwf     Contador2                     ; 1 |
+                      00153                 
+011F   0064           00154 L02:    clrwdt                                  ; 1 | Limpia registro WDT.
+0120   0BAA           00155         decfsz    Contador2,1           ; 1 + (1) ¿Se agotó? (A)
+0121   291F           00156         goto      L02                                           ; 2 no, regresa.
+0122   0BA9           00157         decfsz    Contador1,1           ; 1 + (1) ¿Se agotó? (B)
+0123   291D           00158         goto      L01                                           ; 2 no, regresa
+                      00159                 
+0124   2925           00160                                 goto            $+1                     ; Retardo de 2 ciclos.
+0125   0064           00161                                 clrwdt                                  ; Retardo de un ciclo. 
+                      00162 
+0126   0008           00163         return                                  ; 2+2 Concluído.
+                      00164 ;-------------------------------------------------------------------------------------------------------
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 29
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                            ---------------
+                      00165 ;------[Retardo de 10 milisegundos]------
+                      00166 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+0127                  00167 T10mS:
+0127   3037           00168                         movlw     .55                           ; 1 | Número de repeticiones externas (B
+                            )
+0128   00A9           00169         movwf     Contador1                     ; 1 |
+                      00170                 
+0129   30B5           00171 L03:    movlw     .181                          ; 1 | Número de repeticiones internas (A)
+012A   00AA           00172         movwf     Contador2                     ; 1 |
+                      00173                 
+012B   0064           00174 L04:    clrwdt                                  ; 1 | Limpia registro WDT.
+012C   0064           00175                                 clrwdt                                  ; 1 | Limpia registro WDT.
+012D   0BAA           00176         decfsz    Contador2,1           ; 1 + (1) ¿Se agotó? (A)
+012E   292B           00177         goto      L04                                           ; 2 no, regresa.
+012F   0BA9           00178         decfsz    Contador1,1           ; 1 + (1) ¿Se agotó? (B)
+0130   2929           00179         goto      L03                                           ; 2 no, regresa
+                      00180                 
+0131   0008           00181         return                                  ; 2+2 Concluído.
+                      00182 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+                      00183 ;------[Retardo de 100 milisegundos]------
+                      00184 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+0132                  00185 T100mS:
+0132   30EF           00186                                 movlw     .239                          ; 1 Ajustar el número de repetic
+                            iones (B)
+0133   00A9           00187         movwf     Contador1             ; 1 |
+                      00188                 
+0134   30E8           00189 L05:    movlw     .232                          ; 1 Ajustar el número de repeticiones (A)
+0135   00AA           00190         movwf     Contador2             ; 1 |
+                      00191         
+0136   0064           00192 L06:    clrwdt                                  ; 1 Limpiar WDT
+0137   2938           00193                         goto            $ + 1           ; 2 Ciclos, retardo
+0138   2939           00194                         goto      $ + 1                 ; 2 Ciclos, retardo
+0139   0064           00195                                 clrwdt                                  ; 1 Ciclo, retardo
+                      00196 
+013A   0BAA           00197         decfsz    Contador2,1           ; 1 + (1) ¿Se agotó el tiempo? (A)
+013B   2936           00198         goto      L06                                           ; 2 no, Regresa
+                      00199                 
+013C   0BA9           00200         decfsz    Contador1, 1          ; 1 + (1) ¿Se agotó el tiempo? (B)
+013D   2934           00201         goto      L05                                           ; 2 no, Regresa
+                      00202                 
+013E   293F           00203                         goto      $ + 1                 ; 2 Ciclos, retardo
+013F   2940           00204                         goto            $ + 1           ; 2 Ciclos, retardo
+0140   2941           00205                                 goto      $ + 1                 ; 2 Ciclos, retardo
+0141   0064           00206                                 clrwdt                                  ; 1 Ciclo, retardo
+                      00207 
+0142   0008           00208         return                                  ; 2+2 Terminado
+                      00209 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+                      00210 ;------[Retardo de 1 Segundo]------
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 30
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00211 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+0143                  00212 T1S:
+0143   30A5           00213                         movlw     .165                          ; 1 Ajustar el número de repeticiones (C
+                            )
+0144   00A9           00214         movwf     Contador1             ; 1 |
+0145                  00215 L07:            
+0145   3029           00216                         movlw     .41                           ; 1 Ajustar el número de repeticiones (B
+                            )
+0146   00AA           00217         movwf     Contador2             ; 1 |
+0147                  00218 L08:            
+0147   3093           00219                         movlw     .147                          ; 1 Ajustar el número de repeticiones (A
+                            )
+0148   00AB           00220         movwf     Contador3             ; 1 |
+0149                  00221 L09:            
+0149   0064           00222                         clrwdt                                  ; 1 Limpiar el WDT
+014A   0064           00223         clrwdt                                  ; 1 Retardo de un ciclo
+014B   0BAB           00224         decfsz    Contador3,1           ; 1 + (1) ¿Se agotó el tiempo? (A)
+014C   2949           00225         goto      L09                                           ; 2 no, Regresa
+014D   0BAA           00226         decfsz    Contador2,1           ; 1 + (1) ¿Se agotó el tiempo? (B)
+014E   2947           00227         goto      L08                                           ; 2 no, Regresa
+014F   0BA9           00228         decfsz    Contador1,1           ; 1 + (1) ¿Se agotó el tiempo? (C)
+0150   2945           00229         goto      L07                                           ; 2 no, Regresa
+                      00230                 
+0151   0008           00231         return                                  ; 2+2 Concluido.
+                      00232 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+                      00233 ;------[Retardo de 10 Segundos]------
+                      00234 ;-------------------------------------------------------------------------------------------------------
+                            ---------------
+0152                  00235 T10S:
+0152   30B7           00236                         movlw     .183                          ; 1 | Ajusta el número de repeticiones (
+                            C)
+0153   00A9           00237         movwf     Contador1             ; 1 |
+0154                  00238 L10:            
+0154   30BE           00239                                 movlw     .190                          ; 1 | Ajusta el número de repeti
+                            ciones (B)
+0155   00AA           00240         movwf     Contador2             ; 1 |
+0156                  00241 L11:            
+0156   30EF           00242                                 movlw     .239                          ; 1 | Ajusta el número de repeti
+                            ciones (A)
+0157   00AB           00243         movwf     Contador3             ; 1 |
+0158                  00244 L12:            
+0158   0064           00245                         clrwdt                                  ; 1 | Limpia el "WDT"
+0159   295A           00246                         goto            $ + 1           ; 2 | Retardo de dos ciclos 
+                      00247 
+015A   0BAB           00248         decfsz    Contador3,1           ; 1 + (1) is the time over? (A)
+015B   2958           00249         goto      L12                                           ; 2 no, loop
+                      00250                 
+015C   0BAA           00251         decfsz    Contador2,1           ; 1 + (1) ¿Se consumió el tiempo? (B)
+015D   2956           00252         goto      L11                                           ; 2  NO, regresa
+                      00253                 
+015E   0BA9           00254         decfsz    Contador1,1           ; 1 + (1) ¿Se consumió el tiempo? (C)
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 31
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+015F   2954           00255         goto      L10                                           ; 2 NO, regresa
+                      00256                 
+0160   2961           00257                         goto            $ + 1           ; 2 ciclos de retardo
+0161   0064           00258                                 clrwdt                                  ; 1 ciclo de retardo
+                      00259 
+0162   0008           00260         return                                  ; 2+2 Terminado
+                      00261 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+                            _-_-_-_-_-_-_-_
+                      00262 
+                      00263 ;                       END
+                      00158 ;------------------------------------------------------------------------------  
+                      00159         END                                                                                             
+                                                    ;
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 32
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ACKDT                             00000005
+ACKEN                             00000004
+ACKSTAT                           00000006
+ADCON0                            0000001F
+ADCON1                            0000009F
+ADCS0                             00000006
+ADCS1                             00000007
+ADCS2                             00000006
+ADDEN                             00000003
+ADFM                              00000007
+ADIE                              00000006
+ADIF                              00000006
+ADON                              00000000
+ADRESH                            0000001E
+ADRESL                            0000009E
+BCLIE                             00000003
+BCLIF                             00000003
+BF                                00000000
+BIT_B_CURSOR_BLINK                (1<<0)
+BIT_B_CURSOR_NO_BLINK             0
+BIT_C_CURSOR_OFF                  0
+BIT_C_CURSOR_ON                   (1<<1)
+BIT_DL_DATALENGTH_4               0
+BIT_DL_DATALENGTH_8               (1<<4)
+BIT_D_DISPLAY_OFF                 0
+BIT_D_DISPLAY_ON                  (1<<2)
+BIT_F_FONT_5_10                   (1<<2)
+BIT_F_FONT_5_8                    0
+BIT_ID_DECREMENT_CURSOR           0
+BIT_ID_INCREMENT_CURSOR           (1<<1)
+BIT_N_DISP_LINES_1                0
+BIT_N_DISP_LINES_2                (1<<3)
+BIT_RL_SHIFT_LEFT                 0
+BIT_RL_SHIFT_RIGHT                (1<<2)
+BIT_SC_SHIFT_CURSOR               0
+BIT_SC_SHIFT_DISPLAY              (1<<3)
+BIT_S_AUTOSCROLL_OFF              0
+BIT_S_AUTOSCROLL_ON               (1<<0)
+BRGH                              00000002
+Banco_Actual                      00000000
+C                                 00000000
+C1INV                             00000004
+C1OUT                             00000006
+C2INV                             00000005
+C2OUT                             00000007
+CCP1CON                           00000017
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCP1X                             00000005
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 33
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+CCP1Y                             00000004
+CCP2CON                           0000001D
+CCP2IE                            00000000
+CCP2IF                            00000000
+CCP2M0                            00000000
+CCP2M1                            00000001
+CCP2M2                            00000002
+CCP2M3                            00000003
+CCP2X                             00000005
+CCP2Y                             00000004
+CCPR1                             00000015
+CCPR1H                            00000016
+CCPR1L                            00000015
+CCPR2                             0000001B
+CCPR2H                            0000001C
+CCPR2L                            0000001B
+CHS0                              00000003
+CHS1                              00000004
+CHS2                              00000005
+CIS                               00000003
+CKE                               00000006
+CKP                               00000004
+CM0                               00000000
+CM1                               00000001
+CM2                               00000002
+CMCON                             0000009C
+CMIE                              00000006
+CMIF                              00000006
+CREN                              00000004
+CSRC                              00000007
+CVR0                              00000000
+CVR1                              00000001
+CVR2                              00000002
+CVR3                              00000003
+CVRCON                            0000009D
+CVREN                             00000007
+CVROE                             00000006
+CVRR                              00000005
+Ciclo                             0000009C
+Columnas                          20
+Contador1                         00000029
+Contador2                         0000002A
+Contador3                         0000002B
+D                                 00000005
+DATA_ADDRESS                      00000005
+DC                                00000001
+D_A                               00000005
+D_NOT_A                           00000005
+E                                 PORTB,3
+EEADR                             0000010D
+EEADRH                            0000010F
+EECON1                            0000018C
+EECON2                            0000018D
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 34
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+EEDATA                            0000010C
+EEDATH                            0000010E
+EEIE                              00000004
+EEIF                              00000004
+EEPGD                             00000007
+E_CLEAR_DISPLAY                   0x01
+E_CURSOR_DISPLAY_SHIFT            0x10
+E_DISPLAY_ON_OFF_CTRL             0x08
+E_ENTRY_MODE_SET                  0x04
+E_FUNCTION_SET                    0x20
+E_LCD_CURSOR_OFF                  0x00
+E_LCD_CURSOR_ON                   0x02
+E_LCD_CURSOR_ON_BLINK             0x03
+E_RETURN_HOME                     0x02
+E_SET_CGRAM_ADDR                  0x40
+E_SET_DDRAM_ADDR                  0x80
+Ensayo                            0000003E
+F                                 00000001
+FALSE                             0
+FERR                              00000002
+FSR                               00000004
+GCEN                              00000007
+GIE                               00000007
+GO                                00000002
+GO_DONE                           00000002
+GO_NOT_DONE                       00000002
+Hileras                           4
+I2C_DATA                          00000005
+I2C_READ                          00000002
+I2C_START                         00000003
+I2C_STOP                          00000004
+IBF                               00000007
+IBOV                              00000005
+INDF                              00000000
+INTCON                            0000000B
+INTE                              00000004
+INTEDG                            00000006
+INTF                              00000001
+IRP                               00000007
+L01                               0000011D
+L02                               0000011F
+L03                               00000129
+L04                               0000012B
+L05                               00000134
+L06                               00000136
+L07                               00000145
+L08                               00000147
+L09                               00000149
+L10                               00000154
+L11                               00000156
+L12                               00000158
+LCD_4Bits_PORTB.h                 
+LCD_Autoscroll_Off                
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 35
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+LCD_Autoscroll_On                 
+LCD_Auxiliar1                     00000027
+LCD_Auxiliar2                     00000028
+LCD_Byte                          000000F9
+LCD_ByteCompleto                  00000100
+LCD_Caracter                      000000D3
+LCD_Char                          000000A2
+LCD_Clear                         
+LCD_CodigoCGROM                   000000D6
+LCD_Com                           000000D0
+LCD_Cursor                        
+LCD_Cursor_Left                   
+LCD_Cursor_Right                  
+LCD_Dato                          00000024
+LCD_DosEspaciosBlancos            000000F0
+LCD_EnheMayuscula                 000000DD
+LCD_EnheMinuscula                 000000D7
+LCD_EnviaBlancos                  000000F3
+LCD_EnviaByteLetra                0000010C
+LCD_EnviaOtroBlanco               000000F4
+LCD_FinCGROM                      000000EA
+LCD_FinVisualizaDigito            0000010E
+LCD_GoTo                          
+LCD_Grado                         000000E4
+LCD_GuardaDato                    00000025
+LCD_GuardaTRISB                   00000026
+LCD_Home                          
+LCD_Inicio                        000000B2
+LCD_Init                          
+LCD_LineaEnBlanco                 000000EC
+LCD_Nibble                        00000104
+LCD_Off                           
+LCD_On                            
+LCD_Scroll_Left                   
+LCD_Scroll_Right                  
+LCD_TresEspaciosBlancos           000000F2
+LCD_UnEspacioBlanco               000000EE
+LCD_VisualizaAlto                 00000101
+LCD_VisualizaBajo                 00000103
+Line1                             00000001
+Line2                             00000013
+Mess1                             00000027
+Mess2                             00000034
+NOT_A                             00000005
+NOT_ADDRESS                       00000005
+NOT_BO                            00000000
+NOT_BOR                           00000000
+NOT_DONE                          00000002
+NOT_PD                            00000003
+NOT_POR                           00000001
+NOT_RBPU                          00000007
+NOT_RC8                           00000006
+NOT_T1SYNC                        00000002
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 36
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+NOT_TO                            00000004
+NOT_TX8                           00000006
+NOT_W                             00000002
+NOT_WRITE                         00000002
+OBF                               00000006
+OERR                              00000001
+OPTION_REG                        00000081
+Otra_Prueba                       00000055
+OutCod                            00000023
+OutMes                            00000025
+P                                 00000004
+PCFG0                             00000000
+PCFG1                             00000001
+PCFG2                             00000002
+PCFG3                             00000003
+PCL                               00000002
+PCLATH                            0000000A
+PCON                              0000008E
+PEIE                              00000006
+PEN                               00000002
+PIE1                              0000008C
+PIE2                              0000008D
+PIR1                              0000000C
+PIR2                              0000000D
+PORTA                             00000005
+PORTB                             00000006
+PORTC                             00000007
+PORTD                             00000008
+PORTE                             00000009
+PORT_LCD                          00000006
+PR2                               00000092
+PS0                               00000000
+PS1                               00000001
+PS2                               00000002
+PSA                               00000003
+PSPIE                             00000007
+PSPIF                             00000007
+PSPMODE                           00000004
+Pin_RS                            1
+Point                             00000021
+PulseE                            0000009D
+R                                 00000002
+RA0                               00000000
+RA1                               00000001
+RA2                               00000002
+RA3                               00000003
+RA4                               00000004
+RA5                               00000005
+RB0                               00000000
+RB1                               00000001
+RB2                               00000002
+RB3                               00000003
+RB4                               00000004
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 37
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+RB5                               00000005
+RB6                               00000006
+RB7                               00000007
+RBIE                              00000003
+RBIF                              00000000
+RC0                               00000000
+RC1                               00000001
+RC2                               00000002
+RC3                               00000003
+RC4                               00000004
+RC5                               00000005
+RC6                               00000006
+RC7                               00000007
+RC8_9                             00000006
+RC9                               00000006
+RCD8                              00000000
+RCEN                              00000003
+RCIE                              00000005
+RCIF                              00000005
+RCREG                             0000001A
+RCSTA                             00000018
+RD                                00000000
+RD0                               00000000
+RD1                               00000001
+RD2                               00000002
+RD3                               00000003
+RD4                               00000004
+RD5                               00000005
+RD6                               00000006
+RD7                               00000007
+RE0                               00000000
+RE1                               00000001
+RE2                               00000002
+READ_WRITE                        00000002
+RP0                               00000005
+RP1                               00000006
+RS                                PORTB,1
+RSEN                              00000001
+RW                                PORTB,2
+RX9                               00000006
+RX9D                              00000000
+R_NOT_W                           00000002
+R_W                               00000002
+S                                 00000003
+SEN                               00000000
+SMP                               00000007
+SPBRG                             00000099
+SPEN                              00000007
+SREN                              00000005
+SSPADD                            00000093
+SSPBUF                            00000013
+SSPCON                            00000014
+SSPCON2                           00000091
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 38
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+SSPEN                             00000005
+SSPIE                             00000003
+SSPIF                             00000003
+SSPM0                             00000000
+SSPM1                             00000001
+SSPM2                             00000002
+SSPM3                             00000003
+SSPOV                             00000006
+SSPSTAT                           00000094
+STATUS                            00000003
+SYNC                              00000004
+SelBanco                          
+Select                            00000022
+SendCom                           000000D0
+T0CS                              00000005
+T0IE                              00000005
+T0IF                              00000002
+T0SE                              00000004
+T100mS                            00000132
+T100uS                            00000116
+T10S                              00000152
+T10mS                             00000127
+T10uS                             00000111
+T1CKPS0                           00000004
+T1CKPS1                           00000005
+T1CON                             00000010
+T1INSYNC                          00000002
+T1OSCEN                           00000003
+T1S                               00000143
+T1SYNC                            00000002
+T1mS                              0000011B
+T1uS                              0000010F
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             00000012
+TMR0                              00000001
+TMR0IE                            00000005
+TMR0IF                            00000002
+TMR1                              0000000E
+TMR1CS                            00000001
+TMR1H                             0000000F
+TMR1IE                            00000000
+TMR1IF                            00000000
+TMR1L                             0000000E
+TMR1ON                            00000000
+TMR2                              00000011
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2ON                            00000002
+TOUTPS0                           00000003
+TOUTPS1                           00000004
+TOUTPS2                           00000005
+TOUTPS3                           00000006
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 39
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+TRISA                             00000085
+TRISA0                            00000000
+TRISA1                            00000001
+TRISA2                            00000002
+TRISA3                            00000003
+TRISA4                            00000004
+TRISA5                            00000005
+TRISB                             00000086
+TRISB0                            00000000
+TRISB1                            00000001
+TRISB2                            00000002
+TRISB3                            00000003
+TRISB4                            00000004
+TRISB5                            00000005
+TRISB6                            00000006
+TRISB7                            00000007
+TRISC                             00000087
+TRISC0                            00000000
+TRISC1                            00000001
+TRISC2                            00000002
+TRISC3                            00000003
+TRISC4                            00000004
+TRISC5                            00000005
+TRISC6                            00000006
+TRISC7                            00000007
+TRISD                             00000088
+TRISD0                            00000000
+TRISD1                            00000001
+TRISD2                            00000002
+TRISD3                            00000003
+TRISD4                            00000004
+TRISD5                            00000005
+TRISD6                            00000006
+TRISD7                            00000007
+TRISE                             00000089
+TRISE0                            00000000
+TRISE1                            00000001
+TRISE2                            00000002
+TRIS_LCD                          00000086
+TRMT                              00000001
+TRUE                              1
+TX8_9                             00000006
+TX9                               00000006
+TX9D                              00000000
+TXD8                              00000000
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXREG                             00000019
+TXSTA                             00000098
+UA                                00000001
+Var                               00000020
+W                                 00000000
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 40
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+WCOL                              00000007
+WR                                00000001
+WREN                              00000002
+WRERR                             00000003
+Z                                 00000002
+_BODEN_OFF                        00003FBF
+_BODEN_ON                         00003FFF
+_BOREN_OFF                        00003FBF
+_BOREN_ON                         00003FFF
+_CONFIG                           00002007
+_CPD_OFF                          00003FFF
+_CPD_ON                           00003EFF
+_CP_ALL                           00001FFF
+_CP_OFF                           00003FFF
+_CP_ON                            00001FFF
+_DEBUG_OFF                        00003FFF
+_DEBUG_ON                         000037FF
+_DEVID1                           00002006
+_FOSC_EXTRC                       00003FFF
+_FOSC_HS                          00003FFE
+_FOSC_LP                          00003FFC
+_FOSC_XT                          00003FFD
+_HS_OSC                           00003FFE
+_IDLOC0                           00002000
+_IDLOC1                           00002001
+_IDLOC2                           00002002
+_IDLOC3                           00002003
+_LP_OSC                           00003FFC
+_LVP_OFF                          00003F7F
+_LVP_ON                           00003FFF
+_PWRTE_OFF                        00003FFF
+_PWRTE_ON                         00003FF7
+_RC_OSC                           00003FFF
+_WDTE_OFF                         00003FFB
+_WDTE_ON                          00003FFF
+_WDT_OFF                          00003FFB
+_WDT_ON                           00003FFF
+_WRT_1FOURTH                      00003BFF
+_WRT_256                          00003DFF
+_WRT_HALF                         000039FF
+_WRT_OFF                          00003FFF
+_XT_OSC                           00003FFD
+__16F877                          00000001
+__DEBUG                           1
+dispctrl                          00000004
+MPASM  5.51                      DEMO_LCD.ASM   10-11-2017  10:35:04         PAGE 41
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+
+0000 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0040 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0080 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+00C0 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0100 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0140 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXX------------- ----------------
+2000 : -------X-------- ---------------- ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:   355
+Program Memory Words Free:  7837
+
+
+Errors   :     0
+Warnings :     4 reported,     0 suppressed
+Messages :     2 reported,     0 suppressed
+
+
