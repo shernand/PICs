@@ -1,0 +1,851 @@
+MPASM  5.51                       A-D_INT.ASM   9-6-2017  23:30:18         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001 ;El módulo convertidor ADC. Interrupción trás la conversión. Voltímetro digital
+                      00002 ;
+                      00003 ;Este ejemplo visualiza sobre la pantalla LCD el valor obtenido por el convertidor a partir
+                      00004 ;de una tensión analógica de entrada de entre 0 y 5Vcc que se aplica por la entrada RA0/AN0.
+                      00005 ;A lo que indique el LCD se le debe multiplicar 0.004887 (resolución/bit) para obtener la
+                      00006 ;tensión de entrada en RA0/AN0.
+                      00007 
+Warning[215]: Processor superseded by command line.  Verify processor symbol.
+                      00008         List    p=16F886        ;Tipo de procesador
+                      00009         include    "P16F886.INC"    ;Definiciones de registros internos
+                      00001         LIST
+                      00002 
+                      00003 ;==========================================================================
+                      00004 ;  MPASM PIC16F886 processor include
+                      00005 ; 
+                      00006 ;  (c) Copyright 1999-2013 Microchip Technology, All rights reserved
+                      00007 ;==========================================================================
+                      00008 
+Message[301]: MESSAGE: (Processor-header file mismatch.  Verify selected processor.)
+                      00778         LIST
+                      00010 
+                      00011 ;Ajusta los valores de las palabras de configuración durante el ensamblado.Los bits no empleados
+                      00012 ;adquieren el valor por defecto.Estos y otros valores se pueden modificar según las necesidades
+                      00013 
+                      00014 ;        __config    _CONFIG1, _LVP_OFF&_PWRTE_ON&_WDT_OFF&_EC_OSC&_FCMEN_OFF&_BOR_OFF    ;Palabra 1 de 
+                            configuración
+                      00015 ;        __config    _CONFIG2, _WRT_OFF&_BOR40V                                    ;Palabra 2 de configu
+                            ración
+                      00016 
+                      00017             cblock    0x20            ;Inicio de variables de la aplicación
+  00000020            00018                 Byte_L                ;Parte baja del byte a convertir
+  00000021            00019                 Byte_H                ;Parte alta del byte a convertir
+  00000022            00020                 BCD_2                ;Byte 2 de conversión a BCD
+  00000023            00021                 BCD_1                ;Byte 1 de conversión a BCD
+  00000024            00022                 BCD_0                ;Byte 0 de conversión a BCD
+  00000025            00023                 Contador            ;Variable de contaje
+  00000026            00024                 Temporal            
+  00000027            00025                 Temporal_1
+  00000028            00026                 Temporal_2            ;Variables temporales
+                      00027             endc        
+                      00028 
+  00000070            00029 Lcd_var            equ    0x70            ;Variables de las rutinas LCD
+                      00030     
+0000                  00031                 org    0x00
+0000   285F           00032                 goto    Inicio        ;Vector de reset
+0004                  00033                 org    0x04
+0004   2822           00034                 goto    Inter        ;Vector de interrupción
+0005                  00035                 org    0x05
+                      00036 
+                      00037 ;******************************************************************************************
+                      00038 ;Según el valor contenido en el registro W, se devuelve el carácter a visualizar
+                      00039 
+0005   0082           00040 Tabla_Mensajes    movwf    PCL        ;Calcula el desplazamiento sobre la tabla
+MPASM  5.51                       A-D_INT.ASM   9-6-2017  23:30:18         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00041 
+                      00042 ;***********************************************************************************
+                      00043 ;La directiva DT genera tantas intsrucciones RETLW como bytes o caracteres contenga
+                      00044 
+  00000006            00045 Mens_0            equ    $        ;Mens_0 apunta al primer carácter del mensaje 0
+0006   3441 344E 3430 00046                 dt    "AN0=    (*4.8mV)",0x00
+       343D 3420 3420 
+       3420 3420 3428 
+       342A 3434 342E 
+       3438 346D 3456 
+       3429 3400 
+                      00047 
+Error[105]  : Cannot open file (Include File "LCD4bitsPIC16.inc" not found)
+                      00048         include    "LCD4bitsPIC16.inc"        ;Incluye rutinas de manejo del LCD
+                      00049 
+                      00050 ;*************************************************************************************
+                      00051 ;Mensaje: Esta rutina envía a la pantalla LCD el mensaje cuyo inicio está  indicado en
+                      00052 ;el acumulador. El fin de un mensaje se determina mediante el código 0x00
+                      00053 
+0017   00A7           00054 Mensaje            movwf      Temporal_1         ;Salva posición de la tabla
+0018   0827           00055 Mensaje_1          movf       Temporal_1,W       ;Recupera posición de la tabla
+0019   2005           00056                    call       Tabla_Mensajes     ;Busca caracter de salida
+001A   00A8           00057                    movwf      Temporal_2         ;Guarda el caracter
+001B   08A8           00058                 movf       Temporal_2,F
+001C   1D03           00059                 btfss      STATUS,Z           ;Mira si es el último
+001D   281F           00060                 goto       Mensaje_2
+001E   0008           00061                 return
+Error[113]  : Symbol not previously defined (LCD_DATO)
+001F   2000           00062 Mensaje_2       call    LCD_DATO           ;Visualiza en el LCD
+0020   0AA7           00063                 incf    Temporal_1,F       ;Siguiente caracter
+0021   2818           00064                 goto    Mensaje_1
+                      00065 
+                      00066 ;****************************************************************************************
+                      00067 ;Inter: Programa de tratamiento de interrupción cuando finaliza una conversión. Lee el 
+                      00068 ;resultado, lo convierte a BCD y lo visualiza sobre la pantalla LCD
+0022   081E           00069 Inter            movf    ADRESH,W
+0023   00A1           00070                 movwf    Byte_H
+0024   1683           00071                 bsf        STATUS,RP0        ;Banco 1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0025   081E           00072                 movf    ADRESL,W
+0026   1283           00073                 bcf        STATUS,RP0        ;Banco 0
+0027   00A0           00074                 movwf    Byte_L            ;Lee y salva el resultado de la conversión
+0028   203E           00075                 call    Bits16_BCD        ;Convierte a BCD
+0029   3084           00076                 movlw    0x84
+Error[113]  : Symbol not previously defined (LCD_REG)
+002A   2000           00077                 call    LCD_REG            ;Coloca el cursor
+002B   202E           00078                 call    Visualizar        ;Visualiza sobre el LCD
+002C   149F           00079                 bsf        ADCON0,GO_DONE    ;Inicia una nueva conversión
+002D   0009           00080                 retfie
+                      00081     
+                      00082 ;Visualizar: Visualiza sobre la pantalla LCD, en la posición actual del cursor, los cuatro 
+                      00083 ;dígitos situados en las variables BC_1 y BCD_2
+002E   3002           00084 Visualizar        movlw    2
+MPASM  5.51                       A-D_INT.ASM   9-6-2017  23:30:18         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+002F   00A5           00085                 movwf    Contador        ;Inicia contador de bytes a convertir
+0030   3023           00086                 movlw    BCD_1
+0031   0084           00087                 movwf    FSR                ;Inicia puntero índice
+0032   0E00           00088 Visual_loop        swapf    INDF,W
+0033   390F           00089                 andlw    0x0f
+0034   3830           00090                 iorlw    0x30            ;Convierte a ASCII el nible de más peso
+Error[113]  : Symbol not previously defined (LCD_DATO)
+0035   2000           00091                 call    LCD_DATO        ;Lo visualiza
+0036   0800           00092                 movf    INDF,W
+0037   390F           00093                 andlw    0x0f
+0038   3830           00094                 iorlw    0x30            ;Convierte a ASCII el nible de menos peso
+Error[113]  : Symbol not previously defined (LCD_DATO)
+0039   2000           00095                 call    LCD_DATO        ;Lo visualiza
+003A   0384           00096                 decf    FSR,F            ;Siguiente byte
+003B   0BA5           00097                 decfsz    Contador,F
+003C   2832           00098                 goto    Visual_loop
+003D   0008           00099                 return
+                      00100 
+                      00101 ;16Bits_BCD: Esta rutina convierte un número binario de 16 bits situado en Cont_H y
+                      00102 ;Cont_L y, lo convierte en 5 dígitos BCD que se depositan en las variables BCD_0, BCD_1
+                      00103 ;y BCD_2, siendo esta última la de menos peso.
+                      00104 ;Está presentada en la nota de aplicación AN544 de MICROCHIP y adaptada por MSE
+003E   1003           00105 Bits16_BCD        bcf        STATUS,C
+003F   01A5           00106                 clrf    Contador    
+0040   1625           00107                 bsf        Contador,4        ;Carga el contador con 16        
+0041   01A4           00108                 clrf    BCD_0
+0042   01A3           00109                 clrf    BCD_1
+0043   01A2           00110                 clrf    BCD_2            ;Puesta a 0 inicial
+                      00111 
+0044   0DA0           00112 Loop_16            rlf        Byte_L,F
+0045   0DA1           00113                 rlf        Byte_H,F
+0046   0DA2           00114                 rlf        BCD_2,F
+0047   0DA3           00115                 rlf        BCD_1,F
+0048   0DA4           00116                 rlf        BCD_0,F            ;Desplaza a izda. (multiplica por 2)
+0049   0BA5           00117                 decfsz    Contador,F
+004A   284C           00118                 goto    Ajuste
+004B   0008           00119                 return
+                      00120 
+004C   3022           00121 Ajuste            movlw    BCD_2
+004D   0084           00122                 movwf    FSR                ;Inicia el índice
+004E   2054           00123                 call    Ajuste_BCD        ;Ajusta el primer byte
+004F   0A84           00124                 incf    FSR,F
+0050   2054           00125                 call    Ajuste_BCD        ;Ajusta el segundo byte
+0051   0A84           00126                 incf    FSR,F
+0052   2054           00127                 call    Ajuste_BCD
+0053   2844           00128                 goto    Loop_16
+                      00129 
+0054   0800           00130 Ajuste_BCD        movf    INDF,W        
+0055   3E03           00131                 addlw    0x03
+0056   00A6           00132                 movwf    Temporal    
+0057   19A6           00133                 btfsc    Temporal,3        ;Mayor de 7 el nibble de menos peso ??
+0058   0080           00134                 movwf    INDF            ;Si, lo acumula
+0059   0800           00135                 movf    INDF,W        
+MPASM  5.51                       A-D_INT.ASM   9-6-2017  23:30:18         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+005A   3E30           00136                 addlw    0x30
+005B   00A6           00137                 movwf    Temporal
+005C   1BA6           00138                 btfsc    Temporal,7        ;Mayor de 7 el nibble de menos peso ??
+005D   0080           00139                 movwf    INDF            ;Si, lo acumula
+005E   0008           00140                 return
+                      00141 
+                      00142 ;Programa principal
+005F   0185           00143 Inicio               clrf    PORTA
+0060   0186           00144                 clrf    PORTB            ;Borra salidas
+0061   1683           00145                 bsf        STATUS,RP0
+0062   1703           00146                 bsf        STATUS,RP1        ;Banco 3
+0063   3001           00147                 movlw    b'00000001'
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0064   0088           00148                 movwf    ANSEL            ;RA0/AN0/C12IN0- entrada analógica, resto digitales
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0065   0189           00149                 clrf    ANSELH            ;Puerta B digital
+0066   1303           00150                 bcf        STATUS,RP1        ;Banco 1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0067   0186           00151                 clrf    TRISB            ;Puerta B se configura como salida
+0068   30F1           00152                 movlw    b'11110001'
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0069   0085           00153                 movwf    TRISA            ;RA3:RA1 salidas
+006A   1283           00154                 bcf        STATUS,RP0        ;Selecciona banco 0
+                      00155 
+                      00156 ;Inicio de la pantalla LCD y visualiza mensaje inicial
+Error[113]  : Symbol not previously defined (UP_LCD)
+006B   2000           00157                 call    UP_LCD            ;Configura E/S para el LCD
+Error[113]  : Symbol not previously defined (LCD_INI)
+006C   2000           00158                 call    LCD_INI            ;Secuencia de inicio del LCD
+006D   300C           00159                 movlw    b'00001100'
+Error[113]  : Symbol not previously defined (LCD_REG)
+006E   2000           00160                 call    LCD_REG            ;LCD On, cursor y blink Off
+006F   3006           00161                 movlw    Mens_0
+0070   2017           00162                 call    Mensaje            ;Visualiza "AN0=    (*4.8mV)"
+                      00163 
+                      00164 ;Se activa el ADC y se selecciona el canal RA0/AN0.    Frec. de conversión = Fosc/32        
+0071   1683           00165                 bsf        STATUS,RP0        ;Selecciona página 1
+0072   3080           00166                 movlw    b'10000000'
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0073   009F           00167                 movwf    ADCON1            ;Alineación dcha. Vref= VDD
+0074   1283           00168                 bcf        STATUS,RP0        ;Selecciona página 0
+0075   3081           00169                 movlw    b'10000001'
+0076   009F           00170                 movwf    ADCON0            ;ADC en On, seleciona canal RA0/AN0 y Fosc/32
+                      00171 
+                      00172 ;Habilita interrupción provocada al finalizar la conversión
+0077   130C           00173                 bcf        PIR1,ADIF        ;Restaura el flag del conversor AD
+0078   1683           00174                 bsf        STATUS,RP0        ;Banco 1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0079   170C           00175                 bsf        PIE1,ADIE        ;Activa interrupción del ADC
+007A   1283           00176                 bcf        STATUS,RP0        ;Banco 0
+007B   170B           00177                 bsf        INTCON,PEIE        ;Habilita interrupciones de los periféricos
+007C   178B           00178                 bsf        INTCON,GIE        ;Habilita interrupciones
+007D   149F           00179                 bsf        ADCON0,GO_DONE    ;Inicia la conversión
+MPASM  5.51                       A-D_INT.ASM   9-6-2017  23:30:18         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00180 
+                      00181 ;Bucle principal
+                      00182             
+007E   0000           00183 Loop            nop
+007F   287E           00184                 goto    Loop            ;Repetir la lectura
+                      00185 
+                      00186                 end                        ;Fin del programa fuente
+MPASM  5.51                       A-D_INT.ASM   9-6-2017  23:30:18         PAGE  6
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ABDEN                             00000000
+ABDOVF                            00000007
+ACKDT                             00000005
+ACKEN                             00000004
+ACKSTAT                           00000006
+ADCON0                            0000001F
+ADCON1                            0000009F
+ADCS0                             00000006
+ADCS1                             00000007
+ADDEN                             00000003
+ADFM                              00000007
+ADIE                              00000006
+ADIF                              00000006
+ADON                              00000000
+ADRESH                            0000001E
+ADRESL                            0000009E
+ANS0                              00000000
+ANS1                              00000001
+ANS10                             00000002
+ANS11                             00000003
+ANS12                             00000004
+ANS13                             00000005
+ANS2                              00000002
+ANS3                              00000003
+ANS4                              00000004
+ANS8                              00000000
+ANS9                              00000001
+ANSEL                             00000188
+ANSELH                            00000189
+Ajuste                            0000004C
+Ajuste_BCD                        00000054
+BAUDCTL                           00000187
+BCD_0                             00000024
+BCD_1                             00000023
+BCD_2                             00000022
+BCLIE                             00000003
+BCLIF                             00000003
+BF                                00000000
+BRG0                              00000000
+BRG1                              00000001
+BRG10                             00000002
+BRG11                             00000003
+BRG12                             00000004
+BRG13                             00000005
+BRG14                             00000006
+BRG15                             00000007
+BRG16                             00000003
+BRG2                              00000002
+BRG3                              00000003
+BRG4                              00000004
+BRG5                              00000005
+BRG6                              00000006
+BRG7                              00000007
+MPASM  5.51                       A-D_INT.ASM   9-6-2017  23:30:18         PAGE  7
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+BRG8                              00000000
+BRG9                              00000001
+BRGH                              00000002
+Bits16_BCD                        0000003E
+Byte_H                            00000021
+Byte_L                            00000020
+C                                 00000000
+C1CH0                             00000000
+C1CH1                             00000001
+C1IE                              00000005
+C1IF                              00000005
+C1OE                              00000005
+C1ON                              00000007
+C1OUT                             00000006
+C1POL                             00000004
+C1R                               00000002
+C1RSEL                            00000005
+C1SEN                             00000005
+C2CH0                             00000000
+C2CH1                             00000001
+C2IE                              00000006
+C2IF                              00000006
+C2OE                              00000005
+C2ON                              00000007
+C2OUT                             00000006
+C2POL                             00000004
+C2R                               00000002
+C2REN                             00000004
+C2RSEL                            00000004
+C2SYNC                            00000000
+CCP1CON                           00000017
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCP1X                             00000005
+CCP1Y                             00000004
+CCP2CON                           0000001D
+CCP2IE                            00000000
+CCP2IF                            00000000
+CCP2M0                            00000000
+CCP2M1                            00000001
+CCP2M2                            00000002
+CCP2M3                            00000003
+CCP2X                             00000005
+CCP2Y                             00000004
+CCPR1                             00000015
+CCPR1H                            00000016
+CCPR1L                            00000015
+CCPR2                             0000001B
+CCPR2H                            0000001C
+MPASM  5.51                       A-D_INT.ASM   9-6-2017  23:30:18         PAGE  8
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+CCPR2L                            0000001B
+CHS0                              00000002
+CHS1                              00000003
+CHS2                              00000004
+CHS3                              00000005
+CKE                               00000006
+CKP                               00000004
+CM1CON0                           00000107
+CM2CON0                           00000108
+CM2CON1                           00000109
+CREN                              00000004
+CSRC                              00000007
+Contador                          00000025
+D                                 00000005
+DATA_ADDRESS                      00000005
+DC                                00000001
+DC1B0                             00000004
+DC1B1                             00000005
+DC2B0                             00000004
+DC2B1                             00000005
+D_A                               00000005
+D_NOT_A                           00000005
+ECCPAS                            0000009C
+ECCPAS0                           00000004
+ECCPAS1                           00000005
+ECCPAS2                           00000006
+ECCPASE                           00000007
+EEADR                             0000010D
+EEADRH                            0000010F
+EECON1                            0000018C
+EECON2                            0000018D
+EEDAT                             0000010C
+EEDATA                            0000010C
+EEDATH                            0000010E
+EEIE                              00000004
+EEIF                              00000004
+EEPGD                             00000007
+F                                 00000001
+FERR                              00000002
+FSR                               00000004
+FVREN                             00000000
+GCEN                              00000007
+GIE                               00000007
+GO                                00000001
+GO_DONE                           00000001
+GO_NOT_DONE                       00000001
+HTS                               00000002
+I2C_DATA                          00000005
+I2C_READ                          00000002
+I2C_START                         00000003
+I2C_STOP                          00000004
+INDF                              00000000
+INTCON                            0000000B
+MPASM  5.51                       A-D_INT.ASM   9-6-2017  23:30:18         PAGE  9
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+INTE                              00000004
+INTEDG                            00000006
+INTF                              00000001
+IOCB                              00000096
+IOCB0                             00000000
+IOCB1                             00000001
+IOCB2                             00000002
+IOCB3                             00000003
+IOCB4                             00000004
+IOCB5                             00000005
+IOCB6                             00000006
+IOCB7                             00000007
+IRCF0                             00000004
+IRCF1                             00000005
+IRCF2                             00000006
+IRP                               00000007
+Inicio                            0000005F
+Inter                             00000022
+LTS                               00000001
+Lcd_var                           00000070
+Loop                              0000007E
+Loop_16                           00000044
+MC1OUT                            00000007
+MC2OUT                            00000006
+MSK                               00000093
+MSK0                              00000000
+MSK1                              00000001
+MSK2                              00000002
+MSK3                              00000003
+MSK4                              00000004
+MSK5                              00000005
+MSK6                              00000006
+MSK7                              00000007
+Mens_0                            00000006
+Mensaje                           00000017
+Mensaje_1                         00000018
+Mensaje_2                         0000001F
+NOT_A                             00000005
+NOT_ADDRESS                       00000005
+NOT_BO                            00000000
+NOT_BOR                           00000000
+NOT_DONE                          00000001
+NOT_PD                            00000003
+NOT_POR                           00000001
+NOT_RBPU                          00000007
+NOT_RC8                           00000006
+NOT_T1SYNC                        00000002
+NOT_TO                            00000004
+NOT_TX8                           00000006
+NOT_W                             00000002
+NOT_WRITE                         00000002
+OERR                              00000001
+OPTION_REG                        00000081
+MPASM  5.51                       A-D_INT.ASM   9-6-2017  23:30:18         PAGE 10
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+OSCCON                            0000008F
+OSCTUNE                           00000090
+OSFIE                             00000007
+OSFIF                             00000007
+OSTS                              00000003
+P                                 00000004
+P1M0                              00000006
+P1M1                              00000007
+PCL                               00000002
+PCLATH                            0000000A
+PCON                              0000008E
+PDC0                              00000000
+PDC1                              00000001
+PDC2                              00000002
+PDC3                              00000003
+PDC4                              00000004
+PDC5                              00000005
+PDC6                              00000006
+PEIE                              00000006
+PEN                               00000002
+PIE1                              0000008C
+PIE2                              0000008D
+PIR1                              0000000C
+PIR2                              0000000D
+PORTA                             00000005
+PORTB                             00000006
+PORTC                             00000007
+PORTE                             00000009
+PR2                               00000092
+PRSEN                             00000007
+PS0                               00000000
+PS1                               00000001
+PS2                               00000002
+PSA                               00000003
+PSSAC0                            00000002
+PSSAC1                            00000003
+PSSBD0                            00000000
+PSSBD1                            00000001
+PSTRCON                           0000009D
+PULSR                             00000002
+PULSS                             00000003
+PWM1CON                           0000009B
+R                                 00000002
+RA0                               00000000
+RA1                               00000001
+RA2                               00000002
+RA3                               00000003
+RA4                               00000004
+RA5                               00000005
+RA6                               00000006
+RA7                               00000007
+RB0                               00000000
+RB1                               00000001
+MPASM  5.51                       A-D_INT.ASM   9-6-2017  23:30:18         PAGE 11
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+RB2                               00000002
+RB3                               00000003
+RB4                               00000004
+RB5                               00000005
+RB6                               00000006
+RB7                               00000007
+RBIE                              00000003
+RBIF                              00000000
+RC0                               00000000
+RC1                               00000001
+RC2                               00000002
+RC3                               00000003
+RC4                               00000004
+RC5                               00000005
+RC6                               00000006
+RC7                               00000007
+RC8_9                             00000006
+RC9                               00000006
+RCD8                              00000000
+RCEN                              00000003
+RCIDL                             00000006
+RCIE                              00000005
+RCIF                              00000005
+RCREG                             0000001A
+RCSTA                             00000018
+RD                                00000000
+RE3                               00000003
+READ_WRITE                        00000002
+RP0                               00000005
+RP1                               00000006
+RSEN                              00000001
+RX9                               00000006
+RX9D                              00000000
+R_NOT_W                           00000002
+R_W                               00000002
+S                                 00000003
+SBOREN                            00000004
+SCKP                              00000004
+SCS                               00000000
+SEN                               00000000
+SENDB                             00000003
+SMP                               00000007
+SPBRG                             00000099
+SPBRGH                            0000009A
+SPEN                              00000007
+SR0                               00000006
+SR1                               00000007
+SRCON                             00000185
+SREN                              00000005
+SSPADD                            00000093
+SSPBUF                            00000013
+SSPCON                            00000014
+SSPCON2                           00000091
+MPASM  5.51                       A-D_INT.ASM   9-6-2017  23:30:18         PAGE 12
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+SSPEN                             00000005
+SSPIE                             00000003
+SSPIF                             00000003
+SSPM0                             00000000
+SSPM1                             00000001
+SSPM2                             00000002
+SSPM3                             00000003
+SSPMSK                            00000093
+SSPOV                             00000006
+SSPSTAT                           00000094
+STATUS                            00000003
+STRA                              00000000
+STRB                              00000001
+STRC                              00000002
+STRD                              00000003
+STRSYNC                           00000004
+SWDTEN                            00000000
+SYNC                              00000004
+T0CS                              00000005
+T0IE                              00000005
+T0IF                              00000002
+T0SE                              00000004
+T1CKPS0                           00000004
+T1CKPS1                           00000005
+T1CON                             00000010
+T1GINV                            00000007
+T1GIV                             00000007
+T1GSS                             00000001
+T1INSYNC                          00000002
+T1OSCEN                           00000003
+T1SYNC                            00000002
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             00000012
+TMR0                              00000001
+TMR0IE                            00000005
+TMR0IF                            00000002
+TMR1                              0000000E
+TMR1CS                            00000001
+TMR1GE                            00000006
+TMR1H                             0000000F
+TMR1IE                            00000000
+TMR1IF                            00000000
+TMR1L                             0000000E
+TMR1ON                            00000000
+TMR2                              00000011
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2ON                            00000002
+TOUTPS0                           00000003
+TOUTPS1                           00000004
+TOUTPS2                           00000005
+TOUTPS3                           00000006
+MPASM  5.51                       A-D_INT.ASM   9-6-2017  23:30:18         PAGE 13
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+TRISA                             00000085
+TRISA0                            00000000
+TRISA1                            00000001
+TRISA2                            00000002
+TRISA3                            00000003
+TRISA4                            00000004
+TRISA5                            00000005
+TRISA6                            00000006
+TRISA7                            00000007
+TRISB                             00000086
+TRISB0                            00000000
+TRISB1                            00000001
+TRISB2                            00000002
+TRISB3                            00000003
+TRISB4                            00000004
+TRISB5                            00000005
+TRISB6                            00000006
+TRISB7                            00000007
+TRISC                             00000087
+TRISC0                            00000000
+TRISC1                            00000001
+TRISC2                            00000002
+TRISC3                            00000003
+TRISC4                            00000004
+TRISC5                            00000005
+TRISC6                            00000006
+TRISC7                            00000007
+TRISE                             00000089
+TRISE3                            00000003
+TRMT                              00000001
+TUN0                              00000000
+TUN1                              00000001
+TUN2                              00000002
+TUN3                              00000003
+TUN4                              00000004
+TX8_9                             00000006
+TX9                               00000006
+TX9D                              00000000
+TXD8                              00000000
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXREG                             00000019
+TXSTA                             00000098
+Tabla_Mensajes                    00000005
+Temporal                          00000026
+Temporal_1                        00000027
+Temporal_2                        00000028
+UA                                00000001
+ULPWUE                            00000005
+ULPWUIE                           00000002
+ULPWUIF                           00000002
+VCFG0                             00000004
+MPASM  5.51                       A-D_INT.ASM   9-6-2017  23:30:18         PAGE 14
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+VCFG1                             00000005
+VR0                               00000000
+VR1                               00000001
+VR2                               00000002
+VR3                               00000003
+VRCON                             00000097
+VREN                              00000007
+VROE                              00000006
+VRR                               00000005
+VRSS                              00000004
+Visual_loop                       00000032
+Visualizar                        0000002E
+W                                 00000000
+WCOL                              00000007
+WDTCON                            00000105
+WDTPS0                            00000001
+WDTPS1                            00000002
+WDTPS2                            00000003
+WDTPS3                            00000004
+WPUB                              00000095
+WPUB0                             00000000
+WPUB1                             00000001
+WPUB2                             00000002
+WPUB3                             00000003
+WPUB4                             00000004
+WPUB5                             00000005
+WPUB6                             00000006
+WPUB7                             00000007
+WR                                00000001
+WREN                              00000002
+WRERR                             00000003
+WUE                               00000001
+Z                                 00000002
+_BOR21V                           00003EFF
+_BOR40V                           00003FFF
+_BOR4V_BOR21V                     00003EFF
+_BOR4V_BOR40V                     00003FFF
+_BOREN_NSLEEP                     00003EFF
+_BOREN_OFF                        00003CFF
+_BOREN_ON                         00003FFF
+_BOREN_SBODEN                     00003DFF
+_BOR_NSLEEP                       00003EFF
+_BOR_OFF                          00003CFF
+_BOR_ON                           00003FFF
+_BOR_SBODEN                       00003DFF
+_CONFIG1                          00002007
+_CONFIG2                          00002008
+_CPD_OFF                          00003FFF
+_CPD_ON                           00003F7F
+_CP_OFF                           00003FFF
+_CP_ON                            00003FBF
+_DEBUG_OFF                        00003FFF
+_DEBUG_ON                         00001FFF
+MPASM  5.51                       A-D_INT.ASM   9-6-2017  23:30:18         PAGE 15
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+_DEVID1                           00002006
+_EC_OSC                           00003FFB
+_EXTRC                            00003FFF
+_EXTRCIO                          00003FFE
+_EXTRC_OSC_CLKOUT                 00003FFF
+_EXTRC_OSC_NOCLKOUT               00003FFE
+_FCMEN_OFF                        000037FF
+_FCMEN_ON                         00003FFF
+_FOSC_EC                          00003FFB
+_FOSC_EXTRC_CLKOUT                00003FFF
+_FOSC_EXTRC_NOCLKOUT              00003FFE
+_FOSC_HS                          00003FFA
+_FOSC_INTRC_CLKOUT                00003FFD
+_FOSC_INTRC_NOCLKOUT              00003FFC
+_FOSC_LP                          00003FF8
+_FOSC_XT                          00003FF9
+_HS_OSC                           00003FFA
+_IDLOC0                           00002000
+_IDLOC1                           00002001
+_IDLOC2                           00002002
+_IDLOC3                           00002003
+_IESO_OFF                         00003BFF
+_IESO_ON                          00003FFF
+_INTOSC                           00003FFD
+_INTOSCIO                         00003FFC
+_INTRC_OSC_CLKOUT                 00003FFD
+_INTRC_OSC_NOCLKOUT               00003FFC
+_LP_OSC                           00003FF8
+_LVP_OFF                          00002FFF
+_LVP_ON                           00003FFF
+_MCLRE_OFF                        00003FDF
+_MCLRE_ON                         00003FFF
+_PWRTE_OFF                        00003FFF
+_PWRTE_ON                         00003FEF
+_WDTE_OFF                         00003FF7
+_WDTE_ON                          00003FFF
+_WDT_OFF                          00003FF7
+_WDT_ON                           00003FFF
+_WRT_1FOURTH                      00003BFF
+_WRT_256                          00003DFF
+_WRT_HALF                         000039FF
+_WRT_OFF                          00003FFF
+_XT_OSC                           00003FF9
+__16F877                          00000001
+__DEBUG                           1
+MPASM  5.51                       A-D_INT.ASM   9-6-2017  23:30:18         PAGE 16
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+
+0000 : X---XXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0040 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+
+All other memory blocks unused.
+
+Program Memory Words Used:   125
+Program Memory Words Free:  8067
+
+
+Errors   :     8
+Warnings :     1 reported,     0 suppressed
+Messages :     8 reported,     0 suppressed
+
+

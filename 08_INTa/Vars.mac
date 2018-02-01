@@ -1,0 +1,158 @@
+;--------------------------------------------------------------------------------------------------
+; Macros para la definición de VARIABLES, para cada uno de los BANCOS [0:3] o ZONA COMÚN.
+;	InicioVarsBancoX:
+;		Especifica en donde empiezan las variables, es una DIRECCIÓN ABSOLUTA, dependiendo del 
+;   BANCO en donde se ubicará la VARIABLE.
+;	AgregarVariableBancoX, Tamano:
+;		Especifica la VARIABLE y su TAMAÑO.
+; Incluye una prueba para emitir un mensaje en caso de que se hubiera hecho más de una vez
+; la inicialización de un bloque de memoria.
+; En caso de que no hubiera espacio en el BANCO seleccionado para alojar a la variable da
+; un aviso de error.	
+; BANCO          0            1            2          3
+;-------------------------------------------------------------
+; SFR   --> 0x000-0x01F  0x080-0x09F  0x100-0x10F  0x180-0x18F
+; RAM   --> 0x020-0x06F  0x0A0-0x0EF  0x110-0x16F  0x190-0x1EF
+; COMÚN --> 0x070-0x07F  0x0F0-0x0FF  0x170-0x17F  0x1F0-0x1FF
+;-------------------------------------------------------------
+InicioMemBanco0	    EQU		0x020
+FinMemBanco0	      EQU		0x06F
+InicioMemBanco1	    EQU		0x0A0
+FinMemBanco1	      EQU		0x0EF
+InicioMemBanco2	    EQU		0x110
+FinMemBanco2	      EQU		0x16F
+InicioMemBanco3	    EQU		0x190
+FinMemBanco3	      EQU		0x1FF
+InicioMemComun	    EQU		0x070
+FinMemComun		      EQU		0x07F
+;--------------------------------------------------------------------------------------------------
+IniVarsComunes 	MACRO			  ; Toma los valores de INICIO - FIN de la tabla anterior
+  IFDEF _IniVarsComunes			; Resguarda para que sólo se invoque UNA VEZ este Macro
+    ERROR "Ya se invocó el INICIO de Variables de la ZONA COMÚN"
+  ELSE
+#DEFINE _IniVarsComunes			; Resguarda que sólo se hubiera invocado UNA VEZ este Macro
+  ENDIF
+VarActualComun SET InicioMemComun
+VarFinalComun  SET FinMemComun
+  							ENDM 			  
+;
+AgregarVarComun MACRO NombreVar, Tamano
+  IF ((VarActualComun + Tamano) > (FinMemComun + 1))
+    ERROR "Demasiadas VARIABLES COMUNES, no se puede agregar" 
+  ENDIF
+NombreVar       SET VarActualComun
+VarActualComun  SET VarActualComun + Tamano
+  					  	ENDM
+;
+QuitarVarComun	MACRO	NombreVar, Tamano
+NombreVar				SET	0x000										; No se utilizará esta VARIABLE, por el momento.		
+VarActualComun  SET VarActualComun - Tamano	; Resta al apuntador el tamaño de esta VARIABLE
+	IF (VarActualComun < InicioMemComun)
+VarActualComun  SET InicioMemComun
+	ENDIF
+  					  	ENDM	  					  	
+;--------------------------------------------------------------------------------------------------
+IniVarsBanco0 	MACRO			  ; Toma los valores de INICIO - FIN de la tabla anterior
+  IFDEF _IniVarsBanco0			; Resguarda para que sólo se invoque UNA VEZ este Macro
+    ERROR "Ya se invocó el INICIO de Variables del BANCO 0"
+  ELSE
+#DEFINE _IniVarsBanco0			; Resguarda que sólo se hubiera invocado UNA VEZ este Macro
+  ENDIF
+VarActualBanco0 SET InicioMemBanco0
+VarFinalBanco0  SET FinMemBanco0
+  							ENDM 			  
+;
+AgregarVarBanco0 MACRO NombreVar, Tamano
+  IF ((VarActualBanco0 + Tamano) > (FinMemBanco0 + 1))
+    ERROR "Demasiadas VARIABLES en BANCO 0, no se puede agregar" 
+  ENDIF
+NombreVar       SET VarActualBanco0
+VarActualBanco0 SET VarActualBanco0 + Tamano
+  					  	ENDM
+;
+QuitarVarBanco0	MACRO	NombreVar, Tamano
+NombreVar				SET	0x000											; No se utilizará esta VARIABLE, por el momento
+VarActualBanco0 SET VarActualBanco0 - Tamano	; Resta al apuntador el tamaño de esta VARIABLE
+	IF (VarActualBanco0 < InicioMemBanco0)
+VarActualBanco0 SET InicioMemBanco0
+	ENDIF
+  					  	ENDM  					  	
+;--------------------------------------------------------------------------------------------------
+IniVarsBanco1 	MACRO			  ; Toma los valores de INICIO - FIN de la tabla anterior
+  IFDEF _IniVarsBanco1			; Resguarda que sólo se hubiera invocado UNA VEZ este Macro
+    ERROR "Ya se invocó el INICIO de Variables para el BANCO 1"
+  ELSE
+#DEFINE _IniVarsBanco1			; Resguarda que sólo se hubiera invocado UNA VEZ este Macro
+  ENDIF
+VarActualBanco1 SET InicioMemBanco1
+VarFinalBanco1  SET FinMemBanco1
+  				ENDM 			  
+;
+AgregarVarBanco1 MACRO NombreVar, Tamano
+  IF ((VarActualBanco1 + Tamano)> (FinMemBanco1 + 1))
+    ERROR "Demasiadas VARIABLES en BANCO 1, no se puede agregar" 
+  ENDIF
+NombreVar       SET VarActualBanco1
+VarActualBanco1 SET VarActualBanco1 + Tamano
+  					  ENDM
+;
+QuitarVarBanco1	MACRO	NombreVar, Tamano
+NombreVar				SET	0x000											; No se utilizará esta VARIABLE, por el momento
+VarActualBanco1 SET VarActualBanco1 - Tamano	; Resta al apuntador el tamaño de esta VARIABLE
+	IF (VarActualBanco1 < InicioMemBanco1)
+VarActualBanco1 SET InicioMemBanco1
+	ENDIF
+  					  	ENDM  					  
+;--------------------------------------------------------------------------------------------------
+IniVarsBanco2 	MACRO			  ; Toma los valores de INICIO - FIN de la tabla anterior
+  IFDEF _IniVarsBanco2			; Resguarda que sólo se hubiera invocado UNA VEZ este Macro
+    ERROR "Ya se invocó el INICIO de Variables para el BANCO 2"
+  ELSE
+#DEFINE _IniVarsBanco2			; Resguarda que sólo se hubiera invocado UNA VEZ este Macro
+  ENDIF
+VarActualBanco2 SET InicioMemBanco2
+VarFinalBanco2  SET FinMemBanco2
+  				ENDM 			  
+;
+AgregarVarBanco2 MACRO NombreVar, Tamano
+  IF ((VarActualBanco2 + Tamano) > (FinMemBanco2 + 1))
+    ERROR "Demasiadas VARIABLES en BANCO 2, no se puede agregar" 
+  ENDIF
+NombreVar       SET VarActualBanco2
+VarActualBanco2 SET VarActualBanco2 + Tamano
+  					  ENDM
+;
+QuitarVarBanco2	MACRO	NombreVar, Tamano
+NombreVar				SET	0x000											; No se utilizará esta VARIABLE, por el momento
+VarActualBanco2 SET VarActualBanco2 - Tamano	; Resta al apuntador el tamaño de esta VARIABLE
+	IF (VarActualBanco2 < InicioMemBanco2)
+VarActualBanco2 SET InicioMemBanco2
+	ENDIF
+  					  	ENDM  					  
+;--------------------------------------------------------------------------------------------------
+IniVarsBanco3 	MACRO			  ; Toma los valores de INICIO - FIN de la tabla anterior
+  IFDEF _IniVarsBanco3			; Resguarda que sólo se hubiera invocado UNA VEZ este Macro
+    ERROR "Ya se invocó el INICIO de Variables para el BANCO 3"
+  ELSE
+#DEFINE _IniVarsBanco3			; Resguarda que sólo se hubiera invocado UNA VEZ este Macro
+  ENDIF
+VarActualBanco3 SET InicioMemBanco3
+VarFinalBanco3  SET FinMemBanco3
+  				ENDM 			  
+;
+AgregarVarBanco3 MACRO NombreVar, Tamano
+  IF ((VarActualBanco3 + Tamano) > (FinMemBanco3 + 1))
+    ERROR "Demasiadas VARIABLES en BANCO 3, no se puede agregar" 
+  ENDIF
+NombreVar       SET VarActualBanco3
+VarActualBanco3 SET VarActualBanco3 + Tamano
+  					  ENDM
+;
+QuitarVarBanco3	MACRO	NombreVar, Tamano
+NombreVar				SET	0x000											; No se utilizará esta VARIABLE, por el momento
+VarActualBanco3 SET VarActualBanco3 - Tamano	; Resta al apuntador el tamaño de esta VARIABLE
+	IF (VarActualBanco3 < InicioMemBanco3)
+VarActualBanco3 SET InicioMemBanco3
+	ENDIF
+  					  	ENDM  					  
+;--------------------------------------------------------------------------------------------------	  

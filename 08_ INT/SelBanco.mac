@@ -1,0 +1,50 @@
+;------------------------------------------------------------------------------
+; MACRO para el reemplazo de la directiva BANKSEL.  
+; Se busca tener un número mínimo de instrucciones bit Set / Clear para
+; cambiar al bando deseado.
+;------------------------------------------------------------------------------
+; Ajusta el estado de los bits RP0 y RP1 del registro STATUS para establecer
+; adecuadamente el BANCO en donde se encuentra el registro "Reg" dado como
+; parámetro.
+;
+; A diferencia de la directiva BANKSEL, este macro recuerda en cuál BANCO se 
+; encuentra el proceso de ensamblado, guardada esta información en la variable
+; "Banco_Actual". Basándose en el valor actual de "Banco_Actual" y del valor 
+; propuesto en la etiqueta "Reg" sólo se ejecutarán las instrucciones bsf ó
+; bcf necesarias sobre RP0 y RP1.
+;
+; Reg = El REGISTRO cuyo BANCO se desea seleccionar.
+;------------------------------------------------------------------------------
+	VARIABLE Banco_Actual = 0x0000              ; 0000 0000 0000 0000
+
+; Localidad de Memoria : .... .... .... ....    .... .... .... ....
+; Registros en BANCO 0 : 0000 0000 0000 0000 -> 0000 0000 0111 1111
+; Registros en BANCO 1 : 0000 0000 1000 0000 -> 0000 0000 1111 1111
+; Registros en BANCO 2 : 0000 0001 0000 0000 -> 0000 0001 0111 1111
+; Registros en BANCO 3 : 0000 0001 1000 0000 -> 0000 0001 1111 1111
+
+SelBanco MACRO Reg
+	IF Reg & 0x0100														; Reg > 0xFF, (Bancos 2 o 3)
+		IF (Banco_Actual & 0x0100) == 0					; 0000 0001 0000 0000
+			bsf STATUS, RP1
+		ENDIF
+	ELSE
+		IF (Banco_Actual & 0x0100) == 0x0100		; 0000 0001 0000 0000
+			bcf STATUS, RP1
+		ENDIF
+	ENDIF
+	IF Reg & 0x0080														; Reg > 0x7F, (Bancos 1, 2 o 3)
+		IF (Banco_Actual & 0x0080) == 0					; 0000 0000 0000 0000
+			bsf STATUS, RP0
+		ENDIF
+	ELSE
+		IF (Banco_Actual & 0x0080) == 0x0080		; 0000 000 1000 0000
+			bcf STATUS, RP0
+		ENDIF
+	ENDIF
+Banco_Actual SET Reg & 0x180								; Banco_Actual 0000 000X XXXX XXXX
+																						;							 0000 0001 1000 0000        
+ 				 ENDM
+;------------------------------------------------------------------------------
+
+

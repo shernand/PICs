@@ -1,0 +1,23 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.5.4	//
+!_TAG_REVISION_NAME	MCHPTags	//
+!_TAG_REVISION_VERSION	6.0.1	//
+Ajuste	P:\R\- LABs -\07_A-D_Int\A-D_Int.asm	121;"	l	line:121
+Ajuste_BCD	P:\R\- LABs -\07_A-D_Int\A-D_Int.asm	130;"	l	line:130
+Bits16_BCD	P:\R\- LABs -\07_A-D_Int\A-D_Int.asm	105;"	l	line:105
+Inicio	P:\R\- LABs -\07_A-D_Int\A-D_Int.asm	143;"	l	line:143
+Inter	P:\R\- LABs -\07_A-D_Int\A-D_Int.asm	69;"	l	line:69
+Lcd_var	P:\R\- LABs -\07_A-D_Int\A-D_Int.asm	29;"	q	line:29
+Loop	P:\R\- LABs -\07_A-D_Int\A-D_Int.asm	183;"	l	line:183
+Loop_16	P:\R\- LABs -\07_A-D_Int\A-D_Int.asm	112;"	l	line:112
+Mens_0	P:\R\- LABs -\07_A-D_Int\A-D_Int.asm	45;"	q	line:45
+Mensaje	P:\R\- LABs -\07_A-D_Int\A-D_Int.asm	54;"	l	line:54
+Mensaje_1	P:\R\- LABs -\07_A-D_Int\A-D_Int.asm	55;"	l	line:55
+Mensaje_2	P:\R\- LABs -\07_A-D_Int\A-D_Int.asm	62;"	l	line:62
+Tabla_Mensajes	P:\R\- LABs -\07_A-D_Int\A-D_Int.asm	40;"	l	line:40
+Visual_loop	P:\R\- LABs -\07_A-D_Int\A-D_Int.asm	88;"	l	line:88
+Visualizar	P:\R\- LABs -\07_A-D_Int\A-D_Int.asm	84;"	l	line:84

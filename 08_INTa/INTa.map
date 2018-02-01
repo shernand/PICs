@@ -1,0 +1,172 @@
+MPLINK 4.49, Linker
+Linker Map File - Created Thu Sep 14 13:00:15 2017
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_0       code   0x000000    program   0x000000
+                   .org_1       code   0x000000    program   0x000006
+                   .org_2       code   0x000004    program   0x000258
+      .config_2007_INTA.O       code   0x002007    program   0x000002
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x000002      
+                            0x000004    0x00012f      
+                            0x002007    0x002007      
+            304 out of 8454 program addresses used, program memory utilization is 3%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                     Aqui   0x00012a    program     static P:\R\- LABs -\08_INTa\INTa.asm
+   BCD_IncrementaCentenas   0x000054    program     static P:\R\- LABs -\08_INTa\Bin_BCD.INC
+    BCD_IncrementaDecenas   0x00004e    program     static P:\R\- LABs -\08_INTa\Bin_BCD.INC
+              BCD_Resta10   0x00004a    program     static P:\R\- LABs -\08_INTa\Bin_BCD.INC
+              BIN_BCD_Fin   0x000057    program     static P:\R\- LABs -\08_INTa\Bin_BCD.INC
+                BIN_a_BCD   0x000047    program     static P:\R\- LABs -\08_INTa\Bin_BCD.INC
+                      ISR   0x00012b    program     static P:\R\- LABs -\08_INTa\INTa.asm
+                      L01   0x0000da    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L02   0x0000dc    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L03   0x0000e6    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L04   0x0000e8    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L05   0x0000f1    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L06   0x0000f3    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L07   0x000102    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L08   0x000104    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L09   0x000106    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L10   0x000111    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L11   0x000113    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L12   0x000115    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                 LCD_Byte   0x0000b6    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+         LCD_ByteCompleto   0x0000bd    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+             LCD_Caracter   0x000090    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+                 LCD_Char   0x00005f    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+          LCD_CodigoCGROM   0x000093    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+                  LCD_Com   0x00008d    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+   LCD_DosEspaciosBlancos   0x0000ad    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+        LCD_EnheMayuscula   0x00009a    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+        LCD_EnheMinuscula   0x000094    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+         LCD_EnviaBlancos   0x0000b0    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+       LCD_EnviaByteLetra   0x0000c9    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+      LCD_EnviaOtroBlanco   0x0000b1    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+             LCD_FinCGROM   0x0000a7    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+   LCD_FinVisualizaDigito   0x0000cb    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+                LCD_Grado   0x0000a1    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+               LCD_Inicio   0x00006f    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+        LCD_LineaEnBlanco   0x0000a9    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+               LCD_Nibble   0x0000c1    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+  LCD_TresEspaciosBlancos   0x0000af    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+      LCD_UnEspacioBlanco   0x0000ab    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+        LCD_VisualizaAlto   0x0000be    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+        LCD_VisualizaBajo   0x0000c0    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+                Principal   0x000120    program     static P:\R\- LABs -\08_INTa\INTa.asm
+                   PulseE   0x00005a    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+                  SendCom   0x00008d    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+                   T100mS   0x0000ef    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                   T100uS   0x0000d3    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                     T10S   0x00010f    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                    T10mS   0x0000e4    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                    T10uS   0x0000ce    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      T1S   0x000100    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                     T1mS   0x0000d8    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                     T1uS   0x0000cc    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+         Tecl_ChequeaFila   0x00002d    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+            Tecl_Columna1   0x00002f    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+            Tecl_Columna2   0x000032    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+            Tecl_Columna3   0x000035    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+            Tecl_Columna4   0x000038    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+ Tecl_ConvierteOrdenEnHex   0x00000d    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+           Tecl_FinLeeHex   0x00000c    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+       Tecl_FinTecladoLee   0x000046    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+         Tecl_GuardaValor   0x000044    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+           Tecl_NoPulsada   0x000042    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+     Tecl_TerminaColumnas   0x00003b    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+ Teclado_EsperaDejePulsar   0x000022    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+      Teclado_FinTablaHex   0x00001e    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+       Teclado_Inicializa   0x00001e    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+           Teclado_LeeHex   0x000007    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+    Teclado_LeeOrdenTecla   0x00002b    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+   Teclado_SigueEsperando   0x000024    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+           Teclado_LeeHex   0x000007    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+           Tecl_FinLeeHex   0x00000c    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+ Tecl_ConvierteOrdenEnHex   0x00000d    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+       Teclado_Inicializa   0x00001e    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+      Teclado_FinTablaHex   0x00001e    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+ Teclado_EsperaDejePulsar   0x000022    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+   Teclado_SigueEsperando   0x000024    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+    Teclado_LeeOrdenTecla   0x00002b    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+         Tecl_ChequeaFila   0x00002d    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+            Tecl_Columna1   0x00002f    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+            Tecl_Columna2   0x000032    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+            Tecl_Columna3   0x000035    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+            Tecl_Columna4   0x000038    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+     Tecl_TerminaColumnas   0x00003b    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+           Tecl_NoPulsada   0x000042    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+         Tecl_GuardaValor   0x000044    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+       Tecl_FinTecladoLee   0x000046    program     static P:\R\- LABs -\08_INTa\Teclado.INC
+                BIN_a_BCD   0x000047    program     static P:\R\- LABs -\08_INTa\Bin_BCD.INC
+              BCD_Resta10   0x00004a    program     static P:\R\- LABs -\08_INTa\Bin_BCD.INC
+    BCD_IncrementaDecenas   0x00004e    program     static P:\R\- LABs -\08_INTa\Bin_BCD.INC
+   BCD_IncrementaCentenas   0x000054    program     static P:\R\- LABs -\08_INTa\Bin_BCD.INC
+              BIN_BCD_Fin   0x000057    program     static P:\R\- LABs -\08_INTa\Bin_BCD.INC
+                   PulseE   0x00005a    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+                 LCD_Char   0x00005f    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+               LCD_Inicio   0x00006f    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+                  SendCom   0x00008d    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+                  LCD_Com   0x00008d    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+             LCD_Caracter   0x000090    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+          LCD_CodigoCGROM   0x000093    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+        LCD_EnheMinuscula   0x000094    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+        LCD_EnheMayuscula   0x00009a    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+                LCD_Grado   0x0000a1    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+             LCD_FinCGROM   0x0000a7    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+        LCD_LineaEnBlanco   0x0000a9    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+      LCD_UnEspacioBlanco   0x0000ab    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+   LCD_DosEspaciosBlancos   0x0000ad    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+  LCD_TresEspaciosBlancos   0x0000af    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+         LCD_EnviaBlancos   0x0000b0    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+      LCD_EnviaOtroBlanco   0x0000b1    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+                 LCD_Byte   0x0000b6    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+         LCD_ByteCompleto   0x0000bd    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+        LCD_VisualizaAlto   0x0000be    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+        LCD_VisualizaBajo   0x0000c0    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+               LCD_Nibble   0x0000c1    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+       LCD_EnviaByteLetra   0x0000c9    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+   LCD_FinVisualizaDigito   0x0000cb    program     static P:\R\- LABs -\08_INTa\LCD_4Bits_PORTB.inc
+                     T1uS   0x0000cc    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                    T10uS   0x0000ce    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                   T100uS   0x0000d3    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                     T1mS   0x0000d8    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L01   0x0000da    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L02   0x0000dc    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                    T10mS   0x0000e4    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L03   0x0000e6    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L04   0x0000e8    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                   T100mS   0x0000ef    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L05   0x0000f1    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L06   0x0000f3    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      T1S   0x000100    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L07   0x000102    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L08   0x000104    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L09   0x000106    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                     T10S   0x00010f    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L10   0x000111    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L11   0x000113    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                      L12   0x000115    program     static P:\R\- LABs -\08_INTa\Tiempo.inc
+                Principal   0x000120    program     static P:\R\- LABs -\08_INTa\INTa.asm
+                     Aqui   0x00012a    program     static P:\R\- LABs -\08_INTa\INTa.asm
+                      ISR   0x00012b    program     static P:\R\- LABs -\08_INTa\INTa.asm
+
+

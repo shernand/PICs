@@ -1,0 +1,17 @@
+Warning[215] P:\R\- LABS -\07_A-D_INT\A-D_INT.ASM 8 : Processor superseded by command line.  Verify processor symbol.
+Message[301] C:\PROGRAM FILES (X86)\MICROCHIP\MPASM SUITE\P16F886.INC 33 : MESSAGE: (Processor-header file mismatch.  Verify selected processor.)
+Error[105]   P:\R\- LABS -\07_A-D_INT\A-D_INT.ASM 48 : Cannot open file (Include File "LCD4bitsPIC16.inc" not found)
+Error[113]   P:\R\- LABS -\07_A-D_INT\A-D_INT.ASM 62 : Symbol not previously defined (LCD_DATO)
+Message[302] P:\R\- LABS -\07_A-D_INT\A-D_INT.ASM 72 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Error[113]   P:\R\- LABS -\07_A-D_INT\A-D_INT.ASM 77 : Symbol not previously defined (LCD_REG)
+Error[113]   P:\R\- LABS -\07_A-D_INT\A-D_INT.ASM 91 : Symbol not previously defined (LCD_DATO)
+Error[113]   P:\R\- LABS -\07_A-D_INT\A-D_INT.ASM 95 : Symbol not previously defined (LCD_DATO)
+Message[302] P:\R\- LABS -\07_A-D_INT\A-D_INT.ASM 148 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] P:\R\- LABS -\07_A-D_INT\A-D_INT.ASM 149 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] P:\R\- LABS -\07_A-D_INT\A-D_INT.ASM 151 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] P:\R\- LABS -\07_A-D_INT\A-D_INT.ASM 153 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Error[113]   P:\R\- LABS -\07_A-D_INT\A-D_INT.ASM 157 : Symbol not previously defined (UP_LCD)
+Error[113]   P:\R\- LABS -\07_A-D_INT\A-D_INT.ASM 158 : Symbol not previously defined (LCD_INI)
+Error[113]   P:\R\- LABS -\07_A-D_INT\A-D_INT.ASM 160 : Symbol not previously defined (LCD_REG)
+Message[302] P:\R\- LABS -\07_A-D_INT\A-D_INT.ASM 167 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] P:\R\- LABS -\07_A-D_INT\A-D_INT.ASM 175 : Register in operand not in bank 0.  Ensure that bank bits are correct.

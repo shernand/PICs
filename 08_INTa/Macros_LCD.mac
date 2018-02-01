@@ -1,0 +1,318 @@
+;--------------------------------------------------------------------------------------------------
+; MACROS para el Manejo de la LCD alfanumérica estándar
+;
+;LCD_Init 								Inicialización de manejador (Driver) de la LCD [OBLIGATORIA].
+;LCD_GoTo Columna, Hilera	Ajusta la posición del cursor en la DDRAM.
+;LCD_Autoscroll_Off				Deshabilita la función de "autoscroll" para cuando se escriben caracteres a la LCD.
+;LCD_Autoscroll_On				Habilita la función de "autoscroll" para cuando se escriben caracteres a la LCD.
+;LCD_Scroll_Right					Recorre la pantalla a la Derecha, también se afecta la posición del cursor.
+;LCD_Scroll_Left					Recorre la pantalla a la Izquierda, también se afecta la posición del cursor.
+;LCD_Cursor_Right					Mueve el cursor una posición a la Derecha.
+;LCD_Cursor_Left					Mueve el cursor una posición a la Izquierda.
+;LCD_Cursor Modo					Ajusta el tipo de Cursor. El parámetro Modo puede ser:
+;	--> E_LCD_CURSOR_OFF  		0x00	[Apagado]
+; --> E_LCD_CURSOR_ON  			0x02	[Encendido, Fijo]
+; --> E_LCD_CURSOR_ON_BLINK 0x03	[Encendido, Parpadeando]
+;LCD_Off									Apagado de la pantalla de la LCD.
+;LCD_On										Encendido de la pantalla de la LCD.
+;LCD_Home									Cursor en posición de "Home".
+;LCD_Clear 								Borrado de la pantalla, cursor en posición "Home".
+;--------------------------------------------------------------------------------------------------
+; -----[ Definición de BITS en la palabra de control ]-----
+; Entry Mode Set Control Bits
+#DEFINE BIT_S_AUTOSCROLL_ON	(1<<0)		; !< Enable autoscroll. For use with Entry Mode Set command
+#DEFINE BIT_S_AUTOSCROLL_OFF	0				; !< Disable autoscroll. For use with Entry Mode Set command
+#DEFINE BIT_ID_INCREMENT_CURSOR	(1<<1)	; !< Increment cursor position after each char. For use with Entry Mode Set command
+#DEFINE BIT_ID_DECREMENT_CURSOR	0				; !< Decrement cursor position after each char. For use with Entry Mode Set command
+
+; Display On/Off Control Bits
+#DEFINE BIT_B_CURSOR_BLINK	(1<<0)
+#DEFINE BIT_B_CURSOR_NO_BLINK	0
+#DEFINE BIT_C_CURSOR_ON		(1<<1)
+#DEFINE BIT_C_CURSOR_OFF	0
+#DEFINE BIT_D_DISPLAY_ON	(1<<2)
+#DEFINE BIT_D_DISPLAY_OFF	0
+
+; Cursor / Display Shift Control Bits
+#DEFINE BIT_RL_SHIFT_RIGHT	(1<<2)
+#DEFINE BIT_RL_SHIFT_LEFT	0
+#DEFINE BIT_SC_SHIFT_DISPLAY	(1<<3)		;!< Seting this bit causes a display scroll
+#DEFINE BIT_SC_SHIFT_CURSOR	0						;!< Clearing this bits causes a cursor move
+
+; Function set Control Bits
+#DEFINE BIT_F_FONT_5_10		(1<<2)
+#DEFINE BIT_F_FONT_5_8		0
+#DEFINE BIT_N_DISP_LINES_2	(1<<3)
+#DEFINE BIT_N_DISP_LINES_1	0
+#DEFINE BIT_DL_DATALENGTH_8	(1<<4)
+#DEFINE BIT_DL_DATALENGTH_4	0
+
+; Define "boolean" values
+#IFNDEF TRUE
+#DEFINE TRUE 1
+#ENDIF
+#IFNDEF FALSE
+#DEFINE FALSE 0
+#ENDIF
+;--------------------------------------------------------------------------------------------------
+; Enumeration defining the HD44780 commands
+#DEFINE	E_CLEAR_DISPLAY 0x01
+#DEFINE E_RETURN_HOME 0x02
+#DEFINE	E_ENTRY_MODE_SET 0x04
+#DEFINE	E_DISPLAY_ON_OFF_CTRL 0x08
+#DEFINE	E_CURSOR_DISPLAY_SHIFT 0x10
+#DEFINE	E_FUNCTION_SET 0x20
+#DEFINE	E_SET_CGRAM_ADDR 0x40
+#DEFINE	E_SET_DDRAM_ADDR 0x80
+;--------------------------------------------------------------------------------------------------
+; This enumeration defines the available cursor modes
+#DEFINE	E_LCD_CURSOR_OFF  0x00
+#DEFINE	E_LCD_CURSOR_ON  0x02
+#DEFINE	E_LCD_CURSOR_ON_BLINK 0x03
+;--------------------------------------------------------------------------------------------------
+;* Represents the IO pins used to control the LCD
+;	E_D0_PIN = 0,
+;	E_D1_PIN,
+;	E_D2_PIN,
+;	E_D3_PIN,
+;	E_D4_PIN,
+;	E_D5_PIN,
+;	E_D6_PIN,
+;	E_D7_PIN,
+;	E_EN_PIN,
+;	E_RS_PIN,
+;	E_RW_PIN,
+;
+;--------------------------------------------------------------------------------------------------
+;uint8_t lcd_init(void * iodata, uint8_t cols, uint8_t rows)
+;{
+;	// Initialize IO pins
+;	iomode = lcd_ioinit(iodata);
+;	lcdrows = rows;
+;	lcdcolumns = cols;
+;
+;	// Initial delay after power-up
+;	delay_ms(100);
+;
+;	//  Check if LCD interface is 8 or 4 bit mode
+;	if (iomode == 4) {
+;		// Begin LCD controller Initialization (HD44780 page 45-46)
+;		// Put a loop here to send these three?
+;		lcd_iowrite4(0x03);
+;		delay_ms(5);
+;		lcd_iowrite4(0x03);
+;		delay_us(120);
+;		lcd_iowrite4(0x03);
+;		delay_us(120);
+;		lcd_iowrite4(0x02);
+;		delay_us(120);
+;		lcd_command(E_FUNCTION_SET | BIT_DL_DATALENGTH_4 | BIT_N_DISP_LINES_2 | BIT_F_FONT_5_10);
+;		delay_us(50);
+;	} else if (iomode == 8) {
+;		// Begin LCD controller Initialization (HD44780 page 45-46)
+;		lcd_command(E_FUNCTION_SET);
+;		delay_ms(5);
+;		lcd_command(E_FUNCTION_SET);
+;		delay_us(120);
+;		lcd_command(E_FUNCTION_SET);
+;		delay_us(120);
+;		lcd_command(E_FUNCTION_SET | BIT_DL_DATALENGTH_8 | BIT_N_DISP_LINES_2 | BIT_F_FONT_5_10);
+;		delay_us(50);
+;	}
+;	// Configure display after power up
+;	lcd_command(E_DISPLAY_ON_OFF_CTRL | BIT_D_DISPLAY_OFF);
+;	delay_us(50);
+;	lcd_command(E_CLEAR_DISPLAY);
+;	delay_ms(2);
+;	lcd_command(E_ENTRY_MODE_SET | BIT_S_AUTOSCROLL_OFF | BIT_ID_INCREMENT_CURSOR);
+;	delay_us(50);
+;
+;	return TRUE;
+;}
+
+;void lcd_puts(const char * string)
+;{
+;	while (*string != '\0')
+;		lcd_write(*string++);
+;}
+
+;void lcd_create_char(uint8_t charnum, const uint8_t * chardata)
+;{
+;	uint8_t i;
+;	charnum &= 0x07;
+;	lcd_command(E_SET_CGRAM_ADDR | (charnum << 3));
+;	for (i = 0; i < 8; i++)
+;		lcd_write(chardata[i]);
+;
+;--------------------------------------------------------------------------------------------------
+;-----[ Inicialización de manejador (Driver) de LCD [OBLIGATORIA] ]-----
+LCD_Init  MACRO												;
+						VARIABLE dispctrl = 0x00	; Se emplea en algunos Macros.
+						call		LCD_Inicio
+					ENDM
+;--------------------------------------------------------------------------------------------------
+;-----[ Borrado de pantalla, cursor en "Home" ]-----
+LCD_Clear 	MACRO											; 
+							movlw	E_CLEAR_DISPLAY		;
+							call	SendCom						; Tarda 1.52 mS
+						ENDM
+;--------------------------------------------------------------------------------------------------	
+;-----[ Cursor en posición de "Home" ]-----						
+LCD_Home  	MACRO									; 
+							movlw	E_RETURN_HOME	; 
+							call	SendCom				; Tarda 1.52 mS
+						ENDM
+;--------------------------------------------------------------------------------------------------	
+;-----[ Encendido de la pantalla de la LCD ]-----						
+LCD_On 			MACRO									; 
+dispctrl SET dispctrl | BIT_D_DISPLAY_ON 	; dispctrl |= BIT_D_DISPLAY_ON;
+							movlw		E_DISPLAY_ON_OFF_CTRL
+							iorlw		dispctrl
+							call		SendCom			; lcd_command(E_DISPLAY_ON_OFF_CTRL | dispctrl);
+						ENDM
+;--------------------------------------------------------------------------------------------------	
+;-----[ Apagado de la pantalla de la LCD ]-----						
+LCD_Off 		MACRO											; 
+dispctrl SET dispctrl & ~BIT_D_DISPLAY_ON			; dispctrl &= ~BIT_D_DISPLAY_ON;
+							movlw	E_DISPLAY_ON_OFF_CTRL
+							iorlw	dispctrl		
+							call	SendCom				; lcd_command(E_DISPLAY_ON_OFF_CTRL | dispctrl); delay_us(50)
+						ENDM
+;--------------------------------------------------------------------------------------------------	
+;-----[ Ajusta el tipo de Cursor ]-----
+LCD_Cursor	MACRO  Modo					; 
+
+;		El parámetro Modo puede ser:
+;	--> E_LCD_CURSOR_OFF  		0x00	[Apagado]
+; --> E_LCD_CURSOR_ON  			0x02	[Encendido, Fijo]
+; --> E_LCD_CURSOR_ON_BLINK 0x03	[Encendido, Parpadeando]
+
+dispctrl SET dispctrl & 0xFC			; dispctrl &= 0xFC;
+dispctrl SET dispctrl | Modo			; dispctrl |= Modo;
+							movlw	E_DISPLAY_ON_OFF_CTRL
+							iorlw	dispctrl		
+							call	SendCom				; lcd_command(E_DISPLAY_ON_OFF_CTRL | dispctrl);
+						ENDM
+;--------------------------------------------------------------------------------------------------	
+;-----[ Mueve el cursor una posición a la Izquierda ]-----
+LCD_Cursor_Left	MACRO							; 
+
+; lcd_command(E_CURSOR_DISPLAY_SHIFT | BIT_SC_SHIFT_CURSOR | BIT_RL_SHIFT_LEFT);
+									movlw		E_CURSOR_DISPLAY_SHIFT
+									iorlw		BIT_SC_SHIFT_CURSOR
+									iorlw		BIT_RL_SHIFT_LEFT
+									call		SendCom
+								ENDM
+;--------------------------------------------------------------------------------------------------								
+;-----[ Mueve el cursor una posición a la Derecha ]-----
+LCD_Cursor_Right	MACRO							; 								
+;lcd_command(E_CURSOR_DISPLAY_SHIFT | BIT_SC_SHIFT_CURSOR | BIT_RL_SHIFT_RIGHT);							
+										movlw		E_CURSOR_DISPLAY_SHIFT
+										iorlw		BIT_SC_SHIFT_CURSOR
+										iorlw		BIT_RL_SHIFT_RIGHT
+										call		SendCom
+									ENDM
+;--------------------------------------------------------------------------------------------------									
+;-----[ Recorre la pantalla a la Izquierda, también se afecta la posición del cursor ]-----
+LCD_Scroll_Left		MACRO						; 
+;lcd_command(E_CURSOR_DISPLAY_SHIFT | BIT_SC_SHIFT_DISPLAY | BIT_RL_SHIFT_LEFT);														
+										movlw		E_CURSOR_DISPLAY_SHIFT
+										iorlw		BIT_SC_SHIFT_DISPLAY
+										iorlw		BIT_RL_SHIFT_LEFT
+										call		SendCom
+									ENDM
+;--------------------------------------------------------------------------------------------------									
+;-----[ Recorre la pantalla a la Derecha, también se afecta la posición del cursor ]-----
+LCD_Scroll_Right	MACRO						; 
+;lcd_command(E_CURSOR_DISPLAY_SHIFT | BIT_SC_SHIFT_DISPLAY | BIT_RL_SHIFT_RIGHT);														
+										movlw		E_CURSOR_DISPLAY_SHIFT
+										iorlw		BIT_SC_SHIFT_DISPLAY
+										iorlw		BIT_RL_SHIFT_RIGHT
+										call		SendCom
+									ENDM									
+;--------------------------------------------------------------------------------------------------									
+;-----[ Habilita la función de "autoscroll" para cuando se escriben caracteres a la LCD ]-----
+LCD_Autoscroll_On		MACRO						; 
+;lcd_command(E_ENTRY_MODE_SET | BIT_S_AUTOSCROLL_ON | BIT_ID_INCREMENT_CURSOR);														
+											movlw		E_ENTRY_MODE_SET
+											iorlw		BIT_S_AUTOSCROLL_ON
+											iorlw		BIT_ID_INCREMENT_CURSOR
+											call		SendCom
+										ENDM			
+;--------------------------------------------------------------------------------------------------	
+;-----[ Deshabilita la función de "autoscroll" para cuando se escriben caracteres a la LCD ]-----
+LCD_Autoscroll_Off	MACRO						; 
+;lcd_command(E_ENTRY_MODE_SET | BIT_S_AUTOSCROLL_OFF | BIT_ID_INCREMENT_CURSOR);														
+											movlw		E_ENTRY_MODE_SET
+											iorlw		BIT_S_AUTOSCROLL_OFF
+											iorlw		BIT_ID_INCREMENT_CURSOR
+											call		SendCom
+										ENDM			
+;--------------------------------------------------------------------------------------------------																					
+;-----[ Ajusta la posición del cursor en la DDRAM. Si el cursor está habiilitado, se mostrará. ]
+LCD_GoTo						MACRO		Columna, Hilera 
+	LOCAL Direccion_Hilera
+; Se aplican límites para Hileras y Columnas:
+;	IF (Hilera > Hileras)
+;		Hilera_Final SET Hileras - 1
+;	ENDIF
+;	IF (Columna > Columnas) 
+;		Columna_Final SET Columnas - 1
+;	ENDIF
+
+; PARA LCD de 20x4
+;#define LCD_LINEA1 0x00 // Direccion de memoria para la primera linea
+;#define LCD_LINEA2 0xC0 // Direccion de memoria para la segunda linea
+;#define LCD_LINEA3 0x94 // Direccion de memoria para la tercera linea
+;#define LCD_LINEA4 0xD4 // Direccion de memoria para la cuarta linea
+					
+; PARA LCD de 16x4
+;#define LCD_LINEA1 0x00 // Direccion de memoria para la primera linea
+;#define LCD_LINEA2 0x40 // Direccion de memoria para la segunda linea
+;#define LCD_LINEA3 0x14 // Direccion de memoria para la tercera linea
+;#define LCD_LINEA4 0x54 // Direccion de memoria para la cuarta linea					
+
+; Cálculo de la máscara en función del número de línea en donde se coloca el cursor:
+;            |      V I S I B L E S      |     No Mostrados       |
+; LÍNEA 0 --> 00 01 02 03 04 05 ... 0E 0F 10 11 12 13 14 ... 26 27    En Total 40 Caracteres
+; LÍNEA 1 --> 40 41 42 43 44 45 ... 4E 4F 50 51 52 53 54 ... 66 67    En Total 40 Caracteres
+; LÍNEA 2 --> 14 15 16 17 18 19 ... 22 23 24 25 26 27 28 ... 3A 3B    En Total 40 Caracteres
+; LÍNEA 3 --> 54 55 56 57 58 59 ... 62 63 64 65 66 67 68 ... 80 81    En Total 40 Caracteres
+
+	IF (Columnas == 16)
+		IF (Hilera == 0)
+			Direccion_Hilera SET 0x00
+		ENDIF	
+		IF (Hilera == 1)
+			Direccion_Hilera SET 0x40
+		ENDIF
+		IF (Hilera == 2)
+			Direccion_Hilera SET 0x14
+		ENDIF
+		IF (Hilera == 3)
+			Direccion_Hilera SET 0x54
+		ENDIF
+	ENDIF
+	
+	IF (Columnas == 20)
+		IF (Hilera == 0)
+			Direccion_Hilera SET 0x00
+		ENDIF	
+		IF (Hilera == 1)
+			Direccion_Hilera SET 0xC0
+		ENDIF
+		IF (Hilera == 2)
+			Direccion_Hilera SET 0x94
+		ENDIF
+		IF (Hilera == 3)
+			Direccion_Hilera SET 0xD4
+		ENDIF
+	ENDIF
+	
+; lcd_command(E_SET_DDRAM_ADDR | (col + rowaddr[ row ]));
+											movlw		Direccion_Hilera
+											addlw		Columna
+											iorlw		E_SET_DDRAM_ADDR
+											call		SendCom
+										ENDM			
+;--------------------------------------------------------------------------------------------------	

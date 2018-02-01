@@ -1,0 +1,6 @@
+Error[113]   P:\R\- LABS -\08_INTA\SFHM.ASM 53 : Symbol not previously defined (Principal)
+Error[113]   P:\R\- LABS -\08_INTA\SFHM.ASM 55 : Symbol not previously defined (Principal)
+Error[113]   P:\R\- LABS -\08_INTA\SFHM.ASM 60 : Symbol not previously defined (ISR)
+Error[113]   P:\R\- LABS -\08_INTA\SFHM.ASM 62 : Symbol not previously defined (ISR)
+Message[313] P:\R\- LABS -\08_INTA\TECLADO.INC 25 : CBLOCK constants will start with a value of 0.
+Error[129]   P:\R\- LABS -\08_INTA\SFHM.ASM 104 : Expected (END)
